@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@import "./variables.css";
+@import "./reset.css";
+@import "./layout.css";
+
+@theme inline {
+  --color-background: var(--color-background);
+  --color-background-soft: var(--color-background-soft);
+
+  --color-surface: var(--color-surface);
+  --color-surface-elevated: var(--color-surface-elevated);
+  --color-surface-hover: var(--color-surface-hover);
+
+  --color-border: var(--color-border);
+  --color-border-muted: var(--color-border-muted);
+
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-subtle: var(--color-text-subtle);
+
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+
+  --color-purple-accent: var(--color-accent-purple);
+  --color-blue-accent: var(--color-accent-blue);
+  --color-cyan-accent: var(--color-accent-cyan);
+  --color-green-accent: var(--color-accent-green);
+  --color-yellow-accent: var(--color-accent-yellow);
+  --color-orange-accent: var(--color-accent-orange);
+  --color-red-accent: var(--color-accent-red);
+
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger); 
+  --color-info: var(--color-info);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+}

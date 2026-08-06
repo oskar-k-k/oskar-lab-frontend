@@ -1,0 +1,57 @@
+:root {
+  /* Hintergrund */
+  --color-background: #030b16;
+  --color-background-soft: #0f1824;
+
+  /* Flächen und Karten */
+  --color-surface: #151e2a;
+  --color-surface-elevated: #1d2634;
+  --color-surface-hover: #252f3e;
+
+  /* Rahmen */
+  --color-border: #344154;
+  --color-border-muted: #252f3e;
+  --color-border-highlight: #60708a;
+
+  /* Text */
+  --color-text: #f4f7fb;
+  --color-text-muted: #a7b0bf;
+  --color-text-subtle: #747f92;
+
+  /* Hauptfarbe */
+  --color-primary: #8184f5;
+  --color-primary-hover: #989aff;
+  --color-primary-soft: rgb(129 132 245 / 0.14);
+
+  /* Akzentfarben */
+  --color-accent-purple: #c084fc;
+  --color-accent-blue: #60a5fa;
+  --color-accent-cyan: #67e8f9;
+  --color-accent-green: #86efac;
+  --color-accent-yellow: #fde68a;
+  --color-accent-orange: #fdba74;
+  --color-accent-red: #fb7185;
+
+  /* Statusfarben */
+  --color-success: #4ade80;
+  --color-warning: #facc15;
+  --color-danger: #fb7185;
+  --color-info: #38bdf8;
+
+  /* Schatten und Effekte */
+  --shadow-card:
+    0 12px 35px rgb(0 0 0 / 0.3),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+
+  --shadow-primary:
+    0 0 20px rgb(129 132 245 / 0.2);
+
+  /* Layout */
+  --content-width: 1440px;
+  --header-height: 64px;
+
+  /* Rundungen */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
