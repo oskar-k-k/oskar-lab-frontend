@@ -2,7 +2,6 @@
 
 @import "./variables.css";
 @import "./reset.css";
-@import "./layout.css";
 
 @theme inline {
   --color-background: var(--color-background);
