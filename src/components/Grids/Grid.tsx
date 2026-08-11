@@ -5,6 +5,8 @@ type Props = {
     className?: string;
     gap?: number;
     cardWidth?: number;
+    rows?: number;
+    cols?: number;
 };
 
 export default function Grid({
@@ -12,6 +14,8 @@ export default function Grid({
                                  className = "",
                                  gap = 24,
                                  cardWidth = 260,
+                                 rows,
+                                 cols,
                              }: Props) {
     return (
         <div
@@ -19,6 +23,14 @@ export default function Grid({
             style={{
                 "--grid-gap": `${gap}px`,
                 "--grid-card-width": `${cardWidth}px`,
+
+                ...(cols && {
+                    gridTemplateColumns: `repeat(${cols}, 1fr)`
+                }),
+
+                ...(rows && {
+                    gridTemplateRows: `repeat(${rows}, 1fr)`
+                }),
             } as React.CSSProperties}
         >
             {children}
