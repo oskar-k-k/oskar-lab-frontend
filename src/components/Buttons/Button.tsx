@@ -1,14 +1,15 @@
-import { ReactNode } from "react";
+import Link from "next/link";
+import {ReactNode} from "react";
 import styles from "./Button.module.css";
 import { ButtonHTMLAttributes } from "react";
 
-interface Props extends ButtonHTMLAttributes<HTMLButtonElement>{
+interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
     children: ReactNode;
     className?: string;
     href?: string;
     onClick?: () => void;
     variant?: "primary" | "secondary";
-};
+}
 
 export default function Button({
     children,
@@ -18,18 +19,19 @@ export default function Button({
     variant = "secondary",
     ...props
 }: Props) {
-    const css = `${styles.button} ${styles[variant]} ${className}`;
+    const css = `${styles.button} ${styles[variant]} ${className ?? ""}`;
 
     if (href) {
         return (
-            <a href={href} className={css} >
+            <Link href={href} className={css}>
                 {children}
-            </a>
+            </Link>
         );
     }
 
     return (
         <button
+            type="button"
             className={css}
             onClick={onClick}
             {...props}

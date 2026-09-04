@@ -4,6 +4,13 @@ import {Project, projectsApi} from "@/lib/api/projects";
 
 const localProjects: Project[] = [
     {
+        id: -2,
+        path: "core",
+        title: "Core & Design",
+        description: "Der lebende Styleguide für UI-Komponenten, Design-Tokens und Core-Helfer.",
+        thumbnail: "/projects/core/thumbnail.svg",
+    },
+    {
         id: -1,
         path: "chess",
         title: "Chess",
@@ -14,7 +21,11 @@ const localProjects: Project[] = [
 async function loadProjects(): Promise<{projects: Project[]; backendAvailable: boolean}> {
     try {
         const response = await projectsApi.getAll();
-        return {projects: response.content, backendAvailable: true};
+        const remoteOnlyProjects = response.content.filter(remoteProject => (
+            !localProjects.some(localProject => localProject.path === remoteProject.path)
+        ));
+
+        return {projects: [...localProjects, ...remoteOnlyProjects], backendAvailable: true};
     } catch {
         return {projects: localProjects, backendAvailable: false};
     }
@@ -38,7 +49,7 @@ export default async function Home() {
                     title={project.title ?? ""}
                     description={project.description ?? ""}
                     href={`/projects/${project.path}`}
-                    image={`/projects/${project.path}/thumbnail.png`}
+                    image={project.thumbnail ?? `/projects/${project.path}/thumbnail.png`}
                 />
             ))}
         </Grid>

@@ -6,6 +6,7 @@ export interface Project {
     path: string;
     title: string | null;
     description: string | null;
+    thumbnail?: string;
 }
 
 export const projectsApi = {
