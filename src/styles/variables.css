@@ -48,8 +48,8 @@
     0 0 20px rgb(129 132 245 / 0.2);
 
   /* Layout */
-  --content-width: 1440px;
-  --header-height: 64px;
+  --content-width: 1400px;
+  --header-height: 48px;
 
   /* Rundungen */
   --radius-sm: 6px;

@@ -2,6 +2,8 @@ import Grid from "@/components/Grids/Grid";
 import Card from "@/components/Cards/Card"
 import {Project, projectsApi} from "@/lib/api/projects";
 
+export const dynamic = "force-dynamic";
+
 const localProjects: Project[] = [
     {
         id: -2,

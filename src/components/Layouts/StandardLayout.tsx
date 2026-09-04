@@ -1,5 +1,6 @@
 import styles from "./StandardLayout.module.css";
 
+/** Properties for the standard centered page layout. */
 type Props = {
     children: React.ReactNode;
     className?: string;
@@ -7,6 +8,7 @@ type Props = {
     padding?: number;
 };
 
+/** Constrains page content to a configurable width and responsive padding. */
 export default function StandardLayout({
                                            children,
                                            className = "",
@@ -14,16 +16,14 @@ export default function StandardLayout({
                                            padding = 32,
                                        }: Props) {
     return (
-        <>
-            <main
-                className={`${styles.layout} ${className}`}
-                style={{
-                    "--layout-max-width": `${maxWidth}px`,
-                    "--layout-padding": `${padding}px`,
-                } as React.CSSProperties}
-            >
-                {children}
-            </main>
-        </>
+        <main
+            className={`${styles.layout} ${className}`}
+            style={{
+                "--layout-max-width": `${maxWidth}px`,
+                "--layout-padding": `${padding}px`,
+            } as React.CSSProperties}
+        >
+            {children}
+        </main>
     );
 }

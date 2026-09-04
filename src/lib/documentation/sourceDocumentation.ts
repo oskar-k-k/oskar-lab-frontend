@@ -27,13 +27,30 @@ function compact(text: string): string {
 }
 
 function declarationSignature(node: ts.Node, sourceFile: ts.SourceFile): string {
-    const text = node.getText(sourceFile);
-    const bodyStart = text.indexOf("{");
-    return compact(bodyStart >= 0 ? text.slice(0, bodyStart) : text);
+    const hasBody = (
+        ts.isFunctionDeclaration(node) ||
+        ts.isMethodDeclaration(node) ||
+        ts.isGetAccessorDeclaration(node) ||
+        ts.isSetAccessorDeclaration(node) ||
+        ts.isConstructorDeclaration(node)
+    ) && node.body;
+
+    if (hasBody) {
+        return compact(sourceFile.text.slice(node.getStart(sourceFile), node.body.getStart(sourceFile)));
+    }
+
+    if (ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node)) {
+        const text = node.getText(sourceFile);
+        return compact(text.slice(0, text.indexOf("{")));
+    }
+
+    return compact(node.getText(sourceFile));
 }
 
 function memberDocumentation(member: ts.ClassElement | ts.TypeElement, sourceFile: ts.SourceFile): DocumentedMember | null {
     if (!member.name) return null;
+    const modifiers = ts.canHaveModifiers(member) ? ts.getModifiers(member) : undefined;
+    if (modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.PrivateKeyword)) return null;
     return {name: member.name.getText(sourceFile), signature: declarationSignature(member, sourceFile), description: commentText(member)};
 }
 
@@ -70,6 +87,9 @@ function parseSource(filePath: string, source: string): SourceDocumentation {
         } else if (ts.isTypeAliasDeclaration(node)) {
             name = node.name.text;
             kind = "type";
+            if (ts.isTypeLiteralNode(node.type)) {
+                members = node.type.members.map(member => memberDocumentation(member, sourceFile)).filter(member => member !== null);
+            }
         }
 
         if (name && kind) symbols.push({name, kind, signature: declarationSignature(node, sourceFile), description: commentText(node), members});

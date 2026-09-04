@@ -1,5 +1,6 @@
 import styles from "./Grid.module.css";
 
+/** Properties for the responsive global grid. */
 type Props = {
     children: React.ReactNode;
     className?: string;
@@ -9,6 +10,7 @@ type Props = {
     cols?: number;
 };
 
+/** Arranges children in an automatic or explicitly sized CSS grid. */
 export default function Grid({
                                  children,
                                  className = "",

@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Oskar Lab",
-  description: "Projects Collection",
+  description: "Persönliche Plattform für interaktive Projekte und Experimente",
 };
 
 export default function RootLayout({children,}: Readonly<{
@@ -23,7 +23,7 @@ export default function RootLayout({children,}: Readonly<{
   return (
 
       <html
-          lang="en"
+          lang="de"
           className={`${geistSans.variable} ${geistMono.variable}`}
       >
       <body>

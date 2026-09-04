@@ -4,12 +4,14 @@ import Link from "next/link";
 import styles from "./Header.module.css";
 import {usePathname} from "next/navigation";
 
+/** Properties for the shared project header and its optional slots. */
 type Props = {
     projectName: string;
     center?: React.ReactNode;
     right?: React.ReactNode;
 };
 
+/** Displays the current project and navigation back to the project overview. */
 export default function Header({
                                    projectName,
                                    center,

@@ -63,7 +63,7 @@ function ComponentsTab({documentation}: Readonly<{documentation: readonly Source
         <section className={styles.section}><h2>Live-Komponenten</h2><p className={styles.intro}>Die echten globalen Komponenten, mit sinnvollen Beispiel-Props gerendert.</p>
             <div className={styles.previewGrid}>
                 <article className={styles.preview}><h3>Button</h3><div className={styles.demoRow}><Button variant="primary">Primary</Button><Button>Secondary</Button><Button disabled>Disabled</Button></div></article>
-                <article className={styles.preview}><h3>Card</h3><Card title="Project Card" description="Globale Vorschaukarte mit Titel und Beschreibung." href="#" /></article>
+                <article className={styles.preview}><h3>Card</h3><Card title="Project Card" description="Globale Vorschaukarte mit Titel und Beschreibung." /></article>
                 <article className={styles.preview}><h3>Grid</h3><Grid cardWidth={70} gap={8}>{[1, 2, 3].map(item => <div className={styles.gridItem} key={item}>{item}</div>)}</Grid></article>
                 <article className={styles.preview}><h3>SquareView</h3><div className={styles.squareDemo}><Square color="var(--color-primary)" /><Square color="var(--color-accent-cyan)" /></div></article>
                 <article className={`${styles.preview} ${styles.widePreview}`}><h3>Header</h3><div className={styles.componentFrame}><Header projectName="Preview" center={<span>Center Slot</span>} right={<span>Right Slot</span>} /></div></article>
@@ -76,10 +76,20 @@ function ComponentsTab({documentation}: Readonly<{documentation: readonly Source
 
 export default function CoreExplorer({coreDocumentation, componentDocumentation}: Readonly<{coreDocumentation: readonly SourceDocumentation[]; componentDocumentation: readonly SourceDocumentation[]}>) {
     const [activeTab, setActiveTab] = useState<Tab>("design");
+
+    function handleTabKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, index: number): void {
+        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+        event.preventDefault();
+        const offset = event.key === "ArrowRight" ? 1 : -1;
+        const nextTab = tabs[(index + offset + tabs.length) % tabs.length];
+        setActiveTab(nextTab.id);
+        document.getElementById(`core-tab-${nextTab.id}`)?.focus();
+    }
+
     return <div className={styles.page}>
         <section className={styles.hero}><span className={styles.kicker}>Oskar Lab · Living Documentation</span><h1>Core & Design System</h1><p>Eine automatisch gepflegte Referenz für Design, globale Komponenten und projektübergreifenden Code.</p></section>
-        <div className={styles.tabs} role="tablist" aria-label="Dokumentationsbereiche">{tabs.map(tab => <button key={tab.id} type="button" role="tab" aria-selected={activeTab === tab.id} className={activeTab === tab.id ? styles.activeTab : ""} onClick={() => setActiveTab(tab.id)}><strong>{tab.label}</strong><span>{tab.detail}</span></button>)}</div>
-        <main>{activeTab === "design" && <DesignTab />}{activeTab === "components" && <ComponentsTab documentation={componentDocumentation} />}{activeTab === "core" && <div className={styles.tabContent}><section className={styles.section}><h2>Automatische Core API</h2><p className={styles.intro}>Diese Ansicht scannt <code>src/core</code>. JSDoc-Kommentare über Klassen und Methoden erscheinen automatisch als Beschreibung.</p><DocumentationList files={coreDocumentation} /></section></div>}</main>
+        <div className={styles.tabs} role="tablist" aria-label="Dokumentationsbereiche">{tabs.map((tab, index) => <button id={`core-tab-${tab.id}`} key={tab.id} type="button" role="tab" aria-controls={`core-panel-${tab.id}`} aria-selected={activeTab === tab.id} tabIndex={activeTab === tab.id ? 0 : -1} className={activeTab === tab.id ? styles.activeTab : ""} onClick={() => setActiveTab(tab.id)} onKeyDown={event => handleTabKeyDown(event, index)}><strong>{tab.label}</strong><span>{tab.detail}</span></button>)}</div>
+        <main id={`core-panel-${activeTab}`} role="tabpanel" aria-labelledby={`core-tab-${activeTab}`}>{activeTab === "design" && <DesignTab />}{activeTab === "components" && <ComponentsTab documentation={componentDocumentation} />}{activeTab === "core" && <div className={styles.tabContent}><section className={styles.section}><h2>Automatische Core API</h2><p className={styles.intro}>Diese Ansicht scannt <code>src/core</code>. JSDoc-Kommentare über Klassen und Methoden erscheinen automatisch als Beschreibung.</p><DocumentationList files={coreDocumentation} /></section></div>}</main>
         <footer className={styles.footer}><strong>Regel:</strong> Wiederverwendbar und projektneutral → Core oder Components. Fachlich speziell → jeweiliges Projekt.</footer>
     </div>;
 }

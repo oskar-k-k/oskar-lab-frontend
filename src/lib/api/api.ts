@@ -3,15 +3,25 @@ const API_URL =
 
 type ApiOptions = RequestInit;
 
+/** Error returned when the server responds with a non-successful HTTP status. */
+export class ApiError extends Error {
+    constructor(
+        public readonly status: number,
+        public readonly statusText: string,
+    ) {
+        super(`API request failed: ${status} ${statusText}`);
+        this.name = "ApiError";
+    }
+}
+
+/** Sends a JSON request without caching user- or session-dependent responses. */
 async function request<T>(
     path: string,
     options?: ApiOptions
 ): Promise<T> {
 
-    console.log("API URL:", `${API_URL}${path}`);
-    console.log("OPTIONS:", options);
-
     const response = await fetch(`${API_URL}${path}`, {
+        cache: "no-store",
         ...options,
         headers: {
             "Content-Type": "application/json",
@@ -20,9 +30,7 @@ async function request<T>(
     });
 
     if (!response.ok) {
-        throw new Error(
-            `API Error: ${response.status} ${response.statusText}`
-        );
+        throw new ApiError(response.status, response.statusText);
     }
 
     return response.json();
@@ -36,14 +44,14 @@ export const api = {
     post<T>(path: string, body?: unknown) {
         return request<T>(path, {
             method: "POST",
-            body: body ? JSON.stringify(body) : undefined,
+            body: body === undefined ? undefined : JSON.stringify(body),
         });
     },
 
     put<T>(path: string, body?: unknown) {
         return request<T>(path, {
             method: "PUT",
-            body: body ? JSON.stringify(body) : undefined,
+            body: body === undefined ? undefined : JSON.stringify(body),
         });
     },
 

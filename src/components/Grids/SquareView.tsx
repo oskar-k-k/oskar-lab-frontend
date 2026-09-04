@@ -1,3 +1,4 @@
+/** Properties for a square visual or interactive grid cell. */
 type Props = {
     children?: React.ReactNode;
     className?: string;
@@ -7,6 +8,7 @@ type Props = {
     ariaLabel?: string;
 };
 
+/** Renders a square div or an accessible button when onClick is provided. */
 export default function Square({
                                    children,
                                    className,
