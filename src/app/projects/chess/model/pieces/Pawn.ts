@@ -1,23 +1,20 @@
-import {ChessPiece, Type} from "@/app/projects/chess/classes/ChessPiece";
-import {PawnIcon} from "@/app/projects/chess/icons/PawnIcon";
-import type {ChessBoard} from "@/app/projects/chess/classes/ChessBoard";
-import type {ChessSquare} from "@/app/projects/chess/classes/ChessSquare";
+import {ChessColor, ChessPiece, PieceKind} from "@/app/projects/chess/model/ChessPiece";
+import type {ChessBoard} from "@/app/projects/chess/model/ChessBoard";
+import type {ChessSquare} from "@/app/projects/chess/model/ChessSquare";
 import {vec} from "@/core/Vector";
 
 export class Pawn extends ChessPiece{
+    readonly kind = PieceKind.PAWN;
 
-    readonly name = "Pawn";
-    readonly icon = PawnIcon;
-
-    constructor(type: Type){
-        super(type)
+    constructor(color: ChessColor){
+        super(color)
     }
 
-    getPossibleMoves(board: ChessBoard, square: ChessSquare): ChessSquare[] {
-        const direction = this.type === Type.WHITE ? -1 : 1;
-        const startRow = this.type === Type.WHITE ? 6 : 1;
+    getPseudoLegalTargets(board: ChessBoard, square: ChessSquare): ChessSquare[] {
+        const direction = this.color === ChessColor.WHITE ? -1 : 1;
+        const startRow = this.color === ChessColor.WHITE ? 6 : 1;
         const moves: ChessSquare[] = [];
-        const firstPosition = square.pos.clone().add(vec(0, direction));
+        const firstPosition = square.pos.add(vec(0, direction));
 
         if (board.squares.isValid(firstPosition)) {
             const firstSquare = board.squares.get(firstPosition);
@@ -26,7 +23,7 @@ export class Pawn extends ChessPiece{
                 moves.push(firstSquare);
 
                 if (!this.hasMoved && square.pos.y === startRow) {
-                    const secondPosition = square.pos.clone().add(vec(0, direction * 2));
+                    const secondPosition = square.pos.add(vec(0, direction * 2));
                     const secondSquare = board.squares.get(secondPosition);
 
                     if (secondSquare.getPiece() === null) {
@@ -40,11 +37,11 @@ export class Pawn extends ChessPiece{
     }
 
     getAttackSquares(board: ChessBoard, square: ChessSquare): ChessSquare[] {
-        const direction = this.type === Type.WHITE ? -1 : 1;
+        const direction = this.color === ChessColor.WHITE ? -1 : 1;
         const attacks: ChessSquare[] = [];
 
         for (const xDirection of [-1, 1]) {
-            const targetPosition = square.pos.clone().add(vec(xDirection, direction));
+            const targetPosition = square.pos.add(vec(xDirection, direction));
 
             if (board.squares.isValid(targetPosition)) {
                 attacks.push(board.squares.get(targetPosition));
@@ -61,7 +58,7 @@ export class Pawn extends ChessPiece{
         moves: ChessSquare[],
     ): ChessSquare[] {
         for (const xDirection of [-1, 1]) {
-            const targetPosition = square.pos.clone().add(vec(xDirection, direction));
+            const targetPosition = square.pos.add(vec(xDirection, direction));
 
             if (!board.squares.isValid(targetPosition)) {
                 continue;
@@ -70,7 +67,7 @@ export class Pawn extends ChessPiece{
             const targetSquare = board.squares.get(targetPosition);
             const targetPiece = targetSquare.getPiece();
 
-            if (targetPiece && targetPiece.type !== this.type) {
+            if (targetPiece && targetPiece.color !== this.color) {
                 moves.push(targetSquare);
             } else if (!targetPiece && board.enPassantTarget === targetSquare) {
                 moves.push(targetSquare);

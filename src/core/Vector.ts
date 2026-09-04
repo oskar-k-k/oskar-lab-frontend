@@ -1,94 +1,68 @@
-export class Vector{
-    x: number = 0
-    y: number = 0
+export type VectorLike = Readonly<{x: number; y: number}>;
 
-    constructor(x: number, y: number) {
-        this.x = x
-        this.y = y
+export class Vector {
+    constructor(
+        public readonly x: number,
+        public readonly y: number,
+    ) {
+        Object.freeze(this);
     }
 
-    clone(): Vector{
-        return new Vector(this.x, this.y)
+    add(value: VectorLike | number): Vector {
+        return typeof value === "number"
+            ? new Vector(this.x + value, this.y + value)
+            : new Vector(this.x + value.x, this.y + value.y);
     }
 
-    set(x:number, y:number) : Vector{
-        this.x = x
-        this.y = y
-        return this
+    subtract(value: VectorLike | number): Vector {
+        return typeof value === "number"
+            ? new Vector(this.x - value, this.y - value)
+            : new Vector(this.x - value.x, this.y - value.y);
     }
 
-    setZero(): Vector{
-        this.x = 0
-        this.y = 0
-        return this
+    multiply(value: VectorLike | number): Vector {
+        return typeof value === "number"
+            ? new Vector(this.x * value, this.y * value)
+            : new Vector(this.x * value.x, this.y * value.y);
     }
 
-
-    add(vec2: Vector): Vector{
-        this.x += vec2.x
-        this.y += vec2.y
-        return this
+    divide(value: VectorLike | number): Vector {
+        return typeof value === "number"
+            ? new Vector(this.x / value, this.y / value)
+            : new Vector(this.x / value.x, this.y / value.y);
     }
 
-    sub(vec2: Vector): Vector{
-        this.x -= vec2.x
-        this.y -= vec2.y
-        return this
+    equals(other: VectorLike): boolean {
+        return this.x === other.x && this.y === other.y;
     }
 
-    multiply(vec2: Vector): Vector{
-        this.x *= vec2.x
-        this.y *= vec2.y
-        return this
+    isZero(): boolean {
+        return this.x === 0 && this.y === 0;
     }
 
-    divide(vec2: Vector): Vector{
-        this.x /= vec2.x
-        this.y /= vec2.y
-        return this
+    get length(): number {
+        return Math.hypot(this.x, this.y);
     }
 
-    addNum(scalar:number): Vector{
-        this.x += scalar
-        this.y += scalar
-        return this
+    normalize(): Vector {
+        return this.length === 0 ? Vector.ZERO : this.divide(this.length);
     }
 
-    subNum(scalar:number): Vector{
-        this.x -= scalar
-        this.y -= scalar
-        return this
+    getSum(): number {
+        return this.x + this.y;
     }
 
-    multiplyNum(scalar:number): Vector{
-        this.x *= scalar
-        this.y *= scalar
-        return this
+    toString(): string {
+        return `${this.x}-${this.y}`;
     }
 
-    divideNum(scalar:number): Vector{
-        this.x /= scalar
-        this.y /= scalar
-        return this
+    toJSON(): VectorLike {
+        return {x: this.x, y: this.y};
     }
 
-    equals(vec2: Vector): boolean{
-        return this.x === vec2.x && this.y === vec2.y
-    }
-
-    isZero(): boolean{
-        return this.x === 0 && this.y === 0
-    }
-
-    getSum(): number{
-        return this.x + this.y
-    }
-
-    toString(): string{
-        return this.x.toString() + "-" + this.y.toString()
-    }
+    static readonly ZERO = new Vector(0, 0);
 }
 
-export function vec(x:number, y:number){
-    return new Vector(x, y)
+export function vec(x: number, y: number): Vector {
+    return new Vector(x, y);
 }

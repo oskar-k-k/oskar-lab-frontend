@@ -3,6 +3,8 @@ type Props = {
     className?: string;
     onClick?: () => void;
     color?: string;
+    style?: React.CSSProperties;
+    ariaLabel?: string;
 };
 
 export default function Square({
@@ -10,17 +12,36 @@ export default function Square({
                                    className,
                                    onClick,
                                    color = "#dddddd",
+                                   style,
+                                   ariaLabel,
                                }: Props) {
+    const squareStyle: React.CSSProperties = {
+        background: color,
+        aspectRatio: "1",
+        display: "block",
+        width: "100%",
+        padding: 0,
+        border: 0,
+        ...style,
+    };
+
+    if (!onClick) {
+        return (
+            <div className={className} style={squareStyle}>
+                {children}
+            </div>
+        );
+    }
+
     return (
-        <div
+        <button
+            type="button"
             className={className}
             onClick={onClick}
-            style={{
-                background: color,
-                aspectRatio: "1"
-            }}
+            aria-label={ariaLabel}
+            style={squareStyle}
         >
             {children}
-        </div>
+        </button>
     );
 }

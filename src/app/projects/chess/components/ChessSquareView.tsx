@@ -1,6 +1,7 @@
-import { ChessSquare } from "@/app/projects/chess/classes/ChessSquare";
+import {ChessSquare} from "@/app/projects/chess/model/ChessSquare";
+import {ChessColor, PieceKind} from "@/app/projects/chess/model/ChessPiece";
 import Square from "@/components/Grids/SquareView";
-import {Type} from "@/app/projects/chess/classes/ChessPiece";
+import PieceIcon from "@/app/projects/chess/components/PieceIcon";
 import styles from "./ChessSquareView.module.css";
 
 export enum SquareState {
@@ -12,6 +13,7 @@ export enum SquareState {
 
 type Props = {
     square: ChessSquare;
+    piece: Readonly<{kind: PieceKind; color: ChessColor}> | null;
     selected?: boolean;
     possibleMove?: boolean;
     possibleCapture?: boolean;
@@ -20,13 +22,14 @@ type Props = {
 
 export default function ChessSquareView({
                                             square,
+                                            piece,
                                             selected = false,
                                             possibleMove = false,
                                             possibleCapture = false,
                                             onClick
                                         }: Props) {
-    const Piece = square.getPiece();
-    const Icon = Piece?.icon;
+    const file = String.fromCharCode("a".charCodeAt(0) + square.pos.x);
+    const rank = 8 - square.pos.y;
 
     const isLight = square.pos.getSum() % 2 === 0;
     const state = selected
@@ -54,12 +57,14 @@ export default function ChessSquareView({
             onClick={handleClick}
             color={isLight ? "#eeeed2" : "#769656"}
             className={styles.square}
+            ariaLabel={`Feld ${file}${rank}${piece ? `, ${piece.kind}` : ""}`}
         >
             <Square color={overlayColors[state]} className={styles.overlay}>
-                {Icon && (
-                    <Icon
+                {piece && (
+                    <PieceIcon
+                        kind={piece.kind}
+                        color={piece.color}
                         className={styles.piece}
-                        color={Piece.type === Type.WHITE ? "#f8fafc" : "#172033"}
                     />
                 )}
             </Square>

@@ -1,4 +1,4 @@
-import {ChessPiece} from "@/app/projects/chess/classes/ChessPiece";
+import {ChessPiece} from "@/app/projects/chess/model/ChessPiece";
 import {Vector} from "@/core/Vector";
 
 export class ChessSquare{
