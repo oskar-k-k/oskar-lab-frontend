@@ -1,5 +1,3 @@
-import {isNumberObject} from "node:util/types";
-
 export class Vector{
     x: number = 0
     y: number = 0

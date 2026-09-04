@@ -1,0 +1,201 @@
+.game {
+    width: min(100%, 760px);
+    margin: 0 auto;
+    display: grid;
+    gap: 14px;
+}
+
+.playerPanel {
+    min-height: 76px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border: 1px solid var(--color-border-muted);
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--color-surface-elevated), var(--color-surface));
+    box-shadow: var(--shadow-card);
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.activePlayer {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-card), 0 0 0 1px var(--color-primary-soft);
+}
+
+.avatar {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    font-weight: 800;
+    border: 1px solid rgb(255 255 255 / 0.15);
+}
+
+.whiteAvatar {
+    color: #172033;
+    background: #f8fafc;
+}
+
+.blackAvatar {
+    color: #f8fafc;
+    background: #172033;
+}
+
+.playerInfo {
+    min-width: 0;
+    flex: 1;
+    display: grid;
+    gap: 7px;
+}
+
+.playerHeading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+}
+
+.turnBadge {
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--color-primary-soft);
+    color: var(--color-primary-hover);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.capturedPieces {
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
+}
+
+.capturedIcon {
+    width: 25px;
+    height: 25px;
+    padding: 1px;
+    border-radius: 5px;
+    background: rgb(255 255 255 / 0.08);
+}
+
+.noCaptures {
+    color: var(--color-text-subtle);
+    font-size: 0.8rem;
+}
+
+.status {
+    justify-self: center;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border: 1px solid var(--color-border-muted);
+    border-radius: 999px;
+    color: var(--color-text-muted);
+    background: var(--color-background-soft);
+    font-size: 0.875rem;
+    font-weight: 650;
+}
+
+.status[data-status="check"],
+.status[data-status="checkmate"] {
+    border-color: rgb(251 113 133 / 0.45);
+    color: var(--color-danger);
+    background: rgb(251 113 133 / 0.09);
+}
+
+.boardFrame {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) 24px;
+    grid-template-rows: 24px minmax(0, 1fr) 24px;
+    grid-template-areas:
+        ". top ."
+        "left board right"
+        ". bottom .";
+    padding: 8px;
+    border: 1px solid rgb(148 163 184 / 0.2);
+    border-radius: 18px;
+    background: linear-gradient(145deg, #202b3b, #111927);
+    box-shadow:
+        0 24px 60px rgb(0 0 0 / 0.38),
+        inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+.board {
+    grid-area: board;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 5px;
+    box-shadow: 0 0 0 1px rgb(3 11 22 / 0.7);
+}
+
+.fileLabels {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    align-items: center;
+    text-align: center;
+    color: #91a0b5;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.topFiles {
+    grid-area: top;
+}
+
+.bottomFiles {
+    grid-area: bottom;
+}
+
+.rankLabels {
+    display: grid;
+    grid-template-rows: repeat(8, 1fr);
+    align-items: center;
+    text-align: center;
+    color: #91a0b5;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.leftRanks {
+    grid-area: left;
+}
+
+.rightRanks {
+    grid-area: right;
+}
+
+@media (max-width: 600px) {
+    .game {
+        gap: 10px;
+    }
+
+    .playerPanel {
+        min-height: 66px;
+        padding: 10px 12px;
+    }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    .boardFrame {
+        grid-template-columns: 18px minmax(0, 1fr) 18px;
+        grid-template-rows: 18px minmax(0, 1fr) 18px;
+        padding: 5px;
+        border-radius: 12px;
+    }
+
+    .fileLabels,
+    .rankLabels {
+        font-size: 0.65rem;
+    }
+}

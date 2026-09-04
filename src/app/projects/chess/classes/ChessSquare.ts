@@ -13,7 +13,7 @@ export class ChessSquare{
         return this.piece
     }
 
-    setPiece(piece: ChessPiece) : ChessSquare{
+    setPiece(piece: ChessPiece | null) : ChessSquare{
         this.piece = piece
         return this
     }

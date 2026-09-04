@@ -17,30 +17,11 @@ export function PawnIcon(
             >
                 <circle cx="50" cy="24" r="12" />
 
-                <path d="
-                    M40 38
-                    H60
-                    C59 48 57 57 64 67
-                    H36
-                    C43 57 41 48 40 38
-                    Z
-                " />
+                <path d="M40 38 H60 C59 48 57 57 64 67 H36 C43 57 41 48 40 38 Z" />
 
-                <path d="
-                    M33 67
-                    H67
-                    L74 78
-                    H26
-                    Z
-                " />
+                <path d="M33 67 H67 L74 78 H26 Z" />
 
-                <path d="
-                    M24 78
-                    H76
-                    L80 88
-                    H20
-                    Z
-                " />
+                <path d="M24 78 H76 L80 88 H20 Z" />
             </g>
         </svg>
     );

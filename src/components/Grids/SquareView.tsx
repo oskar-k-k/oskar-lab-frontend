@@ -9,7 +9,7 @@ export default function Square({
                                    children,
                                    className,
                                    onClick,
-                                   color = "#dddddd"
+                                   color = "#dddddd",
                                }: Props) {
     return (
         <div
