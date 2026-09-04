@@ -1,3 +1,7 @@
+# Frontend Agent Rules
+
+Read and follow `../AGENTS.md` before changing frontend code.
+
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
