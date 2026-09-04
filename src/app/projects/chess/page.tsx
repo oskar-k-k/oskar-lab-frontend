@@ -13,7 +13,7 @@ const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
 
 export default function ChessPage() {
-    const {board, legalMoves, selectedSquare, selectSquare, snapshot} = useChessGame();
+    const {board, legalMoves, resetGame, selectedSquare, selectSquare, snapshot} = useChessGame();
 
     function getStatusText(): string {
         const player = snapshot.currentTurn === ChessColor.WHITE ? "Weiß" : "Schwarz";
@@ -39,8 +39,13 @@ export default function ChessPage() {
                 capturedPieces={snapshot.capturedPieces[ChessColor.BLACK]}
             />
 
-            <div className={styles.status} data-status={snapshot.status}>
-                {getStatusText()}
+            <div className={styles.gameControls}>
+                <div className={styles.status} data-status={snapshot.status} role="status" aria-live="polite">
+                    {getStatusText()}
+                </div>
+                <button className={styles.resetButton} type="button" onClick={resetGame}>
+                    Neue Partie
+                </button>
             </div>
 
             <div className={styles.boardFrame}>

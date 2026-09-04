@@ -89,8 +89,15 @@
     font-size: 0.8rem;
 }
 
+.gameControls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
 .status {
-    justify-self: center;
     min-height: 32px;
     display: inline-flex;
     align-items: center;
@@ -101,6 +108,24 @@
     background: var(--color-background-soft);
     font-size: 0.875rem;
     font-weight: 650;
+}
+
+.resetButton {
+    min-height: 32px;
+    padding: 6px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    color: var(--color-text-muted);
+    background: var(--color-surface);
+    font-size: 0.8rem;
+    font-weight: 650;
+    transition: 160ms ease;
+}
+
+.resetButton:hover {
+    border-color: var(--color-primary);
+    color: var(--color-text);
+    background: var(--color-surface-hover);
 }
 
 .status[data-status="check"],

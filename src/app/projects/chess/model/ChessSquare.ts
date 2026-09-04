@@ -1,20 +1,18 @@
 import {ChessPiece} from "@/app/projects/chess/model/ChessPiece";
 import {Vector} from "@/core/Vector";
 
-export class ChessSquare{
-    private piece: ChessPiece | null = null
-
+export class ChessSquare {
+    private piece: ChessPiece | null = null;
 
     constructor(
         public readonly pos: Vector,
     ) {}
 
-    getPiece(): ChessPiece | null{
-        return this.piece
+    getPiece(): ChessPiece | null {
+        return this.piece;
     }
 
-    setPiece(piece: ChessPiece | null) : ChessSquare{
-        this.piece = piece
-        return this
+    setPiece(piece: ChessPiece | null): void {
+        this.piece = piece;
     }
 }

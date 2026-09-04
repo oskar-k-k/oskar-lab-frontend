@@ -36,6 +36,7 @@ export type ChessGameSnapshot = Readonly<{
 
 type PieceConstructor = new (color: ChessColor) => ChessPiece;
 
+/** Owns chess rules and state without depending on React or network transport. */
 export class ChessBoard {
     readonly squares = Array2D.create(8, 8, position => new ChessSquare(position));
 
@@ -72,6 +73,7 @@ export class ChessBoard {
         return this._capturedPieces[color];
     }
 
+    /** Returns all moves that are legal for the active player from one square. */
     getLegalMoves(square: ChessSquare): ChessMove[] {
         const piece = square.getPiece();
 
@@ -91,6 +93,7 @@ export class ChessBoard {
             .filter(move => !this.wouldLeaveKingInCheck(move));
     }
 
+    /** Applies a legal serializable command and reports whether it was accepted. */
     playMove(command: ChessMoveCommand): boolean {
         const from = this.squares.tryGet(command.from);
 
@@ -157,6 +160,7 @@ export class ChessBoard {
         return kingSquare ? this.isSquareAttacked(kingSquare, this.oppositeColor(color)) : false;
     }
 
+    /** Creates immutable JSON-compatible data for rendering or transport. */
     toSnapshot(): ChessGameSnapshot {
         const pieces: ChessGameSnapshot["pieces"][number][] = [];
 
@@ -234,7 +238,7 @@ export class ChessBoard {
         capturedSquare.setPiece(null);
         from.setPiece(null);
         to.setPiece(piece);
-        piece.hasMoved = true;
+        piece.markAsMoved();
 
         if (move.type === ChessMoveType.CASTLING) {
             this.moveCastlingRook(move);
@@ -391,7 +395,7 @@ export class ChessBoard {
         rookSquares.to.setPiece(rook);
 
         if (rook) {
-            rook.hasMoved = true;
+            rook.markAsMoved();
         }
     }
 

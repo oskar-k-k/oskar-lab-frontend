@@ -6,7 +6,7 @@ import {ChessMove} from "@/app/projects/chess/model/ChessMove";
 import {ChessSquare} from "@/app/projects/chess/model/ChessSquare";
 
 export function useChessGame() {
-    const [board] = useState(() => new ChessBoard());
+    const [board, setBoard] = useState(() => new ChessBoard());
     const [snapshot, setSnapshot] = useState(() => board.toSnapshot());
     const [selectedSquare, setSelectedSquare] = useState<ChessSquare | null>(null);
     const [legalMoves, setLegalMoves] = useState<ChessMove[]>([]);
@@ -37,9 +37,17 @@ export function useChessGame() {
         setLegalMoves(canSelect ? board.getLegalMoves(square) : []);
     }
 
+    function resetGame(): void {
+        const nextBoard = new ChessBoard();
+        setBoard(nextBoard);
+        setSnapshot(nextBoard.toSnapshot());
+        clearSelection();
+    }
+
     return {
         board,
         legalMoves,
+        resetGame,
         selectedSquare,
         selectSquare,
         snapshot,
