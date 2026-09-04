@@ -1,33 +1,31 @@
 "use client";
 
 import Grid from "@/components/Grids/Grid";
-import {Array2D} from "@/core/Array2D";
-
-const board = new Array2D<number>(8, 8, 0);
-
+import {ChessBoard} from "@/app/projects/chess/classes/ChessBoard";
+import ChessSquareView from "@/app/projects/chess/views/ChessSqaureView";
+import {Vector, vec} from "@/core/Vector";
+import {ChessSquare} from "@/app/projects/chess/classes/ChessSquare";
+import {useState} from "react";
 
 export default function ChessPage() {
+    const [board] = useState(() => new ChessBoard());
+    const [selectedSquare, setSelectedSquare] = useState<ChessSquare | null>(null);
 
-    function handleClick(item: number, row: number, col: number) {
-        console.log("Item:", item);
-        console.log("Position:", row, col);
+
+    function handleClick(square:ChessSquare){
+        setSelectedSquare(square)
+        console.log(square)
     }
 
     return (
-        <Grid cols={board.cols} rows={board.rows} gap={0}>
-            {board.map((item, row, col) => (
-                <span
-                    key={`${row}-${col}`}
-                    onClick={() => handleClick(item, row, col)}
-                    style={{
-                        background:
-                            (row + col) % 2 === 0
-                                ? "#eeeed2"
-                                : "#769656",
-                        aspectRatio: "1",
-                        color: "#225522"
-                    }}
-                >  ( {`${row}-${col}`} )  </span>
+        <Grid cols={8} rows={8} gap={0}>
+            {board.squares.map((pos, square) => (
+                <ChessSquareView
+                    key={pos.toString()}
+                    square={square}
+                    selected={selectedSquare === square}
+                    onClick={handleClick}
+                ></ChessSquareView>
             ))}
         </Grid>
     );
