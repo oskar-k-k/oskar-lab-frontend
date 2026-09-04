@@ -1,5 +1,9 @@
 import {vec, Vector, VectorLike} from "@/core/Vector";
 
+/**
+ * Ein generisches zweidimensionales Raster mit validierten Koordinaten.
+ * Eignet sich für Boards, Karten und andere feste 2D-Strukturen.
+ */
 export class Array2D<T> {
     private readonly data: T[];
 
@@ -35,11 +39,13 @@ export class Array2D<T> {
         return Array2D.create(width, height, () => value);
     }
 
+    /** Liest einen Wert und wirft bei ungültigen Koordinaten einen RangeError. */
     get(position: VectorLike): T {
         this.assertValid(position);
         return this.data[this.getIndex(position)];
     }
 
+    /** Liest einen Wert sicher; außerhalb des Rasters wird undefined zurückgegeben. */
     tryGet(position: VectorLike): T | undefined {
         return this.isValid(position) ? this.data[this.getIndex(position)] : undefined;
     }

@@ -1,5 +1,9 @@
 export type VectorLike = Readonly<{x: number; y: number}>;
 
+/**
+ * Ein unveränderlicher zweidimensionaler Vektor für Positionen und Berechnungen.
+ * Jede Rechenoperation erzeugt eine neue Instanz.
+ */
 export class Vector {
     constructor(
         public readonly x: number,
@@ -8,6 +12,7 @@ export class Vector {
         Object.freeze(this);
     }
 
+    /** Addiert einen Vektor oder Skalar und gibt einen neuen Vector zurück. */
     add(value: VectorLike | number): Vector {
         return typeof value === "number"
             ? new Vector(this.x + value, this.y + value)
@@ -44,6 +49,7 @@ export class Vector {
         return Math.hypot(this.x, this.y);
     }
 
+    /** Gibt einen Vektor mit der Länge 1 zurück; ZERO bleibt ZERO. */
     normalize(): Vector {
         return this.length === 0 ? Vector.ZERO : this.divide(this.length);
     }
@@ -63,6 +69,7 @@ export class Vector {
     static readonly ZERO = new Vector(0, 0);
 }
 
+/** Kurze Factory-Funktion für einen neuen Vector. */
 export function vec(x: number, y: number): Vector {
     return new Vector(x, y);
 }
