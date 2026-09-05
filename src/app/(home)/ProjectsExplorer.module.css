@@ -1,5 +1,39 @@
 .warning { margin-bottom: 24px; padding: 16px; border: 1px solid rgb(250 204 21 / .4); border-radius: 12px; background: rgb(250 204 21 / .1); color: var(--color-text-muted); }
 .resultSummary { margin-bottom: 18px; color: var(--color-text-subtle); font-size: .85rem; }
+.projectGrid { align-items: stretch; }
+.projectCard {
+    position: relative;
+    isolation: isolate;
+}
+
+.projectCard::after,
+.portfolioCard::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(180deg, rgb(255 255 255 / .055), transparent 46%);
+    pointer-events: none;
+}
+
+.portfolioCard {
+    position: relative;
+    isolation: isolate;
+    border-color: rgb(134 239 172 / .55);
+    box-shadow:
+        0 18px 45px rgb(0 0 0 / .34),
+        0 0 0 1px rgb(134 239 172 / .12),
+        0 0 34px rgb(134 239 172 / .1);
+}
+
+.portfolioCard:hover {
+    border-color: var(--color-accent-green);
+    box-shadow:
+        0 22px 52px rgb(0 0 0 / .38),
+        0 0 0 1px rgb(134 239 172 / .22),
+        0 0 42px rgb(134 239 172 / .16);
+}
+
 .empty { display: grid; place-items: center; gap: 10px; min-height: 320px; padding: 40px; border: 1px dashed var(--color-border); border-radius: 18px; text-align: center; background: var(--color-surface); }
 .empty h1 { font-size: clamp(1.5rem, 4vw, 2.2rem); }
 .empty p { color: var(--color-text-muted); }

@@ -30,7 +30,27 @@ export default function ProjectsExplorer({projects, backendAvailable}: Readonly<
         <StandardLayout>
             {!backendAvailable && <p role="status" className={styles.warning}>{t("projects.backendUnavailable")}</p>}
             {query && <p className={styles.resultSummary}>{visibleProjects.length} {t(visibleProjects.length === 1 ? "projects.projectFound" : "projects.projectsFound")}</p>}
-            {visibleProjects.length > 0 ? <Grid>{visibleProjects.map(project => <Card key={project.id} title={project.title ?? ""} description={project.description ?? ""} href={`/projects/${project.path}`} image={project.thumbnail ?? `/projects/${project.path}/thumbnail.png`} />)}</Grid> : <section className={styles.empty}><h1>{t("projects.emptyTitle")}</h1><p>{t("projects.emptyDescription")}</p><button type="button" onClick={() => setQuery("")}>{t("common.clearSearch")}</button></section>}
+            {visibleProjects.length > 0 ? (
+                <Grid className={styles.projectGrid} cardWidth={280}>
+                    {visibleProjects.map(project => (
+                        <Card
+                            key={project.id}
+                            title={project.title ?? ""}
+                            description={project.description ?? ""}
+                            href={`/projects/${project.path}`}
+                            image={project.thumbnail ?? `/projects/${project.path}/thumbnail.png`}
+                            imageAspect="square"
+                            className={project.path === "portfolio" ? styles.portfolioCard : styles.projectCard}
+                        />
+                    ))}
+                </Grid>
+            ) : (
+                <section className={styles.empty}>
+                    <h1>{t("projects.emptyTitle")}</h1>
+                    <p>{t("projects.emptyDescription")}</p>
+                    <button type="button" onClick={() => setQuery("")}>{t("common.clearSearch")}</button>
+                </section>
+            )}
         </StandardLayout>
     </>;
 }

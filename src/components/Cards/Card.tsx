@@ -4,10 +4,18 @@ import styles from "./Card.module.css";
 
 /** Properties for a global content preview. */
 type Props = {
+    /** Main title used as card heading and image alternative text. */
     title: string;
+    /** Optional supporting copy below the title. */
     description?: string;
+    /** Optional internal or external target for linked cards. */
     href?: string;
+    /** Optional preview image shown above the card content. */
     image?: string;
+    /** Controls the reserved preview image format. */
+    imageAspect?: "wide" | "square";
+    /** Optional additional class for local card variants. */
+    className?: string;
 };
 
 /** Reusable content preview that can optionally link to another page. */
@@ -15,7 +23,9 @@ export default function Card({
                                  title,
                                  description,
                                  href,
-                                 image
+                                 image,
+                                 imageAspect = "wide",
+                                 className = "",
                              }: Props) {
 
     const content = (
@@ -27,7 +37,7 @@ export default function Card({
                     width={400}
                     height={250}
                     sizes="(max-width: 600px) 100vw, 400px"
-                    className={styles.image}
+                    className={`${styles.image} ${styles[imageAspect]}`}
                 />
             )}
 
@@ -41,8 +51,8 @@ export default function Card({
         </>
     );
 
-    const className = styles.card;
+    const cardClassName = `${styles.card} ${className}`;
     return href
-        ? <Link href={href} className={className}>{content}</Link>
-        : <article className={className}>{content}</article>;
+        ? <Link href={href} className={cardClassName}>{content}</Link>
+        : <article className={cardClassName}>{content}</article>;
 }
