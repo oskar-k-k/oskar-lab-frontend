@@ -10,6 +10,10 @@ import {useI18n} from "@/lib/i18n/I18nProvider";
 type Props = {
     projectName: string;
     center?: React.ReactNode;
+    /** Compact status text shown before the right-side controls. */
+    status?: React.ReactNode;
+    /** Full accessible description for compact status text. */
+    statusLabel?: string;
     right?: React.ReactNode;
 };
 
@@ -17,6 +21,8 @@ type Props = {
 export default function Header({
                                    projectName,
                                    center,
+                                   status,
+                                   statusLabel,
                                    right,
                                }: Props) {
     const pathname = usePathname();
@@ -44,6 +50,7 @@ export default function Header({
             </div>
 
             <div className={styles.right}>
+                {status && <div role="status" aria-label={statusLabel} title={statusLabel} className={styles.status}>{status}</div>}
                 {right}
                 <LanguageSwitch />
             </div>

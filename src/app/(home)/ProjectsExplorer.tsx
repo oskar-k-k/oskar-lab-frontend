@@ -28,10 +28,14 @@ export default function ProjectsExplorer({projects, backendAvailable}: Readonly<
     return (
         <div className={styles.page}>
             <div className={styles.ambient} aria-hidden="true" />
-            <Header projectName={t("common.projects")} center={<Search value={query} onChange={setQuery} resultCount={visibleProjects.length} label={t("projects.searchLabel")} placeholder={t("projects.searchPlaceholder")} />} />
+            <Header
+                projectName={t("common.projects")}
+                center={<Search value={query} onChange={setQuery} resultCount={visibleProjects.length} label={t("projects.searchLabel")} placeholder={t("projects.searchPlaceholder")} />}
+                status={!backendAvailable ? t("projects.backendUnavailableShort") : undefined}
+                statusLabel={!backendAvailable ? t("projects.backendUnavailable") : undefined}
+            />
             <StandardLayout>
                 <main className={styles.content}>
-                    {!backendAvailable && <p role="status" className={styles.warning}>{t("projects.backendUnavailable")}</p>}
                     {query && <p className={styles.resultSummary}>{visibleProjects.length} {t(visibleProjects.length === 1 ? "projects.projectFound" : "projects.projectsFound")}</p>}
                     {visibleProjects.length > 0 ? (
                         <Grid className={styles.projectGrid} cardWidth={280}>

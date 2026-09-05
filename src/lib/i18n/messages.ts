@@ -4,7 +4,7 @@ export type Locale = typeof locales[number];
 const en = {
     "common.projects": "Projects", "common.search": "Search", "common.clearSearch": "Clear search", "common.results": "results",
     "language.label": "Change language", "language.english": "English", "language.german": "German",
-    "projects.searchLabel": "Search projects", "projects.searchPlaceholder": "Search projects …", "projects.backendUnavailable": "The backend is currently unavailable. Local projects remain accessible.",
+    "projects.searchLabel": "Search projects", "projects.searchPlaceholder": "Search projects …", "projects.backendUnavailable": "The backend is currently unavailable. Local projects remain accessible.", "projects.backendUnavailableShort": "Backend offline",
     "projects.projectFound": "project found", "projects.projectsFound": "projects found", "projects.emptyTitle": "No project found", "projects.emptyDescription": "Try another search term or clear the search.",
     "projects.portfolioDescription": "Software, ideas, and the person behind Oskar Lab.", "projects.coreDescription": "The living style guide for UI components, design tokens, and core utilities.", "projects.chessDescription": "A complete chess game with all important rules.",
     "chess.white": "White", "chess.black": "Black", "chess.playerOne": "Player 1 · White", "chess.playerTwo": "Player 2 · Black", "chess.turn": "To move", "chess.inCheck": "{player} is in check",
@@ -48,7 +48,7 @@ const en = {
 const de: Record<keyof typeof en, string> = {
     "common.projects": "Projekte", "common.search": "Suchen", "common.clearSearch": "Suche löschen", "common.results": "Treffer",
     "language.label": "Sprache wechseln", "language.english": "Englisch", "language.german": "Deutsch",
-    "projects.searchLabel": "Projekte durchsuchen", "projects.searchPlaceholder": "Projekte durchsuchen …", "projects.backendUnavailable": "Das Backend ist gerade nicht erreichbar. Lokale Projekte bleiben weiterhin verfügbar.",
+    "projects.searchLabel": "Projekte durchsuchen", "projects.searchPlaceholder": "Projekte durchsuchen …", "projects.backendUnavailable": "Das Backend ist gerade nicht erreichbar. Lokale Projekte bleiben weiterhin verfügbar.", "projects.backendUnavailableShort": "Backend offline",
     "projects.projectFound": "Projekt gefunden", "projects.projectsFound": "Projekte gefunden", "projects.emptyTitle": "Kein Projekt gefunden", "projects.emptyDescription": "Versuche einen anderen Suchbegriff oder lösche die Suche.",
     "projects.portfolioDescription": "Software, Ideen und der Mensch hinter Oskar Lab.", "projects.coreDescription": "Der lebende Styleguide für UI-Komponenten, Design-Tokens und Core-Helfer.", "projects.chessDescription": "Ein vollständiges Schachspiel mit allen wichtigen Regeln.",
     "chess.white": "Weiß", "chess.black": "Schwarz", "chess.playerOne": "Spieler 1 · Weiß", "chess.playerTwo": "Spieler 2 · Schwarz", "chess.turn": "Am Zug", "chess.inCheck": "{player} ist im Schach",
