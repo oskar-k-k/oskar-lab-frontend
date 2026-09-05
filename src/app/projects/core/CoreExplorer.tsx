@@ -9,7 +9,7 @@ import Header from "@/components/Header/Header";
 import StandardLayout from "@/components/Layouts/StandardLayout";
 import Search from "@/components/Search/Search";
 import type {SourceDocumentation} from "@/lib/documentation/sourceDocumentation";
-import {countDocumentedSymbols, filterDesignReferences, filterDocumentation, type DesignReference} from "./searchDocumentation";
+import {countDocumentedSymbols, filterDocumentation, filterReferences, type SearchReference} from "./searchDocumentation";
 import styles from "./CorePage.module.css";
 
 type Tab = "design" | "components" | "core";
@@ -19,11 +19,22 @@ const tabs: ReadonlyArray<{id: Tab; label: string; detail: string}> = [
     {id: "core", label: "Core Classes", detail: "Auto-Dokumentation"},
 ];
 const colors = ["background", "background-soft", "surface", "surface-elevated", "primary", "accent-purple", "accent-blue", "accent-cyan", "accent-green", "accent-yellow", "accent-orange", "accent-red"];
+type DesignReference = SearchReference & Readonly<{token?: string}>;
+type ComponentReference = SearchReference & Readonly<{wide?: boolean}>;
 const designReferences: readonly DesignReference[] = [
-    {title: "Farben & Tokens", description: "Globale Farben und Design-Tokens mit Live-Farbvorschau.", keywords: ["theme", "variables", "css"]},
-    {title: "Typografie", description: "Überschriften, Absätze, Zitate und Code-Darstellung.", keywords: ["text", "schrift", "heading"]},
-    {title: "Formulare", description: "Inputs, Select, Textarea, Checkbox, Radio und Fortschritt.", keywords: ["input", "formular", "select"]},
-    {title: "Listen, Tabellen & Status", description: "Strukturierte Inhalte, Badges und Rückmeldungen.", keywords: ["table", "list", "badge"]},
+    ...colors.map(color => ({id: `color-${color}`, title: color, description: `Globaler Farbwert --color-${color}.`, keywords: ["farbe", "color", "token", "css", ...(color.startsWith("background") ? ["hintergrund"] : [])], token: color})),
+    {id: "typography", title: "Typografie", description: "Überschriften, Absätze, Zitate und Code-Darstellung.", keywords: ["text", "schrift", "heading"]},
+    {id: "forms", title: "Formulare", description: "Inputs, Select, Textarea, Checkbox, Radio und Fortschritt.", keywords: ["input", "formular", "select", "textfield"]},
+    {id: "structured-content", title: "Listen, Tabellen & Status", description: "Strukturierte Inhalte, Badges und Rückmeldungen.", keywords: ["table", "tabelle", "list", "liste", "badge"]},
+];
+const componentReferences: readonly ComponentReference[] = [
+    {id: "button", title: "Button", description: "Primäre, sekundäre und deaktivierte Aktionen.", keywords: ["buttons", "knopf", "aktion"]},
+    {id: "card", title: "Card", description: "Karten für Inhalte und verlinkte Vorschauen.", keywords: ["cards", "karte", "project"]},
+    {id: "grid", title: "Grid", description: "Responsive Raster für Karten und andere Inhalte.", keywords: ["grids", "raster", "layout"]},
+    {id: "square", title: "SquareView", description: "Quadratische, frei einfärbbare Rasterzelle.", keywords: ["square", "quadrat", "cell"]},
+    {id: "search", title: "Search", description: "Kontrolliertes Suchfeld mit Löschaktion.", keywords: ["suche", "searchbar", "input"]},
+    {id: "header", title: "Header", description: "Globale Kopfzeile mit optionalen Inhaltsbereichen.", keywords: ["navigation", "kopfzeile"], wide: true},
+    {id: "layout", title: "StandardLayout", description: "Zentrierter, responsiver Seiteninhalt.", keywords: ["layout", "seite", "container"], wide: true},
 ];
 
 function DocumentationList({files}: Readonly<{files: readonly SourceDocumentation[]}>) {
@@ -66,19 +77,23 @@ function DesignTab() {
     </div>;
 }
 
-function ComponentsTab({documentation}: Readonly<{documentation: readonly SourceDocumentation[]}>) {
+function ComponentGallery({references}: Readonly<{references: readonly ComponentReference[]}>) {
     const [previewQuery, setPreviewQuery] = useState("");
+    return <div className={styles.previewGrid}>{references.map(reference => <article className={`${styles.preview} ${reference.wide ? styles.widePreview : ""}`} key={reference.id}><h3>{reference.title}</h3>
+        {reference.id === "button" && <div className={styles.demoRow}><Button variant="primary">Primary</Button><Button>Secondary</Button><Button disabled>Disabled</Button></div>}
+        {reference.id === "card" && <Card title="Project Card" description="Globale Vorschaukarte mit Titel und Beschreibung." />}
+        {reference.id === "grid" && <Grid cardWidth={70} gap={8}>{[1, 2, 3].map(item => <div className={styles.gridItem} key={item}>{item}</div>)}</Grid>}
+        {reference.id === "square" && <div className={styles.squareDemo}><Square color="var(--color-primary)" /><Square color="var(--color-accent-cyan)" /></div>}
+        {reference.id === "search" && <Search value={previewQuery} onChange={setPreviewQuery} label="Beispiel durchsuchen" placeholder="Beispiel durchsuchen …" />}
+        {reference.id === "header" && <div className={styles.componentFrame}><Header projectName="Preview" center={<span>Center Slot</span>} right={<span>Right Slot</span>} /></div>}
+        {reference.id === "layout" && <div className={styles.layoutFrame}><StandardLayout maxWidth={560} padding={18}><div className={styles.gridItem}>Zentrierter Inhalt</div></StandardLayout></div>}
+    </article>)}</div>;
+}
+
+function ComponentsTab({documentation}: Readonly<{documentation: readonly SourceDocumentation[]}>) {
     return <div className={styles.tabContent}>
         <section className={styles.section}><h2>Live-Komponenten</h2><p className={styles.intro}>Die echten globalen Komponenten, mit sinnvollen Beispiel-Props gerendert.</p>
-            <div className={styles.previewGrid}>
-                <article className={styles.preview}><h3>Button</h3><div className={styles.demoRow}><Button variant="primary">Primary</Button><Button>Secondary</Button><Button disabled>Disabled</Button></div></article>
-                <article className={styles.preview}><h3>Card</h3><Card title="Project Card" description="Globale Vorschaukarte mit Titel und Beschreibung." /></article>
-                <article className={styles.preview}><h3>Grid</h3><Grid cardWidth={70} gap={8}>{[1, 2, 3].map(item => <div className={styles.gridItem} key={item}>{item}</div>)}</Grid></article>
-                <article className={styles.preview}><h3>SquareView</h3><div className={styles.squareDemo}><Square color="var(--color-primary)" /><Square color="var(--color-accent-cyan)" /></div></article>
-                <article className={styles.preview}><h3>Search</h3><Search value={previewQuery} onChange={setPreviewQuery} label="Beispiel durchsuchen" placeholder="Beispiel durchsuchen …" /></article>
-                <article className={`${styles.preview} ${styles.widePreview}`}><h3>Header</h3><div className={styles.componentFrame}><Header projectName="Preview" center={<span>Center Slot</span>} right={<span>Right Slot</span>} /></div></article>
-                <article className={`${styles.preview} ${styles.widePreview}`}><h3>StandardLayout</h3><div className={styles.layoutFrame}><StandardLayout maxWidth={560} padding={18}><div className={styles.gridItem}>Zentrierter Inhalt</div></StandardLayout></div></article>
-            </div>
+            <ComponentGallery references={componentReferences} />
         </section>
         <section className={styles.section}><h2>Automatische Component API</h2><p className={styles.intro}>Dateien, Funktionen und Props werden direkt aus <code>src/components</code> gelesen.</p><DocumentationList files={documentation} /></section>
     </div>;
@@ -88,10 +103,11 @@ export default function CoreExplorer({coreDocumentation, componentDocumentation}
     const [activeTab, setActiveTab] = useState<Tab>("design");
     const [query, setQuery] = useState("");
     const searchResults = useMemo(() => {
-        const design = filterDesignReferences(designReferences, query);
+        const design = filterReferences(designReferences, query);
+        const componentPreviews = filterReferences(componentReferences, query);
         const components = filterDocumentation(componentDocumentation, query);
         const core = filterDocumentation(coreDocumentation, query);
-        return {design, components, core, count: design.length + countDocumentedSymbols(components) + countDocumentedSymbols(core)};
+        return {design, componentPreviews, components, core, count: design.length + componentPreviews.length + countDocumentedSymbols(components) + countDocumentedSymbols(core)};
     }, [componentDocumentation, coreDocumentation, query]);
 
     function handleTabKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, index: number): void {
@@ -112,7 +128,8 @@ export default function CoreExplorer({coreDocumentation, componentDocumentation}
         <div className={styles.tabs} role="tablist" aria-label="Dokumentationsbereiche">{tabs.map((tab, index) => <button id={`core-tab-${tab.id}`} key={tab.id} type="button" role="tab" aria-controls={`core-panel-${tab.id}`} aria-selected={activeTab === tab.id} tabIndex={activeTab === tab.id ? 0 : -1} className={activeTab === tab.id ? styles.activeTab : ""} onClick={() => setActiveTab(tab.id)} onKeyDown={event => handleTabKeyDown(event, index)}><strong>{tab.label}</strong><span>{tab.detail}</span></button>)}</div>
         {isSearching ? <main className={styles.searchResults} aria-label="Suchergebnisse"><section className={styles.section}><h2>{searchResults.count} Treffer für „{query.trim()}“</h2>
             {searchResults.count === 0 && <div className={styles.noResults}><p>Keine UI, Komponente, Klasse oder Methode passt zu deiner Suche.</p><Button onClick={() => setQuery("")}>Suche löschen</Button></div>}
-            {searchResults.design.length > 0 && <div className={styles.resultGroup}><h3>UI Design</h3><div className={styles.designResults}>{searchResults.design.map(reference => <article key={reference.title}><strong>{reference.title}</strong><p>{reference.description}</p></article>)}</div></div>}
+            {searchResults.design.length > 0 && <div className={styles.resultGroup}><h3>UI Design</h3><div className={styles.designResults}>{searchResults.design.map(reference => <article key={reference.id}>{reference.token && <div className={styles.resultSwatch} style={{background: `var(--color-${reference.token})`}} />}<strong>{reference.title}</strong><p>{reference.description}</p></article>)}</div></div>}
+            {searchResults.componentPreviews.length > 0 && <div className={styles.resultGroup}><h3>Live-Komponenten</h3><ComponentGallery references={searchResults.componentPreviews} /></div>}
             {searchResults.components.length > 0 && <div className={styles.resultGroup}><h3>Components</h3><DocumentationList files={searchResults.components} /></div>}
             {searchResults.core.length > 0 && <div className={styles.resultGroup}><h3>Core Classes</h3><DocumentationList files={searchResults.core} /></div>}
         </section></main> : <main id={`core-panel-${activeTab}`} role="tabpanel" aria-labelledby={`core-tab-${activeTab}`}>{activeTab === "design" && <DesignTab />}{activeTab === "components" && <ComponentsTab documentation={componentDocumentation} />}{activeTab === "core" && <div className={styles.tabContent}><section className={styles.section}><h2>Automatische Core API</h2><p className={styles.intro}>Diese Ansicht scannt <code>src/core</code>. JSDoc-Kommentare über Klassen und Methoden erscheinen automatisch als Beschreibung.</p><DocumentationList files={coreDocumentation} /></section></div>}</main>}

@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {countDocumentedSymbols, filterDesignReferences, filterDocumentation} from "../searchDocumentation";
+import {countDocumentedSymbols, filterDocumentation, filterReferences} from "../searchDocumentation";
 import type {SourceDocumentation} from "@/lib/documentation/sourceDocumentation";
 
 const documentation: SourceDocumentation[] = [{
@@ -24,7 +24,8 @@ describe("core reference search", () => {
     });
 
     it("searches design titles, descriptions and keywords", () => {
-        const references = [{title: "Farben & Tokens", description: "Globale Farbwerte", keywords: ["theme"]}];
-        expect(filterDesignReferences(references, "theme")).toEqual(references);
+        const references = [{id: "colors", title: "Farben & Tokens", description: "Globale Farbwerte", keywords: ["theme"]}];
+        expect(filterReferences(references, "theme")).toEqual(references);
+        expect(filterReferences(references, "globale theme")).toEqual(references);
     });
 });

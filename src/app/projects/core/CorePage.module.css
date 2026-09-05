@@ -91,6 +91,7 @@
 .resultGroup > h3 { color: var(--color-accent-cyan); font-family: var(--font-geist-mono); font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; }
 .designResults { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 .designResults article { padding: 18px; border: 1px solid var(--color-border-muted); border-radius: 12px; background: var(--color-background-soft); }
+.resultSwatch { height: 62px; margin: -10px -10px 14px; border: 1px solid var(--color-border-muted); border-radius: 8px; }
 .designResults p, .noResults p { margin-top: 6px; color: var(--color-text-muted); line-height: 1.55; }
 .noResults { display: grid; justify-items: start; gap: 14px; margin-top: 20px; }
 .docCard { min-width: 0; padding: 20px; border: 1px solid var(--color-border-muted); border-radius: 14px; background: var(--color-background-soft); }

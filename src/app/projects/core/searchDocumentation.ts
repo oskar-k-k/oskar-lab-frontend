@@ -1,9 +1,10 @@
 import type {DocumentedSymbol, SourceDocumentation} from "@/lib/documentation/sourceDocumentation";
 
-export type DesignReference = Readonly<{title: string; description: string; keywords: readonly string[]}>;
+export type SearchReference = Readonly<{id: string; title: string; description: string; keywords: readonly string[]}>;
 
 function includesQuery(values: readonly (string | undefined)[], query: string): boolean {
-    return values.some(value => value?.toLocaleLowerCase("de").includes(query));
+    const searchableText = values.filter(Boolean).join(" ").toLocaleLowerCase("de");
+    return query.split(/\s+/).every(term => searchableText.includes(term));
 }
 
 function filterSymbol(symbol: DocumentedSymbol, query: string): DocumentedSymbol | null {
@@ -25,7 +26,7 @@ export function filterDocumentation(files: readonly SourceDocumentation[], searc
 }
 
 /** Filters the manually curated visual design areas shown in the living documentation. */
-export function filterDesignReferences(references: readonly DesignReference[], searchQuery: string): DesignReference[] {
+export function filterReferences<T extends SearchReference>(references: readonly T[], searchQuery: string): T[] {
     const query = searchQuery.trim().toLocaleLowerCase("de");
     if (!query) return [...references];
     return references.filter(reference => includesQuery([reference.title, reference.description, ...reference.keywords], query));
