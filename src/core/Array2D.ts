@@ -39,13 +39,13 @@ export class Array2D<T> {
         return Array2D.create(width, height, () => value);
     }
 
-    /** Liest einen Wert und wirft bei ungültigen Koordinaten einen RangeError. */
+    /** Reads a value and throws RangeError for invalid coordinates. */
     get(position: VectorLike): T {
         this.assertValid(position);
         return this.data[this.getIndex(position)];
     }
 
-    /** Liest einen Wert sicher; außerhalb des Rasters wird undefined zurückgegeben. */
+    /** Safely reads a value and returns undefined outside the grid. */
     tryGet(position: VectorLike): T | undefined {
         return this.isValid(position) ? this.data[this.getIndex(position)] : undefined;
     }

@@ -3,6 +3,7 @@ import {ChessColor, PieceKind} from "@/app/projects/chess/model/ChessPiece";
 import Square from "@/components/Grids/SquareView";
 import PieceIcon from "@/app/projects/chess/components/PieceIcon";
 import styles from "./ChessSquareView.module.css";
+import {useI18n} from "@/lib/i18n/I18nProvider";
 
 export enum SquareState {
     DEFAULT,
@@ -28,6 +29,7 @@ export default function ChessSquareView({
                                             possibleCapture = false,
                                             onClick
                                         }: Props) {
+    const {t} = useI18n();
     const file = String.fromCharCode("a".charCodeAt(0) + square.pos.x);
     const rank = 8 - square.pos.y;
 
@@ -57,7 +59,7 @@ export default function ChessSquareView({
             onClick={handleClick}
             color={isLight ? "#eeeed2" : "#769656"}
             className={styles.square}
-            ariaLabel={`Feld ${file}${rank}${piece ? `, ${piece.kind}` : ""}`}
+            ariaLabel={`${t("chess.square", {square: `${file}${rank}`})}${piece ? `, ${t(`chess.${piece.kind}`)}` : ""}`}
         >
             <Square color={overlayColors[state]} className={styles.overlay}>
                 {piece && (

@@ -3,7 +3,7 @@ import {ReactNode} from "react";
 import styles from "./Button.module.css";
 import { ButtonHTMLAttributes } from "react";
 
-/** Eigenschaften der globalen Button-Komponente. */
+/** Properties for the global Button component. */
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
     children: ReactNode;
     className?: string;
@@ -12,7 +12,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: "primary" | "secondary";
 }
 
-/** Globale Aktion, die optional als interner Next.js-Link gerendert wird. */
+/** Global action that can optionally render as an internal Next.js link. */
 export default function Button({
     children,
     className,

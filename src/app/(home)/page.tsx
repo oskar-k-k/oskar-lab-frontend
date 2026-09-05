@@ -8,14 +8,14 @@ const localProjects: Project[] = [
         id: -2,
         path: "core",
         title: "Core & Design",
-        description: "Der lebende Styleguide für UI-Komponenten, Design-Tokens und Core-Helfer.",
+        description: "The living style guide for UI components, design tokens, and core utilities.",
         thumbnail: "/projects/core/thumbnail.svg",
     },
     {
         id: -1,
         path: "chess",
         title: "Chess",
-        description: "Ein vollständiges Schachspiel mit allen wichtigen Regeln.",
+        description: "A complete chess game with all important rules.",
     },
 ];
 

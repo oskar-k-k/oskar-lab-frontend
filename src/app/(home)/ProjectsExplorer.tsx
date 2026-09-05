@@ -8,23 +8,29 @@ import StandardLayout from "@/components/Layouts/StandardLayout";
 import Search from "@/components/Search/Search";
 import type {Project} from "@/lib/api/projects";
 import styles from "./ProjectsExplorer.module.css";
+import {useI18n} from "@/lib/i18n/I18nProvider";
 
 /** Displays and filters all available Oskar Lab projects. */
 export default function ProjectsExplorer({projects, backendAvailable}: Readonly<{projects: readonly Project[]; backendAvailable: boolean}>) {
     const [query, setQuery] = useState("");
+    const {t} = useI18n();
+    const localizedProjects = useMemo(() => projects.map(project => ({
+        ...project,
+        description: project.path === "core" ? t("projects.coreDescription") : project.path === "chess" ? t("projects.chessDescription") : project.description,
+    })), [projects, t]);
     const visibleProjects = useMemo(() => {
         const normalizedQuery = query.trim().toLocaleLowerCase("de");
-        if (!normalizedQuery) return projects;
-        return projects.filter(project => [project.title, project.description, project.path]
+        if (!normalizedQuery) return localizedProjects;
+        return localizedProjects.filter(project => [project.title, project.description, project.path]
             .some(value => value?.toLocaleLowerCase("de").includes(normalizedQuery)));
-    }, [projects, query]);
+    }, [localizedProjects, query]);
 
     return <>
-        <Header projectName="Projects" center={<Search value={query} onChange={setQuery} resultCount={visibleProjects.length} label="Projekte durchsuchen" placeholder="Projekte durchsuchen …" />} />
+        <Header projectName={t("common.projects")} center={<Search value={query} onChange={setQuery} resultCount={visibleProjects.length} label={t("projects.searchLabel")} placeholder={t("projects.searchPlaceholder")} />} />
         <StandardLayout>
-            {!backendAvailable && <p role="status" className={styles.warning}>Das Backend ist gerade nicht erreichbar. Lokale Projekte bleiben weiterhin verfügbar.</p>}
-            {query && <p className={styles.resultSummary}>{visibleProjects.length} {visibleProjects.length === 1 ? "Projekt" : "Projekte"} gefunden</p>}
-            {visibleProjects.length > 0 ? <Grid>{visibleProjects.map(project => <Card key={project.id} title={project.title ?? ""} description={project.description ?? ""} href={`/projects/${project.path}`} image={project.thumbnail ?? `/projects/${project.path}/thumbnail.png`} />)}</Grid> : <section className={styles.empty}><h1>Kein Projekt gefunden</h1><p>Versuche einen anderen Suchbegriff oder lösche die Suche.</p><button type="button" onClick={() => setQuery("")}>Suche löschen</button></section>}
+            {!backendAvailable && <p role="status" className={styles.warning}>{t("projects.backendUnavailable")}</p>}
+            {query && <p className={styles.resultSummary}>{visibleProjects.length} {t(visibleProjects.length === 1 ? "projects.projectFound" : "projects.projectsFound")}</p>}
+            {visibleProjects.length > 0 ? <Grid>{visibleProjects.map(project => <Card key={project.id} title={project.title ?? ""} description={project.description ?? ""} href={`/projects/${project.path}`} image={project.thumbnail ?? `/projects/${project.path}/thumbnail.png`} />)}</Grid> : <section className={styles.empty}><h1>{t("projects.emptyTitle")}</h1><p>{t("projects.emptyDescription")}</p><button type="button" onClick={() => setQuery("")}>{t("common.clearSearch")}</button></section>}
         </StandardLayout>
     </>;
 }

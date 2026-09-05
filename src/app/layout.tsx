@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import {cookies} from "next/headers";
+import I18nProvider from "@/lib/i18n/I18nProvider";
+import {parseLocale} from "@/lib/i18n/messages";
 import "../styles/globals.css";
 
 const geistSans = Geist({
@@ -14,20 +17,21 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Oskar Lab",
-  description: "Persönliche Plattform für interaktive Projekte und Experimente",
+  description: "A personal platform for interactive projects and experiments",
 };
 
-export default function RootLayout({children,}: Readonly<{
+export default async function RootLayout({children,}: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = parseLocale((await cookies()).get("oskar-lab-locale")?.value);
   return (
 
       <html
-          lang="de"
+          lang={locale}
           className={`${geistSans.variable} ${geistMono.variable}`}
       >
       <body>
-      {children}
+      <I18nProvider initialLocale={locale}>{children}</I18nProvider>
       </body>
       </html>
   );

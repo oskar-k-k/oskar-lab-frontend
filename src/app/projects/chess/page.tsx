@@ -8,32 +8,34 @@ import ChessSquareView from "@/app/projects/chess/components/ChessSquareView";
 import PlayerPanel from "@/app/projects/chess/components/PlayerPanel";
 import {useChessGame} from "@/app/projects/chess/hooks/useChessGame";
 import styles from "./ChessPage.module.css";
+import {useI18n} from "@/lib/i18n/I18nProvider";
 
 const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
 
 export default function ChessPage() {
     const {board, legalMoves, resetGame, selectedSquare, selectSquare, snapshot} = useChessGame();
+    const {t} = useI18n();
 
     function getStatusText(): string {
-        const player = snapshot.currentTurn === ChessColor.WHITE ? "Weiß" : "Schwarz";
+        const player = t(snapshot.currentTurn === ChessColor.WHITE ? "chess.white" : "chess.black");
 
         switch (snapshot.status) {
             case GameStatus.CHECK:
-                return `${player} ist im Schach`;
+                return t("chess.inCheck", {player});
             case GameStatus.CHECKMATE:
-                return `Schachmatt – ${player} hat verloren`;
+                return t("chess.checkmate", {player});
             case GameStatus.STALEMATE:
-                return "Patt – Unentschieden";
+                return t("chess.stalemate");
             default:
-                return `Am Zug: ${player}`;
+                return t("chess.currentTurn", {player});
         }
     }
 
     return (
         <div className={styles.game}>
             <PlayerPanel
-                name="Spieler 2 · Schwarz"
+                name={t("chess.playerTwo")}
                 color={ChessColor.BLACK}
                 active={snapshot.currentTurn === ChessColor.BLACK}
                 capturedPieces={snapshot.capturedPieces[ChessColor.BLACK]}
@@ -44,7 +46,7 @@ export default function ChessPage() {
                     {getStatusText()}
                 </div>
                 <button className={styles.resetButton} type="button" onClick={resetGame}>
-                    Neue Partie
+                    {t("chess.newGame")}
                 </button>
             </div>
 
@@ -91,7 +93,7 @@ export default function ChessPage() {
             </div>
 
             <PlayerPanel
-                name="Spieler 1 · Weiß"
+                name={t("chess.playerOne")}
                 color={ChessColor.WHITE}
                 active={snapshot.currentTurn === ChessColor.WHITE}
                 capturedPieces={snapshot.capturedPieces[ChessColor.WHITE]}

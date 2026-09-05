@@ -1,6 +1,7 @@
 import {ChessColor, PieceKind} from "@/app/projects/chess/model/ChessPiece";
 import PieceIcon from "@/app/projects/chess/components/PieceIcon";
 import styles from "../ChessPage.module.css";
+import {useI18n} from "@/lib/i18n/I18nProvider";
 
 type Props = {
     name: string;
@@ -10,22 +11,23 @@ type Props = {
 };
 
 export default function PlayerPanel({name, color, active, capturedPieces}: Props) {
+    const {t} = useI18n();
     return (
         <section
             className={`${styles.playerPanel} ${active ? styles.activePlayer : ""}`}
         >
             <div className={`${styles.avatar} ${color === ChessColor.WHITE ? styles.whiteAvatar : styles.blackAvatar}`}>
-                {color === ChessColor.WHITE ? "W" : "S"}
+                {t(color === ChessColor.WHITE ? "chess.white" : "chess.black").charAt(0)}
             </div>
 
             <div className={styles.playerInfo}>
                 <div className={styles.playerHeading}>
                     <strong>{name}</strong>
-                    {active && <span className={styles.turnBadge}>Am Zug</span>}
+                    {active && <span className={styles.turnBadge}>{t("chess.turn")}</span>}
                 </div>
-                <div className={styles.capturedPieces} aria-label={`${name}: geschlagene Figuren`}>
+                <div className={styles.capturedPieces} aria-label={t("chess.capturedPieces", {player: name})}>
                     {capturedPieces.length === 0 && (
-                        <span className={styles.noCaptures}>Noch keine Figuren geschlagen</span>
+                        <span className={styles.noCaptures}>{t("chess.noCaptures")}</span>
                     )}
                     {capturedPieces.map((piece, index) => (
                         <PieceIcon
@@ -33,7 +35,7 @@ export default function PlayerPanel({name, color, active, capturedPieces}: Props
                             kind={piece.kind}
                             color={piece.color}
                             className={styles.capturedIcon}
-                            aria-label={piece.kind}
+                            aria-label={t(`chess.${piece.kind}`)}
                         />
                     ))}
                 </div>

@@ -103,12 +103,12 @@ async function generateSourceDocumentation(directory: string): Promise<SourceDoc
     return Promise.all(files.sort().map(async filePath => parseSource(filePath, await readFile(filePath, "utf8"))));
 }
 
-/** Generiert die Dokumentation für alle projektübergreifenden Core-Dateien. */
+/** Generates documentation for all shared Core source files. */
 export function generateCoreDocumentation(): Promise<SourceDocumentation[]> {
     return generateSourceDocumentation(path.join(process.cwd(), "src", "core"));
 }
 
-/** Generiert die Dokumentation für alle globalen React-Komponenten. */
+/** Generates documentation for all global React components. */
 export function generateComponentDocumentation(): Promise<SourceDocumentation[]> {
     return generateSourceDocumentation(path.join(process.cwd(), "src", "components"));
 }

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import styles from "./Header.module.css";
 import {usePathname} from "next/navigation";
+import LanguageSwitch from "@/components/LanguageSwitch/LanguageSwitch";
+import {useI18n} from "@/lib/i18n/I18nProvider";
 
 /** Properties for the shared project header and its optional slots. */
 type Props = {
@@ -18,6 +20,7 @@ export default function Header({
                                    right,
                                }: Props) {
     const pathname = usePathname();
+    const {t} = useI18n();
 
     const isRoot = pathname === "/";
 
@@ -31,7 +34,7 @@ export default function Header({
                             href="/"
                             className={styles.back}
                         >
-                            ← Projects
+                            ← {t("common.projects")}
                         </Link>
 
                         <span className={styles.divider} />
@@ -50,6 +53,7 @@ export default function Header({
 
             <div className={styles.right}>
                 {right}
+                <LanguageSwitch />
             </div>
         </header>
     );

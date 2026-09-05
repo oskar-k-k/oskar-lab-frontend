@@ -12,7 +12,7 @@ export class Vector {
         Object.freeze(this);
     }
 
-    /** Addiert einen Vektor oder Skalar und gibt einen neuen Vector zurück. */
+    /** Adds a vector or scalar and returns a new Vector. */
     add(value: VectorLike | number): Vector {
         return typeof value === "number"
             ? new Vector(this.x + value, this.y + value)
@@ -49,7 +49,7 @@ export class Vector {
         return Math.hypot(this.x, this.y);
     }
 
-    /** Gibt einen Vektor mit der Länge 1 zurück; ZERO bleibt ZERO. */
+    /** Returns a vector of length 1; ZERO remains ZERO. */
     normalize(): Vector {
         return this.length === 0 ? Vector.ZERO : this.divide(this.length);
     }
@@ -69,7 +69,7 @@ export class Vector {
     static readonly ZERO = new Vector(0, 0);
 }
 
-/** Kurze Factory-Funktion für einen neuen Vector. */
+/** Creates a new Vector with concise syntax. */
 export function vec(x: number, y: number): Vector {
     return new Vector(x, y);
 }
