@@ -64,8 +64,17 @@ export default function PortfolioPage() {
 
         <section className={styles.toolbox}><div><p className={styles.sectionLabel}>05 · {t("portfolio.stackLabel")}</p><h2>{t("portfolio.stackTitle")}</h2><p>{t("portfolio.stackText")}</p></div><div className={styles.skills}>{skills.map(skill => <span key={skill}>{skill}</span>)}</div></section>
 
-        <section className={styles.mindset}><p className={styles.sectionLabel}>06 · {t("portfolio.mindsetLabel")}</p><blockquote>{t("portfolio.mindsetTitle")}</blockquote><p>{t("portfolio.mindsetText")}</p></section>
+        <section className={styles.personal}>
+            <div className={styles.personalIntro}><p className={styles.sectionLabel}>06 · {t("portfolio.personalLabel")}</p><h2>{t("portfolio.personalTitle")}</h2><p>{t("portfolio.personalIntro")}</p></div>
+            <div className={styles.personalGrid}>
+                <article><span>01</span><h3>{t("portfolio.movementTitle")}</h3><p>{t("portfolio.movementText")}</p></article>
+                <article><span>02</span><h3>{t("portfolio.growthTitle")}</h3><p>{t("portfolio.growthText")}</p></article>
+                <article><span>03</span><h3>{t("portfolio.balanceTitle")}</h3><p>{t("portfolio.balanceText")}</p></article>
+            </div>
+        </section>
 
-        <footer className={styles.footer}><p className={styles.sectionLabel}>07 · {t("portfolio.contactLabel")}</p><h2>{t("portfolio.footerTitle")}</h2><p>{t("portfolio.footerText")}</p><a href="mailto:o.konczarek@gmail.com">{t("portfolio.email")} <span>↗</span></a><small>© {new Date().getFullYear()} Oskar Konczarek</small></footer>
+        <section className={styles.mindset}><p className={styles.sectionLabel}>07 · {t("portfolio.mindsetLabel")}</p><blockquote>{t("portfolio.mindsetTitle")}</blockquote><p>{t("portfolio.mindsetText")}</p></section>
+
+        <footer className={styles.footer}><p className={styles.sectionLabel}>08 · {t("portfolio.contactLabel")}</p><h2>{t("portfolio.footerTitle")}</h2><p>{t("portfolio.footerText")}</p><a href="mailto:o.konczarek@gmail.com">{t("portfolio.email")} <span>↗</span></a><small>© {new Date().getFullYear()} Oskar Konczarek</small></footer>
     </main>;
 }
