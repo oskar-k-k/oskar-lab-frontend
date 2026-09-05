@@ -23,6 +23,18 @@ describe("core reference search", () => {
         expect(result[0].symbols[0].members).toHaveLength(2);
     });
 
+    it("ranks an exact symbol name above incidental signature matches", () => {
+        const incidentalFile: SourceDocumentation = {
+            path: "src/core/Array2D.ts",
+            symbols: [{name: "Array2D", kind: "class", signature: "class Array2D", description: "", members: [
+                {name: "get", signature: "get(position: Vector): unknown", description: ""},
+            ]}],
+        };
+
+        const result = filterDocumentation([incidentalFile, ...documentation], "Vector");
+        expect(result.map(file => file.path)).toEqual(["src/core/Vector.ts", "src/core/Array2D.ts"]);
+    });
+
     it("searches design titles, descriptions and keywords", () => {
         const references = [{id: "colors", title: "Farben & Tokens", description: "Globale Farbwerte", keywords: ["theme"]}];
         expect(filterReferences(references, "theme")).toEqual(references);
