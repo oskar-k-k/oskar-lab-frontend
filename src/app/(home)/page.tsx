@@ -1,6 +1,5 @@
-import Grid from "@/components/Grids/Grid";
-import Card from "@/components/Cards/Card"
 import {Project, projectsApi} from "@/lib/api/projects";
+import ProjectsExplorer from "./ProjectsExplorer";
 
 export const dynamic = "force-dynamic";
 
@@ -35,26 +34,5 @@ async function loadProjects(): Promise<{projects: Project[]; backendAvailable: b
 
 export default async function Home() {
     const {projects, backendAvailable} = await loadProjects();
-
-  return (
-      <>
-        {!backendAvailable && (
-            <p role="status" className="mb-6 rounded-xl border border-yellow-accent/40 bg-yellow-accent/10 p-4 text-text-muted">
-                Das Backend ist gerade nicht erreichbar. Lokale Projekte bleiben weiterhin verfügbar.
-            </p>
-        )}
-
-        <Grid>
-            {projects.map((project) => (
-                <Card
-                    key={project.id}
-                    title={project.title ?? ""}
-                    description={project.description ?? ""}
-                    href={`/projects/${project.path}`}
-                    image={project.thumbnail ?? `/projects/${project.path}/thumbnail.png`}
-                />
-            ))}
-        </Grid>
-      </>
-  );
+    return <ProjectsExplorer projects={projects} backendAvailable={backendAvailable} />;
 }
