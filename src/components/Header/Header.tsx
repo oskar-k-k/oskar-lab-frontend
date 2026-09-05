@@ -27,24 +27,16 @@ export default function Header({
     return (
         <header className={styles.header}>
             <div className={styles.left}>
-
                 {!isRoot && (
-                    <>
-                        <Link
-                            href="/"
-                            className={styles.back}
-                        >
-                            ← {t("common.projects")}
-                        </Link>
-
-                        <span className={styles.divider} />
-                    </>
+                    <Link href="/" className={styles.back} aria-label={t("common.projects")}>
+                        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m14.5 5-7 7 7 7" /></svg>
+                    </Link>
                 )}
-
-                <span className={styles.title}>
-                    {projectName}
+                <span className={styles.brand} aria-hidden="true"><span>O</span></span>
+                <span className={styles.identity}>
+                    <span className={styles.eyebrow}>Oskar Lab</span>
+                    <span className={styles.title}>{projectName}</span>
                 </span>
-
             </div>
 
             <div className={styles.content}>
