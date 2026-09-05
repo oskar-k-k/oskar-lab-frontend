@@ -43,6 +43,7 @@ export default function Header({
                     <span className={styles.eyebrow}>Oskar Lab</span>
                     <span className={styles.title}>{projectName}</span>
                 </span>
+                {status && <div role="status" aria-label={statusLabel} title={statusLabel} className={styles.status}>{status}</div>}
             </div>
 
             <div className={styles.content}>
@@ -50,7 +51,6 @@ export default function Header({
             </div>
 
             <div className={styles.right}>
-                {status && <div role="status" aria-label={statusLabel} title={statusLabel} className={styles.status}>{status}</div>}
                 {right}
                 <LanguageSwitch />
             </div>

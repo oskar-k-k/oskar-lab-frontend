@@ -66,7 +66,7 @@
 .right { display: flex; align-items: center; flex-shrink: 0; gap: 8px; padding-left: 2px; }
 
 .status {
-    max-width: min(36vw, 420px);
+    max-width: min(24vw, 220px);
     display: flex;
     align-items: center;
     gap: 7px;
@@ -97,7 +97,7 @@
     .content { order: 3; flex-basis: 100%; justify-content: stretch; }
     .content > * { width: 100%; max-width: none; }
     .right { margin-left: auto; }
-    .status { max-width: 44vw; overflow: hidden; text-overflow: ellipsis; }
+    .status { max-width: 35vw; overflow: hidden; text-overflow: ellipsis; }
     .brand { width: 33px; height: 33px; }
     .back { width: 32px; height: 32px; }
 }
@@ -107,5 +107,5 @@
     .left { gap: 7px; min-width: 0; }
     .eyebrow { display: none; }
     .title { margin-top: 0; }
-    .status { max-width: 36vw; padding-inline: 8px; font-size: .7rem; }
+    .status { max-width: 34vw; padding-inline: 8px; font-size: .7rem; }
 }
