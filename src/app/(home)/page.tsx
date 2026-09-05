@@ -5,6 +5,13 @@ export const dynamic = "force-dynamic";
 
 const localProjects: Project[] = [
     {
+        id: -3,
+        path: "portfolio",
+        title: "Portfolio",
+        description: "Software, ideas, and the person behind Oskar Lab.",
+        thumbnail: "/projects/portfolio/oskar.jpg",
+    },
+    {
         id: -2,
         path: "core",
         title: "Core & Design",
