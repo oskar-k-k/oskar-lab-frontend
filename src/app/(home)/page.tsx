@@ -31,6 +31,13 @@ const localProjects: Project[] = [
         description: "A self-hosted AI fitting room prototype for person and garment images.",
         thumbnail: "/projects/virtual-try-on/thumbnail.svg",
     },
+    {
+        id: -5,
+        path: "neon-vault",
+        title: "Neon Vault",
+        description: "A fictional-credit casino with blackjack, roulette, and slots.",
+        thumbnail: "/projects/neon-vault/thumbnail.svg",
+    },
 ];
 
 async function loadProjects(): Promise<{projects: Project[]; backendAvailable: boolean}> {

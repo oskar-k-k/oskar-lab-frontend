@@ -1,0 +1,365 @@
+.page {
+    display: grid;
+    gap: 18px;
+}
+
+.hero {
+    min-height: 260px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+    align-items: end;
+    gap: 24px;
+    padding: 28px;
+    overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    border-radius: 8px;
+    background:
+        radial-gradient(circle at 20% 20%, rgb(253 230 138 / 0.24), transparent 30%),
+        radial-gradient(circle at 84% 16%, rgb(103 232 249 / 0.2), transparent 28%),
+        linear-gradient(135deg, #121722, #151e2a 46%, #2a1726);
+    box-shadow: var(--shadow-card);
+}
+
+.hero h1 {
+    margin: 0;
+    color: var(--color-text);
+    font-size: clamp(2.4rem, 7vw, 5.8rem);
+    line-height: 0.94;
+}
+
+.hero p {
+    max-width: 660px;
+    margin: 10px 0 0;
+    color: var(--color-text-muted);
+    font-size: 1.03rem;
+    line-height: 1.6;
+}
+
+.kicker {
+    margin: 0;
+    color: var(--color-accent-yellow);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.wallet {
+    display: grid;
+    gap: 10px;
+    padding: 18px;
+    border: 1px solid rgb(255 255 255 / 0.16);
+    border-radius: 8px;
+    background: rgb(3 11 22 / 0.68);
+}
+
+.wallet span {
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+    font-weight: 750;
+    text-transform: uppercase;
+}
+
+.wallet strong {
+    color: var(--color-accent-yellow);
+    font-size: 2.4rem;
+    line-height: 1;
+}
+
+.wallet button,
+.actions button {
+    min-height: 40px;
+    padding: 9px 14px;
+    border: 1px solid rgb(253 230 138 / 0.5);
+    border-radius: 6px;
+    color: #111927;
+    background: var(--color-accent-yellow);
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.wallet button:hover,
+.actions button:hover {
+    background: #fff3b0;
+}
+
+.gameTabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.gameTabs button {
+    min-height: 46px;
+    border: 1px solid var(--color-border-muted);
+    border-radius: 6px;
+    color: var(--color-text-muted);
+    background: var(--color-surface);
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.gameTabs button:hover,
+.gameTabs .activeTab {
+    border-color: var(--color-accent-cyan);
+    color: var(--color-text);
+    background: var(--color-surface-hover);
+}
+
+.table {
+    display: grid;
+    gap: 20px;
+    padding: 22px;
+    border: 1px solid var(--color-border-muted);
+    border-radius: 8px;
+    background: linear-gradient(145deg, var(--color-surface), #101923);
+    box-shadow: var(--shadow-card);
+}
+
+.tableHeader {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.tableHeader h2 {
+    margin: 4px 0 0;
+    font-size: clamp(1.5rem, 4vw, 2.4rem);
+}
+
+.status {
+    max-width: 420px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid rgb(103 232 249 / 0.26);
+    border-radius: 6px;
+    color: var(--color-text-muted);
+    background: rgb(103 232 249 / 0.08);
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.blackjackGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.hand {
+    display: grid;
+    gap: 16px;
+    min-height: 210px;
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: rgb(3 11 22 / 0.36);
+}
+
+.hand header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.hand h3,
+.hand p {
+    margin: 0;
+}
+
+.hand span,
+.hand p {
+    color: var(--color-text-muted);
+}
+
+.cards {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.card {
+    width: 72px;
+    aspect-ratio: 0.72;
+    display: grid;
+    align-content: space-between;
+    padding: 10px;
+    border-radius: 7px;
+    color: #172033;
+    background: #f8fafc;
+    box-shadow: 0 12px 22px rgb(0 0 0 / 0.26);
+}
+
+.card[data-red="true"] {
+    color: #be123c;
+}
+
+.card span,
+.card strong {
+    color: currentColor;
+    font-size: 1.1rem;
+}
+
+.card strong {
+    justify-self: end;
+    font-size: 1.6rem;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.actions button:disabled {
+    border-color: var(--color-border-muted);
+    color: var(--color-text-subtle);
+    background: var(--color-surface-hover);
+    cursor: not-allowed;
+}
+
+.rouletteLayout {
+    display: grid;
+    grid-template-columns: minmax(180px, 280px) minmax(0, 1fr);
+    align-items: center;
+    gap: 18px;
+}
+
+.wheel {
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border: 12px solid #e2e8f0;
+    border-radius: 50%;
+    background:
+        conic-gradient(#111927 0 10deg, #be123c 10deg 20deg, #111927 20deg 30deg, #be123c 30deg 40deg, #111927 40deg 50deg, #be123c 50deg 60deg, #111927 60deg 70deg, #be123c 70deg 80deg, #111927 80deg 90deg, #047857 90deg 100deg, #111927 100deg 110deg, #be123c 110deg 120deg, #111927 120deg 130deg, #be123c 130deg 140deg, #111927 140deg 150deg, #be123c 150deg 160deg, #111927 160deg 170deg, #be123c 170deg 180deg, #111927 180deg 190deg, #be123c 190deg 200deg, #111927 200deg 210deg, #be123c 210deg 220deg, #111927 220deg 230deg, #be123c 230deg 240deg, #111927 240deg 250deg, #be123c 250deg 260deg, #111927 260deg 270deg, #be123c 270deg 280deg, #111927 280deg 290deg, #be123c 290deg 300deg, #111927 300deg 310deg, #be123c 310deg 320deg, #111927 320deg 330deg, #be123c 330deg 340deg, #111927 340deg 350deg, #be123c 350deg 360deg);
+    box-shadow: inset 0 0 0 18px rgb(3 11 22 / 0.8), 0 18px 34px rgb(0 0 0 / 0.28);
+}
+
+.wheel span {
+    width: 92px;
+    height: 92px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgb(255 255 255 / 0.24);
+    border-radius: 50%;
+    color: var(--color-text);
+    background: #111927;
+    font-size: 2.2rem;
+    font-weight: 900;
+}
+
+.wheel[data-color="red"] span {
+    background: #be123c;
+}
+
+.wheel[data-color="green"] span {
+    background: #047857;
+}
+
+.betBoard {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.betBoard legend {
+    grid-column: 1 / -1;
+    margin-bottom: 4px;
+    color: var(--color-text-muted);
+    font-weight: 800;
+}
+
+.betOption input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.betOption span {
+    min-height: 58px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-text-muted);
+    background: rgb(3 11 22 / 0.36);
+    font-weight: 850;
+    cursor: pointer;
+}
+
+.betOption input:checked + span,
+.betOption span:hover {
+    border-color: var(--color-accent-yellow);
+    color: var(--color-text);
+    background: rgb(253 230 138 / 0.12);
+}
+
+.reels {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.reel {
+    min-height: 190px;
+    display: grid;
+    place-items: center;
+    gap: 8px;
+    padding: 18px;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    border-radius: 8px;
+    background: linear-gradient(180deg, #f8fafc, #cbd5e1);
+    color: #111927;
+    box-shadow: inset 0 0 0 6px rgb(15 23 42 / 0.08);
+}
+
+.reel span {
+    font-size: clamp(2.5rem, 10vw, 5rem);
+    font-weight: 950;
+    line-height: 1;
+}
+
+.reel small {
+    color: #334155;
+    font-weight: 850;
+    text-transform: uppercase;
+}
+
+@media (max-width: 780px) {
+    .hero,
+    .blackjackGrid,
+    .rouletteLayout {
+        grid-template-columns: 1fr;
+    }
+
+    .tableHeader {
+        display: grid;
+    }
+
+    .status {
+        max-width: none;
+    }
+}
+
+@media (max-width: 560px) {
+    .hero,
+    .table {
+        padding: 16px;
+    }
+
+    .gameTabs,
+    .betBoard,
+    .reels {
+        grid-template-columns: 1fr;
+    }
+
+    .reel {
+        min-height: 120px;
+    }
+}

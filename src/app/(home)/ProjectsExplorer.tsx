@@ -16,7 +16,7 @@ export default function ProjectsExplorer({projects, backendAvailable}: Readonly<
     const {t} = useI18n();
     const localizedProjects = useMemo(() => projects.map(project => ({
         ...project,
-        description: project.path === "portfolio" ? t("projects.portfolioDescription") : project.path === "core" ? t("projects.coreDescription") : project.path === "chess" ? t("projects.chessDescription") : project.path === "cloth-lab" ? t("projects.virtualTryOnDescription") : project.description,
+        description: project.path === "portfolio" ? t("projects.portfolioDescription") : project.path === "core" ? t("projects.coreDescription") : project.path === "chess" ? t("projects.chessDescription") : project.path === "cloth-lab" ? t("projects.virtualTryOnDescription") : project.path === "neon-vault" ? t("projects.neonVaultDescription") : project.description,
     })), [projects, t]);
     const visibleProjects = useMemo(() => {
         const normalizedQuery = query.trim().toLocaleLowerCase("de");
