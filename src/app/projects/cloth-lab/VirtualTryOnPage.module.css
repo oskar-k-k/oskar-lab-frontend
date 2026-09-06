@@ -35,6 +35,36 @@
     letter-spacing: 0;
 }
 
+.titleRow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.workerBadge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 10px;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    border-radius: var(--radius-sm);
+    background: rgb(251 113 133 / 0.14);
+    color: var(--color-danger);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.workerBadge[data-state="online"] {
+    background: rgb(74 222 128 / 0.13);
+    color: var(--color-success);
+}
+
+.workerBadge[data-state="checking"] {
+    background: rgb(250 204 21 / 0.13);
+    color: var(--color-warning);
+}
+
 .hero span {
     color: var(--color-text-muted);
     font-size: 1.05rem;

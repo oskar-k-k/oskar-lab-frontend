@@ -6,6 +6,7 @@ import styles from "./VirtualTryOnPage.module.css";
 
 type UploadSlot = "person" | "garment";
 type Status = "idle" | "ready" | "generating" | "success" | "error";
+type WorkerStatus = "checking" | "online" | "offline";
 
 const acceptedImageTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxImageSize = 8 * 1024 * 1024;
@@ -20,6 +21,7 @@ export default function VirtualTryOnClient() {
     const [personPreview, setPersonPreview] = useState<string | null>(null);
     const [garmentPreview, setGarmentPreview] = useState<string | null>(null);
     const [resultImage, setResultImage] = useState<string | null>(null);
+    const [workerStatus, setWorkerStatus] = useState<WorkerStatus>("checking");
     const personPreviewRef = useRef<string | null>(null);
     const garmentPreviewRef = useRef<string | null>(null);
     const resultImageRef = useRef<string | null>(null);
@@ -28,6 +30,7 @@ export default function VirtualTryOnClient() {
 
     const ready = personImage !== null && garmentImage !== null;
     const primaryLabel = status === "generating" ? t("tryOn.generating") : t("tryOn.generate");
+    const workerStatusText = workerStatus === "online" ? t("tryOn.workerOnline") : workerStatus === "offline" ? t("tryOn.workerOffline") : t("tryOn.workerChecking");
     const statusText = useMemo(() => {
         if (status === "success") return t("tryOn.success");
         if (status === "error") return message ?? t("tryOn.errorGeneric");
@@ -39,6 +42,28 @@ export default function VirtualTryOnClient() {
         if (personPreviewRef.current) URL.revokeObjectURL(personPreviewRef.current);
         if (garmentPreviewRef.current) URL.revokeObjectURL(garmentPreviewRef.current);
         if (resultImageRef.current?.startsWith("blob:")) URL.revokeObjectURL(resultImageRef.current);
+    }, []);
+
+    useEffect(() => {
+        let active = true;
+
+        async function loadWorkerStatus(): Promise<void> {
+            try {
+                const response = await fetch("/api/try-on", {cache: "no-store"});
+                const payload = await response.json() as {online?: boolean};
+                if (active) setWorkerStatus(payload.online ? "online" : "offline");
+            } catch {
+                if (active) setWorkerStatus("offline");
+            }
+        }
+
+        void loadWorkerStatus();
+        const interval = window.setInterval(loadWorkerStatus, 10000);
+
+        return () => {
+            active = false;
+            window.clearInterval(interval);
+        };
     }, []);
 
     function validateFile(file: File): string | null {
@@ -156,7 +181,10 @@ export default function VirtualTryOnClient() {
             <section className={styles.workspace}>
                 <header className={styles.hero}>
                     <p>{t("tryOn.kicker")}</p>
-                    <h1>{t("tryOn.title")}</h1>
+                    <div className={styles.titleRow}>
+                        <h1>{t("tryOn.title")}</h1>
+                        <span className={styles.workerBadge} data-state={workerStatus}>{workerStatusText}</span>
+                    </div>
                     <span>{t("tryOn.subtitle")}</span>
                 </header>
 

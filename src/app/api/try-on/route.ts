@@ -1,6 +1,7 @@
 const maxImageSize = 8 * 1024 * 1024;
 const acceptedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const workerTimeoutMs = 15 * 60 * 1000;
+const workerHealthTimeoutMs = 2 * 1000;
 
 function jsonError(error: string, status: number): Response {
     return Response.json({error}, {status});
@@ -8,6 +9,42 @@ function jsonError(error: string, status: number): Response {
 
 function isValidImage(value: FormDataEntryValue | null): value is File {
     return value instanceof File && acceptedImageTypes.has(value.type) && value.size > 0 && value.size <= maxImageSize;
+}
+
+function getWorkerHealthUrl(workerUrl: string): string {
+    return workerUrl.endsWith("/try-on") ? `${workerUrl.slice(0, -"/try-on".length)}/health` : workerUrl;
+}
+
+/** Returns the configured try-on worker availability for the frontend status badge. */
+export async function GET() {
+    const workerUrl = process.env.TRYON_WORKER_URL;
+    if (!workerUrl) {
+        return Response.json({online: false, configured: false}, {headers: {"cache-control": "no-store"}});
+    }
+
+    const abortController = new AbortController();
+    const timeout = setTimeout(() => abortController.abort(), workerHealthTimeoutMs);
+    try {
+        const response = await fetch(getWorkerHealthUrl(workerUrl), {
+            cache: "no-store",
+            signal: abortController.signal,
+        });
+
+        if (!response.ok) {
+            return Response.json({online: false, configured: true}, {headers: {"cache-control": "no-store"}});
+        }
+
+        const payload = await response.json().catch(() => ({})) as Record<string, unknown>;
+        return Response.json({
+            online: true,
+            configured: true,
+            engine: typeof payload.engine === "string" ? payload.engine : undefined,
+        }, {headers: {"cache-control": "no-store"}});
+    } catch {
+        return Response.json({online: false, configured: true}, {headers: {"cache-control": "no-store"}});
+    } finally {
+        clearTimeout(timeout);
+    }
 }
 
 /** Proxies try-on uploads to a self-hosted GPU worker without exposing its URL to the browser. */
