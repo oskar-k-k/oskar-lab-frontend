@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-label="Virtual Try-On preview">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#06111d"/>
+      <stop offset="0.55" stop-color="#182125"/>
+      <stop offset="1" stop-color="#263026"/>
+    </linearGradient>
+    <linearGradient id="cloth" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#67e8f9"/>
+      <stop offset="1" stop-color="#86efac"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#bg)"/>
+  <rect x="92" y="104" width="616" height="592" rx="34" fill="#0f1824" stroke="#60708a" stroke-width="6"/>
+  <circle cx="310" cy="258" r="62" fill="#f4f7fb"/>
+  <path d="M204 556c12-118 58-190 106-190s94 72 106 190" fill="#344154"/>
+  <path d="M486 242l72-34 74 34-26 92-34-16v178H518V318l-34 16-26-92Z" fill="url(#cloth)"/>
+  <path d="M214 606h372" stroke="#67e8f9" stroke-width="18" stroke-linecap="round"/>
+  <path d="M456 578l70 56 70-56" fill="none" stroke="#86efac" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

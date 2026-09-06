@@ -24,6 +24,13 @@ const localProjects: Project[] = [
         title: "Chess",
         description: "A complete chess game with all important rules.",
     },
+    {
+        id: -4,
+        path: "virtual-try-on",
+        title: "Virtual Try-On",
+        description: "A self-hosted AI fitting room prototype for person and garment images.",
+        thumbnail: "/projects/virtual-try-on/thumbnail.svg",
+    },
 ];
 
 async function loadProjects(): Promise<{projects: Project[]; backendAvailable: boolean}> {
