@@ -1,6 +1,7 @@
 "use client";
 
-import {useMemo, useState} from "react";
+import {useMemo, useRef, useState} from "react";
+import type {CSSProperties} from "react";
 import {useI18n} from "@/lib/i18n/I18nProvider";
 import styles from "./NeonVaultPage.module.css";
 
@@ -14,6 +15,7 @@ const initialBalance = 1000;
 const blackjackBet = 50;
 const rouletteBetAmount = 40;
 const slotsBet = 25;
+const rouletteSpinDuration = 1200;
 const suits = ["♠", "♥", "♦", "♣"];
 const ranks: Card[] = [
     {rank: "A", suit: "", value: 11},
@@ -86,9 +88,13 @@ export default function NeonVaultPage() {
     const [blackjackMessage, setBlackjackMessage] = useState(() => t("casino.blackjackStart"));
     const [rouletteBet, setRouletteBet] = useState<RouletteBet>("red");
     const [rouletteNumber, setRouletteNumber] = useState<number | null>(null);
+    const [rouletteBallAngle, setRouletteBallAngle] = useState(28);
+    const [rouletteSpinId, setRouletteSpinId] = useState(0);
+    const [rouletteSpinning, setRouletteSpinning] = useState(false);
     const [rouletteMessage, setRouletteMessage] = useState(() => t("casino.rouletteStart"));
     const [reels, setReels] = useState<SlotSymbol[]>(slotSymbols.slice(0, 3));
     const [slotsMessage, setSlotsMessage] = useState(() => t("casino.slotsStart"));
+    const rouletteTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const playerScore = useMemo(() => scoreHand(playerHand), [playerHand]);
     const dealerScore = useMemo(() => scoreHand(dealerHand), [dealerHand]);
@@ -103,6 +109,10 @@ export default function NeonVaultPage() {
         setDealerHand([]);
         setBlackjackMessage(t("casino.blackjackRefilled"));
         setRouletteMessage(t("casino.rouletteRefilled"));
+        setRouletteNumber(null);
+        setRouletteBallAngle(28);
+        setRouletteSpinning(false);
+        if (rouletteTimeout.current !== null) clearTimeout(rouletteTimeout.current);
         setSlotsMessage(t("casino.slotsRefilled"));
     }
 
@@ -160,14 +170,25 @@ export default function NeonVaultPage() {
     }
 
     function spinRoulette() {
-        if (!canAffordRoulette) return;
+        if (!canAffordRoulette || rouletteSpinning) return;
         const number = Math.floor(Math.random() * 37);
         const payout = getRouletteWin(number, rouletteBet);
         const color = getRouletteColor(number);
+        const landingAngle = 360 - (number / 37) * 360;
 
-        setBalance(current => current - rouletteBetAmount + payout);
-        setRouletteNumber(number);
-        setRouletteMessage(payout > 0 ? t("casino.rouletteWin", {number, color, payout}) : t("casino.rouletteLose", {number, color}));
+        if (rouletteTimeout.current !== null) clearTimeout(rouletteTimeout.current);
+        setBalance(current => current - rouletteBetAmount);
+        setRouletteSpinning(true);
+        setRouletteNumber(null);
+        setRouletteSpinId(current => current + 1);
+        setRouletteMessage(t("casino.rouletteSpinning"));
+        setRouletteBallAngle(landingAngle);
+        rouletteTimeout.current = setTimeout(() => {
+            setBalance(current => current + payout);
+            setRouletteNumber(number);
+            setRouletteSpinning(false);
+            setRouletteMessage(payout > 0 ? t("casino.rouletteWin", {number, color, payout}) : t("casino.rouletteLose", {number, color}));
+        }, rouletteSpinDuration);
     }
 
     function playSlots() {
@@ -245,8 +266,16 @@ export default function NeonVaultPage() {
                         <p className={styles.status} role="status" aria-live="polite">{rouletteMessage}</p>
                     </div>
                     <div className={styles.rouletteLayout}>
-                        <div className={styles.wheel} data-color={rouletteNumber === null ? "idle" : getRouletteColor(rouletteNumber)}>
-                            <span>{rouletteNumber ?? "?"}</span>
+                        <div
+                            key={rouletteSpinId}
+                            className={`${styles.wheel} ${rouletteSpinning ? styles.spinningWheel : ""}`}
+                            data-color={rouletteNumber === null ? "idle" : getRouletteColor(rouletteNumber)}
+                            style={{"--ball-angle": `${rouletteBallAngle}deg`} as CSSProperties}
+                        >
+                            <div className={styles.ballTrack} aria-hidden="true">
+                                <span className={styles.ball} />
+                            </div>
+                            <span className={styles.resultPocket}>{rouletteNumber ?? "?"}</span>
                         </div>
                         <fieldset className={styles.betBoard}>
                             <legend>{t("casino.betField")}</legend>
@@ -264,6 +293,7 @@ export default function NeonVaultPage() {
                                         value={value}
                                         checked={rouletteBet === value}
                                         onChange={() => setRouletteBet(value as RouletteBet)}
+                                        disabled={rouletteSpinning}
                                     />
                                     <span>{label}</span>
                                 </label>
@@ -271,7 +301,7 @@ export default function NeonVaultPage() {
                         </fieldset>
                     </div>
                     <div className={styles.actions}>
-                        <button type="button" onClick={spinRoulette} disabled={!canAffordRoulette}>{t("casino.spinWheel")}</button>
+                        <button type="button" onClick={spinRoulette} disabled={!canAffordRoulette || rouletteSpinning}>{t("casino.spinWheel")}</button>
                     </div>
                 </section>
             )}
