@@ -27,7 +27,7 @@ const localProjects: Project[] = [
     {
         id: -4,
         path: "virtual-try-on",
-        title: "Virtual Try-On",
+        title: "ClothLab",
         description: "A self-hosted AI fitting room prototype for person and garment images.",
         thumbnail: "/projects/virtual-try-on/thumbnail.svg",
     },
