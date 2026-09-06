@@ -233,17 +233,26 @@
     aspect-ratio: 1;
     display: grid;
     place-items: center;
+    overflow: hidden;
     border: 12px solid #e2e8f0;
+    border-radius: 50%;
+    background: #101923;
+    box-shadow: inset 0 0 0 18px rgb(3 11 22 / 0.8), 0 18px 34px rgb(0 0 0 / 0.28);
+}
+
+.wheelRotor {
+    position: absolute;
+    inset: 0;
     border-radius: 50%;
     background:
         conic-gradient(#111927 0 10deg, #be123c 10deg 20deg, #111927 20deg 30deg, #be123c 30deg 40deg, #111927 40deg 50deg, #be123c 50deg 60deg, #111927 60deg 70deg, #be123c 70deg 80deg, #111927 80deg 90deg, #047857 90deg 100deg, #111927 100deg 110deg, #be123c 110deg 120deg, #111927 120deg 130deg, #be123c 130deg 140deg, #111927 140deg 150deg, #be123c 150deg 160deg, #111927 160deg 170deg, #be123c 170deg 180deg, #111927 180deg 190deg, #be123c 190deg 200deg, #111927 200deg 210deg, #be123c 210deg 220deg, #111927 220deg 230deg, #be123c 230deg 240deg, #111927 240deg 250deg, #be123c 250deg 260deg, #111927 260deg 270deg, #be123c 270deg 280deg, #111927 280deg 290deg, #be123c 290deg 300deg, #111927 300deg 310deg, #be123c 310deg 320deg, #111927 320deg 330deg, #be123c 330deg 340deg, #111927 340deg 350deg, #be123c 350deg 360deg);
-    box-shadow: inset 0 0 0 18px rgb(3 11 22 / 0.8), 0 18px 34px rgb(0 0 0 / 0.28);
 }
 
 .wheel::before {
     content: "";
     position: absolute;
     inset: 34px;
+    z-index: 1;
     border: 1px dashed rgb(248 250 252 / 0.24);
     border-radius: 50%;
 }
@@ -252,6 +261,7 @@
     content: "";
     position: absolute;
     inset: 52px;
+    z-index: 1;
     border-radius: 50%;
     background:
         radial-gradient(circle at 50% 50%, rgb(253 230 138 / 0.16), transparent 42%),
@@ -261,7 +271,7 @@
         inset 0 0 32px rgb(0 0 0 / 0.5);
 }
 
-.spinningWheel {
+.spinningWheel .wheelRotor {
     animation: roulette-wheel-spin 1200ms cubic-bezier(0.12, 0.72, 0.16, 1) both;
 }
 

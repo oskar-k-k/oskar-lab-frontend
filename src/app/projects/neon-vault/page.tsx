@@ -272,6 +272,7 @@ export default function NeonVaultPage() {
                             data-color={rouletteNumber === null ? "idle" : getRouletteColor(rouletteNumber)}
                             style={{"--ball-angle": `${rouletteBallAngle}deg`} as CSSProperties}
                         >
+                            <div className={styles.wheelRotor} aria-hidden="true" />
                             <div className={styles.ballTrack} aria-hidden="true">
                                 <span className={styles.ball} />
                             </div>
