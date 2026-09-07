@@ -3,6 +3,7 @@
 import Link from "next/link";
 import styles from "./Header.module.css";
 import {usePathname} from "next/navigation";
+import UserMenu from "@/components/Auth/UserMenu";
 import LanguageSwitch from "@/components/LanguageSwitch/LanguageSwitch";
 import {useI18n} from "@/lib/i18n/I18nProvider";
 
@@ -52,6 +53,7 @@ export default function Header({
 
             <div className={styles.right}>
                 {right}
+                <UserMenu />
                 <LanguageSwitch />
             </div>
         </header>

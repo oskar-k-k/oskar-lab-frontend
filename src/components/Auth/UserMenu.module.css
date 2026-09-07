@@ -1,0 +1,174 @@
+.loginButton,
+.profileButton {
+    height: 38px;
+    border: 1px solid var(--color-border-muted);
+    background: rgb(255 255 255 / .045);
+    color: var(--color-text);
+    transition: 160ms ease;
+}
+
+.loginButton:hover,
+.profileButton:hover,
+.account:focus-within .profileButton {
+    border-color: rgb(129 132 245 / .55);
+    background: var(--color-primary-soft);
+}
+
+.loginButton:disabled {
+    cursor: not-allowed;
+    opacity: .58;
+}
+
+.loginButton:disabled:hover {
+    border-color: var(--color-border-muted);
+    background: rgb(255 255 255 / .045);
+}
+
+.loginButton:focus-visible,
+.profileButton:focus-visible,
+.panel button:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.loginButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 92px;
+    padding: 0 13px;
+    border-radius: 999px;
+    font-size: .82rem;
+    font-weight: 700;
+}
+
+.loginButton svg {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 auto;
+}
+
+.account {
+    position: relative;
+}
+
+.profileButton {
+    width: 38px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    padding: 0;
+    border-radius: 50%;
+}
+
+.profileButton img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profileButton svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+
+.panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 230px;
+    display: none;
+    padding: 10px;
+    border: 1px solid var(--color-border-muted);
+    border-radius: 8px;
+    background: rgb(7 13 25 / .98);
+    box-shadow: 0 20px 45px rgb(0 0 0 / .35);
+}
+
+.account:hover .panel,
+.account:focus-within .panel {
+    display: grid;
+    gap: 8px;
+}
+
+.profileSummary {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    padding: 4px 4px 9px;
+    border-bottom: 1px solid var(--color-border-muted);
+}
+
+.profileSummary strong,
+.profileSummary span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profileSummary strong {
+    font-size: .9rem;
+}
+
+.profileSummary span {
+    color: var(--color-text-muted);
+    font-size: .76rem;
+}
+
+.panel button {
+    width: 100%;
+    min-height: 34px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+    font-size: .82rem;
+    font-weight: 700;
+    text-align: left;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.panel button:hover {
+    background: var(--color-primary-soft);
+}
+
+.skeleton {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--color-border-muted);
+    border-radius: 50%;
+    background: linear-gradient(90deg, rgb(255 255 255 / .05), rgb(255 255 255 / .11), rgb(255 255 255 / .05));
+    background-size: 200% 100%;
+    animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+}
+
+@media (max-width: 520px) {
+    .loginButton {
+        min-width: 38px;
+        width: 38px;
+        padding: 0;
+        border-radius: 50%;
+    }
+
+    .loginButton span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+}

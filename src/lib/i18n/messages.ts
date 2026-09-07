@@ -3,6 +3,7 @@ export type Locale = typeof locales[number];
 
 const en = {
     "common.projects": "Projects", "common.search": "Search", "common.clearSearch": "Clear search", "common.results": "results",
+    "auth.signIn": "Sign in", "auth.signInWithGoogle": "Sign in with Google", "auth.signOut": "Sign out", "auth.account": "Account", "auth.accountFor": "Account for {name}", "auth.loading": "Loading account", "auth.setupRequired": "Google login is not configured yet.",
     "language.label": "Change language", "language.english": "English", "language.german": "German",
     "projects.searchLabel": "Search projects", "projects.searchPlaceholder": "Search projects …", "projects.backendUnavailable": "The backend is currently unavailable. Local projects remain accessible.", "projects.backendUnavailableShort": "Backend offline",
     "projects.projectFound": "project found", "projects.projectsFound": "projects found", "projects.emptyTitle": "No project found", "projects.emptyDescription": "Try another search term or clear the search.",
@@ -58,6 +59,7 @@ const en = {
 
 const de: Record<keyof typeof en, string> = {
     "common.projects": "Projekte", "common.search": "Suchen", "common.clearSearch": "Suche löschen", "common.results": "Treffer",
+    "auth.signIn": "Login", "auth.signInWithGoogle": "Mit Google einloggen", "auth.signOut": "Abmelden", "auth.account": "Konto", "auth.accountFor": "Konto für {name}", "auth.loading": "Konto wird geladen", "auth.setupRequired": "Google-Login ist noch nicht konfiguriert.",
     "language.label": "Sprache wechseln", "language.english": "Englisch", "language.german": "Deutsch",
     "projects.searchLabel": "Projekte durchsuchen", "projects.searchPlaceholder": "Projekte durchsuchen …", "projects.backendUnavailable": "Das Backend ist gerade nicht erreichbar. Lokale Projekte bleiben weiterhin verfügbar.", "projects.backendUnavailableShort": "Backend offline",
     "projects.projectFound": "Projekt gefunden", "projects.projectsFound": "Projekte gefunden", "projects.emptyTitle": "Kein Projekt gefunden", "projects.emptyDescription": "Versuche einen anderen Suchbegriff oder lösche die Suche.",

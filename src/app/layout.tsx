@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import {cookies} from "next/headers";
+import AuthProvider from "@/lib/auth/AuthProvider";
 import I18nProvider from "@/lib/i18n/I18nProvider";
 import {parseLocale} from "@/lib/i18n/messages";
 import "../styles/globals.css";
@@ -31,7 +32,7 @@ export default async function RootLayout({children,}: Readonly<{
           className={`${geistSans.variable} ${geistMono.variable}`}
       >
       <body>
-      <I18nProvider initialLocale={locale}>{children}</I18nProvider>
+      <AuthProvider><I18nProvider initialLocale={locale}>{children}</I18nProvider></AuthProvider>
       </body>
       </html>
   );
