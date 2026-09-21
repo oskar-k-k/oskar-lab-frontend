@@ -19,8 +19,9 @@ export function createAppConfig(name) {
         outputFileTracingRoot: workspaceRoot,
         env: {NEXT_PUBLIC_APP_BASE_PATH: basePath},
         async redirects() {
-            if (!platform) return ["/account", "/terms", "/privacy"].map(source => ({source, destination:`${process.env.AUTH_PLATFORM_URL ?? "http://127.0.0.1:10030"}${source}`, permanent:false, basePath:false}));
+            if (!platform) return ["/account", "/terms", "/privacy"].map(source => ({source, destination:`${process.env.AUTH_PLATFORM_URL ?? "http://localhost:10030"}${source}`, permanent:false, basePath:false}));
             return [
+                ...(process.env.AUTH_URL && new URL(process.env.AUTH_URL).hostname === "localhost" ? [{source:"/:path*", has:[{type:"host", value:"127\\.0\\.0\\.1"}], destination:`${new URL(process.env.AUTH_URL).origin}/:path*`, permanent:false}] : []),
                 {source:"/apps/core/:path*", destination:"/apps/core-design/:path*", permanent:true},
                 {source:"/projects/core/:path*", destination:"/apps/core-design/:path*", permanent:true},
                 {source:"/projects/:path+", destination:"/apps/:path+", permanent:true},
@@ -29,7 +30,7 @@ export function createAppConfig(name) {
             ];
         },
         async rewrites() {
-            if (!platform) return [{source:"/api/auth/:path*", destination:`${process.env.AUTH_PLATFORM_URL ?? "http://127.0.0.1:10030"}/api/auth/:path*`, basePath:false}];
+            if (!platform) return [{source:"/api/auth/:path*", destination:`${process.env.AUTH_PLATFORM_URL ?? "http://localhost:10030"}/api/auth/:path*`, basePath:false}];
             return Object.entries(appPorts).filter(([id]) => id !== name).map(([id, port]) => ({
                 source:`/apps/${id}/:path*`,
                 destination:`${process.env[`APP_${id.replaceAll("-", "_").toUpperCase()}_URL`] ?? `http://127.0.0.1:${port}`}/apps/${id}/:path*`,

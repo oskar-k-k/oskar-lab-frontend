@@ -1,7 +1,8 @@
 "use client";
 
 import {useState, type FormEvent} from "react";
-import {signIn, signOut, useSession} from "next-auth/react";
+import {SessionProvider, signIn, signOut, useSession} from "next-auth/react";
+import type {Session} from "next-auth";
 import {TERMS_VERSION} from "@oskar-lab/auth/contracts";
 import {useI18n} from "@oskar-lab/i18n/I18nProvider";
 import {type TranslationKey} from "@oskar-lab/i18n/messages";
@@ -13,7 +14,11 @@ const errorKeys: Record<string, TranslationKey> = Object.fromEntries([
 ].map(key => [key, `auth.${key}`])) as Record<string, TranslationKey>;
 
 /** Handles local login, registration and the two Google onboarding steps. */
-export default function AccountForm({googleAvailable, returnTo, oauthError}: {googleAvailable: boolean; returnTo: string; oauthError: boolean}) {
+export default function AccountForm(props: {googleAvailable: boolean; returnTo: string; oauthError: boolean; initialSession: Session | null}) {
+    return <SessionProvider session={props.initialSession}><AccountFields {...props} /></SessionProvider>;
+}
+
+function AccountFields({googleAvailable, returnTo, oauthError}: {googleAvailable: boolean; returnTo: string; oauthError: boolean}) {
     const {t} = useI18n();
     const {data: session, status, update} = useSession();
     const [register, setRegister] = useState(false);
@@ -68,7 +73,7 @@ export default function AccountForm({googleAvailable, returnTo, oauthError}: {go
                 {error && <p role="alert" className={styles.feedback}>{t(error === "oauthError" ? "auth.oauthError" : errorKeys[error] ?? "auth.unavailable")}</p>}
                 {notice && <p role="status" className={styles.feedback}>{t("auth.registered")}</p>}
                 <form className={styles.form} onSubmit={submit} key={`${register}-${linking}-${onboarding}`}>
-                    {(register && !linking || onboarding) && <label className={styles.field}>{t("auth.username")}<input name="username" required minLength={3} maxLength={32} pattern="[a-z0-9_]{3,32}" autoComplete="username" aria-describedby="username-hint" /><small id="username-hint">{t("auth.usernameHint")}</small></label>}
+                    {(register && !linking || onboarding) && <label className={styles.field}>{t("auth.username")}<input name="username" required minLength={3} maxLength={32} pattern="[a-zA-Z0-9_]{3,32}" autoComplete="username" autoCapitalize="none" spellCheck={false} aria-describedby="username-hint" /><small id="username-hint">{t("auth.usernameHint")}</small></label>}
                     {register && !session && <label className={styles.field}>{t("auth.email")}<input name="email" type="email" autoComplete="email" required maxLength={254} /></label>}
                     {!register && !session && <label className={styles.field}>{t("auth.identifier")}<input name="identifier" autoComplete="username" required maxLength={254} /></label>}
                     {!onboarding && <label className={styles.field}>{t("auth.password")}<input name="password" type="password" autoComplete={register && !session ? "new-password" : "current-password"} required minLength={register && !session ? 12 : 1} maxLength={128} aria-describedby={register ? "password-hint" : undefined} />{register && <small id="password-hint">{t("auth.passwordHint")}</small>}</label>}
@@ -76,7 +81,7 @@ export default function AccountForm({googleAvailable, returnTo, oauthError}: {go
                     {(register && !session || onboarding) && <label className={styles.check}><input name="acceptTerms" type="checkbox" required /><span>{t("auth.acceptTerms")} <a href="/terms" target="_blank" rel="noreferrer">{t("auth.terms")}</a>.</span></label>}
                     <button className={styles.button} disabled={busy}>{t(busy ? "auth.busy" : linking ? "auth.link" : onboarding ? "auth.complete" : register ? "auth.register" : "auth.signIn")}</button>
                 </form>
-                {!session && (googleAvailable ? <button type="button" className={`${styles.button} ${styles.secondary}`} disabled={busy} onClick={() => {setBusy(true); void signIn("google", {redirectTo: `/account?returnTo=${encodeURIComponent(returnTo)}`}).catch(() => {setBusy(false); setError("unavailable");});}}>{t("auth.signInWithGoogle")}</button> : <p>{t("auth.googleUnavailable")}</p>)}
+                {!session && (googleAvailable ? <button type="button" className={`${styles.button} ${styles.secondary}`} disabled={busy} onClick={() => {setBusy(true); void signIn("google", {redirectTo: `/account?continue=1&returnTo=${encodeURIComponent(returnTo)}`}).catch(() => {setBusy(false); setError("unavailable");});}}>{t("auth.signInWithGoogle")}</button> : <p>{t("auth.googleUnavailable")}</p>)}
                 {session && <button className={`${styles.button} ${styles.secondary}`} onClick={() => signOut({redirectTo: "/account"})}>{t("auth.signOut")}</button>}
             </>}
         </section>

@@ -5,6 +5,10 @@ import {appPath} from "../src/paths";
 afterEach(() => vi.unstubAllEnvs());
 
 describe("independent app routing", () => {
+    it("keeps local login cookies on the configured canonical host", async () => {
+        vi.stubEnv("AUTH_URL", "http://localhost:10030");
+        expect(await createAppConfig("oskar-lab").redirects()).toContainEqual({source:"/:path*", has:[{type:"host", value:"127\\.0\\.0\\.1"}], destination:"http://localhost:10030/:path*", permanent:false});
+    });
     it("isolates app pages and assets under their own base path", () => {
         vi.stubEnv("APP_STANDALONE", "false");
         expect(createAppConfig("chess").basePath).toBe("/apps/chess");

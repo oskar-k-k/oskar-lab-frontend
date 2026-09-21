@@ -92,7 +92,7 @@ Keep domain logic in its owning app. Shared packages must not import app source.
 
 ## Platform accounts
 
-`/account` is the central login and registration page. Guests can use public apps without registering. Local registration requires a unique lowercase username (3–32 letters, digits or underscores), email, a password of 12–128 characters, matching confirmation, and explicit acceptance of the versioned terms. Login accepts username or email, case-insensitively.
+`/account` is the central login and registration page. Guests can use public apps without registering. Local registration requires a unique username (3–32 uppercase/lowercase ASCII letters, digits or underscores; displayed as entered, unique irrespective of case), email, a password of 12–128 characters, matching confirmation, and explicit acceptance of the versioned terms. Login accepts username or email, case-insensitively.
 
 Google identities must have a verified email. First-time Google users choose their username and accept the terms before account-dependent features can use their identity. When a Google email matches an existing local account, the user confirms the existing password once. This prevents account pre-hijacking through unverified local email addresses. Both login methods then resolve to the same internal UUID. Google subjects, not changeable email addresses, identify already linked accounts.
 
@@ -104,7 +104,7 @@ In `apps/oskar-lab/.env.local`:
 AUTH_SECRET=<random secret, at least 32 characters>
 AUTH_BRIDGE_SECRET=<different random secret, at least 32 characters>
 AUTH_BACKEND_URL=http://127.0.0.1:10081
-AUTH_URL=http://127.0.0.1:10030
+AUTH_URL=http://localhost:10030
 AUTH_TRUST_HOST=true
 AUTH_GOOGLE_ID=<Google OAuth web client ID>
 AUTH_GOOGLE_SECRET=<Google OAuth web client secret>
@@ -115,10 +115,10 @@ Put the **same bridge secret** in `../backend/.env.local`. Never put either secr
 In Google Cloud, configure the web client's authorized redirect URI exactly as:
 
 ```text
-http://127.0.0.1:10030/api/auth/callback/google
+http://localhost:10030/api/auth/callback/google
 ```
 
-Use `127.0.0.1:10030` consistently for local login. If you deliberately use `localhost`, change `AUTH_URL` and the Google redirect URI together. Production requires the real HTTPS origin, unique secrets, and a trusted reverse proxy that rejects untrusted Host headers. Do not expose the private backend authentication routes through a public reverse proxy.
+Use `localhost:10030` consistently for local login. With this AUTH_URL, the platform redirects requests from `127.0.0.1` to `localhost` before authentication so OAuth state and session cookies stay on one host. Production requires the real HTTPS origin, unique secrets, and a trusted reverse proxy that rejects untrusted Host headers. Do not expose the private backend authentication routes through a public reverse proxy.
 
 Start the built backend using `./start-local.ps1` in the backend directory. Start all frontends with `npm run dev`. For individual apps, `AUTH_PLATFORM_URL` identifies the central account service. Apps redirect account pages to that service and proxy session requests; they never need Google credentials.
 
