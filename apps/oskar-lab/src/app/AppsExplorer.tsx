@@ -16,7 +16,7 @@ export default function AppsExplorer({apps, backendAvailable}: Readonly<{apps: r
     const {t} = useI18n();
     const localizedApps = useMemo(() => apps.map(app => ({
         ...app,
-        description: app.path === "portfolio" ? t("apps.portfolioDescription") : app.path === "core-design" ? t("apps.coreDescription") : app.path === "chess" ? t("apps.chessDescription") : app.path === "cloth-lab" ? t("apps.virtualTryOnDescription") : app.path === "neon-vault" ? t("apps.neonVaultDescription") : app.description,
+        description: app.path === "workout" ? t("apps.workoutDescription") : app.path === "portfolio" ? t("apps.portfolioDescription") : app.path === "core-design" ? t("apps.coreDescription") : app.path === "chess" ? t("apps.chessDescription") : app.path === "cloth-lab" ? t("apps.virtualTryOnDescription") : app.path === "neon-vault" ? t("apps.neonVaultDescription") : app.description,
     })), [apps, t]);
     const visibleApps = useMemo(() => {
         const normalizedQuery = query.trim().toLocaleLowerCase("de");

@@ -1,7 +1,7 @@
 import path from "node:path";
 import {fileURLToPath} from "node:url";
 
-export const appPorts = {"oskar-lab":10030, chess:10031, "cloth-lab":10032, "neon-vault":10033, portfolio:10034, "core-design":10035};
+export const appPorts = {"oskar-lab":10030, chess:10031, "cloth-lab":10032, "neon-vault":10033, portfolio:10034, "core-design":10035, workout:10036};
 const workspaceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 
 /** Configures an independently built app and optional platform routing. */

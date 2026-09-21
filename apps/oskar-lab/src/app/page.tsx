@@ -5,6 +5,13 @@ export const dynamic = "force-dynamic";
 
 const localApps: App[] = [
     {
+        id: -6,
+        path: "workout",
+        title: "Workout",
+        description: "Reusable sessions and personal exercise plans.",
+        thumbnail: "/catalog/workout/thumbnail.svg",
+    },
+    {
         id: -3,
         path: "portfolio",
         title: "Portfolio",
