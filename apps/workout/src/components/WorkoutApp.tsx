@@ -95,6 +95,7 @@ function Sessions({signedIn, planId, exercisePosition}: {signedIn: boolean; plan
         {!planId && <header className={styles.hero}>
             <p className={styles.kicker}>{t("workout.kicker")}</p>
             <h1>{t("workout.title")}</h1><p>{t("workout.intro")}</p>
+            <Link href="/exercises" className={styles.trackLink}>{t("workout.trackIndependent")}</Link>
             {!editing && signedIn && <button className={styles.primary} disabled={loading || !catalog.length} onClick={() => edit()}>{t("workout.create")}</button>}
         </header>}
         {!planId && !signedIn && <p className={styles.notice}>{t("workout.signInHint")} <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL ?? ""}/account`}>{t("workout.signIn")}</a></p>}

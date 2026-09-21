@@ -51,7 +51,7 @@ describe("workout platform bridge", () => {
         currentUser.mockResolvedValue(null);
         expect((await GET(new Request(`http://localhost/api/workout/history/${id}`), context(["history", id]))).status).toBe(401);
         currentUser.mockResolvedValue({id});
-        const log = {id, planId: id, planVersion: 0, position: 0, exerciseId: id, trackingMode: "weighted", sets: [{setNumber: 1, value: 8, weight: 12.5}]};
+        const log = {id, exerciseId: id, trackingMode: "reps", sets: [{setNumber: 1, value: 8, weight: 12.5}]};
         const make = (body: unknown) => new Request("http://localhost/api/workout/logs", {method: "POST", headers: {origin: "http://localhost"}, body: JSON.stringify(body)});
         expect((await POST(make({...log, sets: []}), context(["logs"]))).status).toBe(400);
         expect((await POST(make(log), context(["logs"]))).status).toBe(200);

@@ -96,33 +96,29 @@ retain their original list positions and share the same group label and tabs.
 
 ## Set tracking
 
-Each prescription has `trackingMode`: `reps`, `seconds`, or `weighted` (reps + kg),
-configurable in the plan editor independently of target ranges. V6 backfills
-existing holds and common weighted exercises; mixed alternatives remain adjustable.
-The source target values remain unchanged. Dumbbell weights use one dumbbell;
-weighted bodyweight exercises use added load, not total body mass.
+Tracking is available directly from `/exercises` and `/exercises/{id}`, or inside
+session exercise details. Logs belong only to the account and catalog exercise.
+Users select repetitions or seconds and can optionally add weight to either unit.
+Plan `trackingMode` values provide initial form defaults, not restrictions.
+Dumbbell weights refer to one dumbbell; bodyweight movements use added load.
 
-Signed-in users enter actual sets in the exercise detail page. Blank rows are
-skipped, zero is valid, and additional sets are supported up to 100. Each save is
-an immutable dated entry. History belongs to the account and catalog exercise,
-across plans, with units and plan name snapshotted at save time. Editing a plan
-never rewrites history. Dates are stored in UTC and shown in the device timezone.
-History is read in pages of 20. Entries are currently append-only.
+Blank rows are skipped, zero is valid, and up to 100 sets are supported. Each save
+creates an immutable dated entry. History shows the exercise name across plans,
+with recorded units and optional weight. Dates use UTC and display in the device
+timezone. History is paginated in groups of 20 and remains append-only.
 
-`POST /internal/workout/logs` accepts a client UUID, plan ID/version, exercise ID,
-position, tracking mode and ordered `{setNumber, value, weight}` rows. The server
-checks plan access, the current prescription and valid units. Repeating an ID
-with identical data returns the original entry; changed data conflicts. Each
-new insert uses persist rather than merge to prevent concurrent retry overwrites.
+`POST /internal/workout/logs` accepts a client UUID, exercise ID, tracking mode and
+ordered `{setNumber, value, weight}` rows. No plan is required. Identical retries
+return the original entry; changed data conflicts. Inserts use persist rather than
+merge to prevent concurrent retry overwrites. Legacy `weighted` units remain
+readable. V7 makes historical plan metadata nullable without deleting old records.
 `GET /internal/workout/history/{exerciseId}?page=0` returns only the caller's logs.
 Both routes use the existing platform bridge and completed-account checks.
 
-Drafts survive tab changes and failed saves. Session storage keeps them within
-the same browser tab where available, scoped by account, plan version, position
-and type. A pending uncertain request freezes its payload until a safe retry.
-Confirmed saves clear the draft. Storage denial falls back to memory, with an
-unload warning for unfinished input. Reloading after a plan change starts a new
-draft; users must copy old values when a stale-plan conflict is reported.
+Drafts survive tab changes and failed saves. Session storage scopes drafts by
+account and exercise within the browser tab. An uncertain request freezes its
+payload until a safe retry. Confirmed saves clear the draft. Storage denial falls
+back to memory with an unload warning for unfinished input.
 
 Plan editing uses shared two-handle RangeSlider controls for sets, targets and rests.
 Exact inputs retain the full supported numeric bounds; practical slider scales

@@ -5,6 +5,7 @@ import ExerciseTracking from "./ExerciseTracking";
 import Tabs from "@oskar-lab/ui/Tabs/Tabs";
 import {useI18n} from "@oskar-lab/i18n/I18nProvider";
 import type {Entry, Exercise, Plan} from "../model/workout";
+import {trackingMode} from "../model/tracking";
 import {supersetPositions} from "../model/supersets";
 import styles from "./Workout.module.css";
 
@@ -45,7 +46,7 @@ export default function SessionView({plan, catalog, exercisePosition, canEdit, o
                             <div><dt>{t("workout.rest")}</dt><dd>{entry.restMin !== null && entry.restMax !== null ? duration(entry.restMin, entry.restMax) : t("workout.open")}</dd></div>
                         </dl>
                         {entry.notes && <section className={styles.focusNotes}><h2>{t("workout.exerciseNotes")}</h2><p>{entry.notes}</p></section>}
-                        <ExerciseTracking plan={plan} entry={entry} position={position} />
+                        <ExerciseTracking exercise={catalog.find(exercise => exercise.id === entry.exerciseId)!} initialSets={entry.setsMax} initialMode={trackingMode(entry)} />
                         </>};
                 })} />
         </article>;

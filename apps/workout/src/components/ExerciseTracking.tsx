@@ -4,21 +4,21 @@ import {useEffect, useState} from "react";
 import {useCurrentUser} from "@oskar-lab/auth/useCurrentUser";
 import {useI18n} from "@oskar-lab/i18n/I18nProvider";
 import {appPath} from "@oskar-lab/config/paths";
-import type {Entry, Plan} from "../model/workout";
-import {completedSets, isExerciseLog, isHistory, isSaveLog, trackingMode, type ExerciseLog, type SaveLog, type SetDraft} from "../model/tracking";
+import type {Exercise} from "../model/workout";
+import {completedSets, isExerciseLog, isHistory, isSaveLog, type TrackingMode, type ExerciseLog, type SaveLog, type SetDraft} from "../model/tracking";
 import {request, WorkoutError} from "../services/client";
 import styles from "./Workout.module.css";
 
-type Props = {plan: Plan; entry: Entry; position: number};
-type Draft = {rows: SetDraft[]; pending: SaveLog | null};
+type Props = {exercise: Exercise; initialSets?: number; initialMode?: TrackingMode};
+type Draft = {rows: SetDraft[]; pending: SaveLog | null; unit: "reps" | "seconds"; withWeight: boolean};
 
-function readDraft(key: string, count: number): Draft {
-    const empty = {rows: Array.from({length: count}, () => ({value: "", weight: ""})), pending: null};
+function readDraft(key: string, count: number, initialMode: TrackingMode): Draft {
+    const empty: Draft = {unit: initialMode === "seconds" ? "seconds" : "reps", withWeight: initialMode === "weighted", rows: Array.from({length: count}, () => ({value: "", weight: ""})), pending: null};
     try {
         const value: unknown = JSON.parse(sessionStorage.getItem(key) ?? "null");
         if (!value || typeof value !== "object") return empty;
         const draft = value as Draft;
-        if (!Array.isArray(draft.rows) || !draft.rows.length || draft.rows.length > 100 ||
+        if ((draft.unit !== "reps" && draft.unit !== "seconds") || typeof draft.withWeight !== "boolean" || !Array.isArray(draft.rows) || !draft.rows.length || draft.rows.length > 100 ||
             !draft.rows.every(row => row && typeof row.value === "string" && row.value.length <= 20 && typeof row.weight === "string" && row.weight.length <= 20) ||
             (draft.pending !== null && !isSaveLog(draft.pending))) return empty;
         return draft;
@@ -30,15 +30,15 @@ export default function ExerciseTracking(props: Props) {
     const {user} = useCurrentUser();
     const {t} = useI18n();
     if (!user) return <section className={styles.tracking}><p className={styles.muted}>{t("workout.trackingLogin")}</p>
-        <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL ?? ""}/account?returnTo=${encodeURIComponent(appPath(`/sessions/${props.plan.id}/exercises/${props.position}`))}`}>{t("workout.signIn")}</a></section>;
-    return <PersonalTracking key={`${user.id}:${props.plan.id}:${props.plan.version}:${props.position}`} {...props} ownerId={user.id} />;
+        <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL ?? ""}/account?returnTo=${encodeURIComponent(appPath(`/exercises/${props.exercise.id}`))}`}>{t("workout.signIn")}</a></section>;
+    return <PersonalTracking key={`${user.id}:${props.exercise.id}`} {...props} ownerId={user.id} />;
 }
 
-function PersonalTracking({plan, entry, position, ownerId}: Props & {ownerId: string}) {
+function PersonalTracking({exercise, initialSets = 3, initialMode = "reps", ownerId}: Props & {ownerId: string}) {
     const {t, locale} = useI18n();
-    const unit = trackingMode(entry);
-    const storageKey = `workout-draft:${ownerId}:${plan.id}:${plan.version}:${position}:${unit}`;
-    const [draft, setDraft] = useState(() => readDraft(storageKey, entry.setsMax));
+    const storageKey = `exercise-draft:${ownerId}:${exercise.id}`;
+    const [draft, setDraft] = useState(() => readDraft(storageKey, initialSets, initialMode));
+    const {unit, withWeight} = draft;
     const [busy, setBusy] = useState(false);
     const [saved, setSaved] = useState(false);
     const [error, setError] = useState<number | null>(null);
@@ -61,14 +61,14 @@ function PersonalTracking({plan, entry, position, ownerId}: Props & {ownerId: st
     }, [draft, dirty, storageKey]);
     useEffect(() => {
         let active = true;
-        request(`history/${entry.exerciseId}?page=${page}`, isHistory).then(result => {
+        request(`history/${exercise.id}?page=${page}`, isHistory).then(result => {
             if (!active) return;
             setHistory(current => page === 0 ? result.entries : [...current, ...result.entries.filter(log => !current.some(old => old.id === log.id))]);
             setHasMore(result.hasMore); setHistoryError(false);
         }).catch(() => {if (active) setHistoryError(true);})
             .finally(() => {if (active) setHistoryLoading(false);});
         return () => {active = false;};
-    }, [entry.exerciseId, page, reload]);
+    }, [exercise.id, page, reload]);
 
     function update(index: number, field: keyof SetDraft, value: string) {
         setSaved(false); setError(null);
@@ -76,15 +76,14 @@ function PersonalTracking({plan, entry, position, ownerId}: Props & {ownerId: st
     }
     async function save() {
         if (busy) return;
-        const sets = completedSets(draft.rows, unit);
+        const sets = completedSets(draft.rows);
         if (!draft.pending && !sets) {setError(400); return;}
-        const payload = draft.pending ?? {id: crypto.randomUUID(), planId: plan.id, planVersion: plan.version,
-            position, exerciseId: entry.exerciseId, trackingMode: unit, sets: sets!};
+        const payload = draft.pending ?? {id: crypto.randomUUID(), exerciseId: exercise.id, trackingMode: unit, sets: sets!};
         setDraft(current => ({...current, pending: payload})); setBusy(true); setError(null);
         try {
             const log = await request("logs", isExerciseLog, payload, "POST");
             setHistory(current => [log, ...current.filter(old => old.id !== log.id)]);
-            setDraft({rows: Array.from({length: entry.setsMax}, () => ({value: "", weight: ""})), pending: null});
+            setDraft(current => ({...current, rows: Array.from({length: initialSets}, () => ({value: "", weight: ""})), pending: null}));
             setSaved(true); setHistoryLoading(true); setPage(0); setReload(value => value + 1);
         } catch (failure) {
             const status = failure instanceof WorkoutError ? failure.status : 503;
@@ -96,13 +95,22 @@ function PersonalTracking({plan, entry, position, ownerId}: Props & {ownerId: st
     const valueLabel = t(unit === "seconds" ? "workout.durationSeconds" : "workout.reps");
     return <section className={styles.tracking}>
         <h2>{t("workout.tracking")}</h2><p className={styles.muted}>{t("workout.actualHint")}</p>
-        {unit === "weighted" && <p className={styles.muted}>{t("workout.weightHint")}</p>}
+        {withWeight && <p className={styles.muted}>{t("workout.weightHint")}</p>}
         <form onSubmit={event => {event.preventDefault(); void save();}}>
             <fieldset disabled={busy || draft.pending !== null} className={styles.setFields}>
+                <div className={styles.trackingOptions}>
+                    <label>{t("workout.recordUnit")}<select value={unit} onChange={event => setDraft(current => ({...current, unit: event.target.value as "reps" | "seconds"}))}>
+                        <option value="reps">{t("workout.reps")}</option><option value="seconds">{t("workout.durationSeconds")}</option>
+                    </select></label>
+                    <label className={styles.weightToggle}><input type="checkbox" checked={withWeight} onChange={event => {
+                        const checked = event.target.checked;
+                        setDraft(current => ({...current, withWeight: checked, rows: current.rows.map(row => ({...row, weight: checked ? row.weight : ""}))}));
+                    }} />{t("workout.optionalWeight")}</label>
+                </div>
                 {draft.rows.map((row, index) => <div className={styles.setRow} key={index}>
                     <span>{t("workout.setNumber", {number: index + 1})}</span>
                     <label>{valueLabel}<input aria-label={`${t("workout.setNumber", {number: index + 1})}: ${valueLabel}`} type="number" inputMode="numeric" min="0" max="86400" step="1" value={row.value} onChange={event => update(index, "value", event.target.value)} /></label>
-                    {unit === "weighted" && <label>{t("workout.weightKg")}<input aria-label={`${t("workout.setNumber", {number: index + 1})}: ${t("workout.weightKg")}`} type="number" inputMode="decimal" min="0" max="10000" step="0.01" value={row.weight} onChange={event => update(index, "weight", event.target.value)} /></label>}
+                    {withWeight && <label>{t("workout.weightKg")}<input aria-label={`${t("workout.setNumber", {number: index + 1})}: ${t("workout.weightKg")}`} type="number" inputMode="decimal" min="0" max="10000" step="0.01" value={row.weight} onChange={event => update(index, "weight", event.target.value)} /></label>}
                 </div>)}
                 <button type="button" disabled={draft.rows.length >= 100} onClick={() => setDraft(current => ({...current, rows: [...current.rows, {value: "", weight: ""}]}))}>{t("workout.addSet")}</button>
             </fieldset>
@@ -117,7 +125,7 @@ function PersonalTracking({plan, entry, position, ownerId}: Props & {ownerId: st
         {!historyLoading && !historyError && !history.length && <p className={styles.muted}>{t("workout.historyEmpty")}</p>}
         <ol className={styles.history}>{history.map(log => <li key={log.id}>
             <time dateTime={log.recordedAt}>{new Intl.DateTimeFormat(locale, {dateStyle: "medium", timeStyle: "short"}).format(new Date(log.recordedAt))}</time>
-            <p className={styles.muted}>{log.planName}</p>
+            <p className={styles.muted}>{locale === "de" ? exercise.nameDe : exercise.name}</p>
             {log.sets.map(set => <div className={styles.historySet} key={set.setNumber}><span>{t("workout.setNumber", {number: set.setNumber})}</span>
                 <strong>{set.value} {t(log.trackingMode === "seconds" ? "workout.secondsShort" : "workout.reps")}{set.weight !== null && ` · ${new Intl.NumberFormat(locale).format(set.weight)} kg`}</strong></div>)}
         </li>)}</ol>
