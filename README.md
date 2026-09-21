@@ -10,6 +10,7 @@ npm.cmd run dev
 
 Do not overwrite an existing `.env.local`. Open http://localhost:10030.
 `npm.cmd run start` also uses port 10030 after `npm.cmd run build`.
+The development server also allows `127.0.0.1` via `allowedDevOrigins`, so local IP links can load development resources and interactive components.
 
 ## Services
 
