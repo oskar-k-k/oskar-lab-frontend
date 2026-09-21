@@ -4,7 +4,7 @@ export type Exercise = {id: string; name: string; nameDe: string};
 export type Entry = {
     exerciseId: string; setsMin: number; setsMax: number; mode: "reps" | "seconds" | "unspecified";
     targetMin: number | null; targetMax: number | null; restMin: number | null; restMax: number | null;
-    superset: string; notes: string;
+    superset: string; notes: string; trackingMode?: "reps" | "seconds" | "weighted";
 };
 /** Array order is the exercise order. Version prevents stale updates. */
 export type Plan = {id: string; version: number; name: string; notes: string; template: boolean; exercises: Entry[]};
@@ -25,6 +25,7 @@ export function isEntry(v: unknown): v is Entry {
         integer(v.setsMin, 1, 100) && integer(v.setsMax, 1, 100) && v.setsMin <= v.setsMax &&
         (v.mode === "unspecified" ? v.targetMin === null && v.targetMax === null :
             (v.mode === "seconds" || v.mode === "reps") && v.targetMin !== null && range(v.targetMin, v.targetMax, 1)) &&
+        (v.trackingMode === undefined || ["reps", "seconds", "weighted"].includes(String(v.trackingMode))) &&
         range(v.restMin, v.restMax, 0) && text(v.superset, 32) && text(v.notes, 1000);
 }
 /** Validates persisted plans and form drafts at HTTP boundaries. */

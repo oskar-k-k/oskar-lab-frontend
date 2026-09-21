@@ -45,4 +45,19 @@ describe("workout platform bridge", () => {
         });
         expect((await POST(request, context(["plans"]))).status).toBe(200);
     });
+    it("requires a verified account for history and validates tracking writes", async () => {
+        vi.stubEnv("AUTH_BRIDGE_SECRET", "synthetic-secret-at-least-32-characters");
+        const fetcher = vi.fn().mockResolvedValue(Response.json({})); vi.stubGlobal("fetch", fetcher);
+        currentUser.mockResolvedValue(null);
+        expect((await GET(new Request(`http://localhost/api/workout/history/${id}`), context(["history", id]))).status).toBe(401);
+        currentUser.mockResolvedValue({id});
+        const log = {id, planId: id, planVersion: 0, position: 0, exerciseId: id, trackingMode: "weighted", sets: [{setNumber: 1, value: 8, weight: 12.5}]};
+        const make = (body: unknown) => new Request("http://localhost/api/workout/logs", {method: "POST", headers: {origin: "http://localhost"}, body: JSON.stringify(body)});
+        expect((await POST(make({...log, sets: []}), context(["logs"]))).status).toBe(400);
+        expect((await POST(make(log), context(["logs"]))).status).toBe(200);
+        expect(fetcher.mock.calls[0][1].headers["X-User-Id"]).toBe(id);
+        await GET(new Request(`http://localhost/api/workout/history/${id}?page=2`), context(["history", id]));
+        expect(fetcher.mock.calls[1][0]).toContain(`history/${id}?page=2`);
+    });
+
 });

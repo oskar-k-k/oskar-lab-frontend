@@ -3,6 +3,7 @@
 import {useState} from "react";
 import {useI18n} from "@oskar-lab/i18n/I18nProvider";
 import {isPlan, moveEntry, newEntry, type Entry, type Exercise, type Plan} from "../model/workout";
+import {trackingMode} from "../model/tracking";
 import styles from "./Workout.module.css";
 
 type Props = {initial: Plan; catalog: Exercise[]; busy: boolean; onSave: (plan: Plan) => void; onCancel: () => void};
@@ -47,6 +48,9 @@ export default function PlanEditor({initial, catalog, busy, onSave, onCancel}: P
                         update(index, {mode, targetMin: null, targetMax: null});
                     }}>{(["reps", "seconds", "unspecified"] as const).map(mode => <option key={mode} value={mode}>{t(`workout.${mode}`)}</option>)}</select></label>
                 </div>
+                <label>{t("workout.trackingType")}<select value={trackingMode(entry)} onChange={event => update(index, {trackingMode: event.target.value as Entry["trackingMode"]})}>
+                    {(["reps", "seconds", "weighted"] as const).map(mode => <option key={mode} value={mode}>{t(`workout.track.${mode}`)}</option>)}
+                </select></label>
                 <div className={styles.numbers}>
                     {numeric(entry, index, "setsMin")}{numeric(entry, index, "setsMax")}
                     {entry.mode !== "unspecified" && <>{numeric(entry, index, "targetMin")}{numeric(entry, index, "targetMax")}</>}
