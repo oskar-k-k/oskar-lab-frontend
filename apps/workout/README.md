@@ -83,3 +83,9 @@ repeated exercises and refers to the current plan order. This full-page view sho
 sets, targets, rest, superset group and all exercise notes. Its back link returns
 to the session, including after a direct visit or reload. Invalid positions show
 a recoverable message. Plan notes remain collapsed below the session list.
+
+Superset rows share a bordered visual group and labeled connection line without
+changing exercise order. Exercise pages expose all members of the selected group
+as URL-backed tabs; single exercises get one tab. Keyboard users can focus tabs
+with arrows/Home/End and activate them with Enter or Space. Non-adjacent members
+retain their original list positions and share the same group label and tabs.
