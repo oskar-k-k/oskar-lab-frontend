@@ -11,11 +11,12 @@ export default function WorkoutHeader() {
     const pathname = usePathname();
     const {t} = useI18n();
     if (!pathname.includes("/sessions/")) return <Header appName="Workout" />;
+    const exercise = pathname.match(/\/sessions\/([0-9a-f-]+)\/exercises\//i);
+    const backLabel = t(exercise ? "workout.backToSession" : "workout.backToPlans");
     return <header className={styles.sessionHeader}>
-        <Link href="/" aria-label={t("workout.backToPlans")}>
+        <Link href={exercise ? `/sessions/${exercise[1]}` : "/"} aria-label={backLabel}>
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m14 6-6 6 6 6M8 12h13" /></svg>
-            <span>{t("workout.backToPlans")}</span>
+            <span>{backLabel}</span>
         </Link>
-        <span>{t("workout.session")}</span>
     </header>;
 }

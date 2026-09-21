@@ -9,23 +9,24 @@ import {useI18n} from "@oskar-lab/i18n/I18nProvider";
 import {isExercise, isPlan, isPlanPage, type Exercise, type Plan} from "../model/workout";
 import {request, WorkoutError} from "../services/client";
 import PlanEditor from "./PlanEditor";
+import SessionView from "./SessionView";
 import styles from "./Workout.module.css";
 
 const isCatalog = (v: unknown): v is Exercise[] => Array.isArray(v) && v.every(isExercise);
 const isPlans = (v: unknown): v is Plan[] => Array.isArray(v) && v.every(isPlan);
-const range = (min: number, max: number) => min === max ? String(min) : `${min}–${max}`;
+
 
 /** Reloads account-scoped UI on identity changes so drafts cannot cross accounts. */
-export default function WorkoutApp({planId}: {planId?: string}) {
+export default function WorkoutApp({planId, exercisePosition}: {planId?: string; exercisePosition?: number}) {
     const {user, loading} = useCurrentUser();
     const {t} = useI18n();
     if (loading) return <main className={styles.page}><p role="status">{t("workout.loading")}</p></main>;
-    return <Sessions key={`${user?.id ?? "guest"}:${planId ?? "overview"}`} signedIn={!!user} planId={planId} />;
+    return <Sessions key={`${user?.id ?? "guest"}:${planId ?? "overview"}`} signedIn={!!user} planId={planId} exercisePosition={exercisePosition} />;
 }
 
-function Sessions({signedIn, planId}: {signedIn: boolean; planId?: string}) {
+function Sessions({signedIn, planId, exercisePosition}: {signedIn: boolean; planId?: string; exercisePosition?: number}) {
     const router = useRouter();
-    const {t, locale} = useI18n();
+    const {t} = useI18n();
     const [catalog, setCatalog] = useState<Exercise[]>([]);
     const [templates, setTemplates] = useState<Plan[]>([]);
     const [plans, setPlans] = useState<Plan[]>([]);
@@ -110,22 +111,9 @@ function Sessions({signedIn, planId}: {signedIn: boolean; planId?: string}) {
                 {hasMore && <button disabled={busy} onClick={more}>{t("workout.more")}</button>}
             </section>}
             {!planId && <section className={styles.section} aria-labelledby="templates-title"><h2 id="templates-title">{t("workout.templates")}</h2>{cards(templates)}</section>}
-            {selected && <section className={styles.detail} aria-label={selected.name}>
-                <div className={styles.detailHeader}><div><p className={styles.kicker}>{t(selected.template ? "workout.template" : "workout.personal")}</p><h1>{selected.name}</h1></div>
-                    {signedIn && <button className={styles.primary} onClick={() => edit(selected)}>{t(selected.template ? "workout.useTemplate" : "workout.edit")}</button>}
-                </div>
-                {selected.notes && <details className={styles.planNotes}><summary>{t("workout.planNotes")}</summary><p className={styles.muted}>{selected.notes}</p></details>}
-                <ol className={styles.exercises}>{selected.exercises.map((entry, index) => <li key={index}>
-                    <span className={styles.position} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span><div>
-                        <h3>{catalog.find(e => e.id === entry.exerciseId)?.[locale === "de" ? "nameDe" : "name"]}</h3>
-                        <p className={styles.prescription}>{range(entry.setsMin, entry.setsMax)} {t(entry.setsMax === 1 ? "workout.oneSet" : "workout.sets")}
-                            {entry.targetMin !== null && entry.targetMax !== null && <> × {range(entry.targetMin, entry.targetMax)} {t(entry.mode === "seconds" ? "workout.secondsShort" : "workout.reps")}</>}</p>
-                        <p className={styles.muted}>{entry.restMin === null || entry.restMax === null ? t("workout.restUnspecified") : t("workout.restValue", {value: range(entry.restMin, entry.restMax)})}</p>
-                        {entry.superset && <span className={styles.tag}>{t("workout.group", {group: entry.superset})}</span>}
-                        {entry.notes && (entry.notes.length > 80 ? <details className={styles.note}><summary>{t("workout.exerciseNotes")}</summary><p>{entry.notes}</p></details> : <p className={styles.note}>{entry.notes}</p>)}
-                    </div>
-                </li>)}</ol>
-            </section>}
+            {selected && <SessionView plan={selected} catalog={catalog} exercisePosition={exercisePosition}
+                canEdit={signedIn} onEdit={() => edit(selected)} />}
+
         </>}
     </main>;
 }

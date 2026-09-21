@@ -61,6 +61,27 @@
 .page summary {cursor: pointer; min-height: 44px; align-content: center; color: var(--color-text-muted);}
 .planNotes {font-size: .85rem; border-bottom: 1px solid var(--color-border-muted);}
 .planNotes p {padding-bottom: 12px;}
+.minimalTitle {display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--color-border-muted);}
+.minimalTitle h1 {flex: 1; min-width: 0; margin: 0; font-size: 1rem; line-height: 1.35; font-weight: 650;}
+.page .minimalTitle button {flex-shrink: 0; padding: 8px; background: transparent; border: none; font-size: .8rem; color: var(--color-text-muted);}
+.exerciseLinks {list-style: none; padding: 0; margin: 0;}
+.exerciseLinks li {border-bottom: 1px solid var(--color-border-muted);}
+.exerciseLinks a {display: grid; grid-template-columns: 24px minmax(0, 1fr) 14px; align-items: center; gap: 10px; padding: 16px 0; min-height: 76px; color: var(--color-text); text-decoration: none;}
+.exerciseLinks a:hover {background: var(--color-background-soft);}
+.exerciseLabel {display: grid; gap: 4px;}
+.exerciseName {font-weight: 600; font-size: .95rem; line-height: 1.35;}
+.exerciseLinks .prescription {margin: 0; font-size: .85rem; font-weight: 500;}
+.chevron {color: var(--color-text-subtle); font-size: 1.3rem;}
+.exerciseFocus {padding-top: 12px;}
+.exerciseFocus h1 {font-size: clamp(1.5rem, 5vw, 2rem); font-weight: 650; line-height: 1.25;}
+.focusTarget {margin: 20px 0 28px; font-size: clamp(1.5rem, 6vw, 2.4rem); font-weight: 600; color: var(--color-accent-green);}
+.facts {margin: 0;}
+.facts > div {display: flex; justify-content: space-between; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--color-border-muted);}
+.facts dt {color: var(--color-text-muted);}
+.facts dd {margin: 0; text-align: right;}
+.focusNotes {padding-top: 28px;}
+.focusNotes h2 {font-size: .9rem; color: var(--color-text-muted); margin-bottom: 12px;}
+.focusNotes p {line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere;}
 @media (min-width: 700px) {
     .page {padding-top: 50px;}
     .cards {grid-template-columns: repeat(3, minmax(0, 1fr));}

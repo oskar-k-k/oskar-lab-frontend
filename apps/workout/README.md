@@ -74,3 +74,12 @@ back-to-plans header. The URL survives reloads and direct visits. Personal sessi
 links require their owner to sign in. Session rows are compact on mobile; long
 technique/combination notes and plan notes remain available in disclosures.
 The same dedicated session route is used on desktop.
+
+## Exercise focus
+
+Session rows show only the exercise name and prescription. Opening a row navigates
+to `/sessions/{id}/exercises/{position}`; the zero-based position distinguishes
+repeated exercises and refers to the current plan order. This full-page view shows
+sets, targets, rest, superset group and all exercise notes. Its back link returns
+to the session, including after a direct visit or reload. Invalid positions show
+a recoverable message. Plan notes remain collapsed below the session list.
