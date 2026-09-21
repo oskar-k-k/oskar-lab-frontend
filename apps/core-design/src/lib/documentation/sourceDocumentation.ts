@@ -105,7 +105,7 @@ async function generateSourceDocumentation(directory: string): Promise<SourceDoc
 
 /** Generates documentation for all shared Core source files. */
 export function generateCoreDocumentation(): Promise<SourceDocumentation[]> {
-    return generateSourceDocumentation(path.resolve(process.cwd(), "../../packages/core/src"));
+    return Promise.all(["core", "auth"].map(name => generateSourceDocumentation(path.resolve(process.cwd(), `../../packages/${name}/src`)))).then(groups => groups.flat());
 }
 
 /** Generates documentation for all global React components. */

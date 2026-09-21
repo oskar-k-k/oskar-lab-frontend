@@ -89,3 +89,63 @@ npm.cmd run check
 This checks types in every app, lints the workspace, runs app/package tests and builds each app independently. Core & Design reads source documentation from `packages/core`, `packages/ui`, and `packages/platform-shell`.
 
 Keep domain logic in its owning app. Shared packages must not import app source. Each product owns its root layout and can replace shared document defaults or the platform header later. The translation catalog remains shared for now; extracting an app also requires its relevant translations and package dependencies.
+
+## Platform accounts
+
+`/account` is the central login and registration page. Guests can use public apps without registering. Local registration requires a unique lowercase username (3–32 letters, digits or underscores), email, a password of 12–128 characters, matching confirmation, and explicit acceptance of the versioned terms. Login accepts username or email, case-insensitively.
+
+Google identities must have a verified email. First-time Google users choose their username and accept the terms before account-dependent features can use their identity. When a Google email matches an existing local account, the user confirms the existing password once. This prevents account pre-hijacking through unverified local email addresses. Both login methods then resolve to the same internal UUID. Google subjects, not changeable email addresses, identify already linked accounts.
+
+### Local configuration
+
+In `apps/oskar-lab/.env.local`:
+
+```dotenv
+AUTH_SECRET=<random secret, at least 32 characters>
+AUTH_BRIDGE_SECRET=<different random secret, at least 32 characters>
+AUTH_BACKEND_URL=http://127.0.0.1:10081
+AUTH_URL=http://127.0.0.1:10030
+AUTH_TRUST_HOST=true
+AUTH_GOOGLE_ID=<Google OAuth web client ID>
+AUTH_GOOGLE_SECRET=<Google OAuth web client secret>
+```
+
+Put the **same bridge secret** in `../backend/.env.local`. Never put either secret in a `NEXT_PUBLIC_*` variable. The backend accepts identity operations only through this server-to-server credential. Google credentials belong only to the platform. Restart the platform after updating them.
+
+In Google Cloud, configure the web client's authorized redirect URI exactly as:
+
+```text
+http://127.0.0.1:10030/api/auth/callback/google
+```
+
+Use `127.0.0.1:10030` consistently for local login. If you deliberately use `localhost`, change `AUTH_URL` and the Google redirect URI together. Production requires the real HTTPS origin, unique secrets, and a trusted reverse proxy that rejects untrusted Host headers. Do not expose the private backend authentication routes through a public reverse proxy.
+
+Start the built backend using `./start-local.ps1` in the backend directory. Start all frontends with `npm run dev`. For individual apps, `AUTH_PLATFORM_URL` identifies the central account service. Apps redirect account pages to that service and proxy session requests; they never need Google credentials.
+
+### Checking identity in apps
+
+```tsx
+// Client component: presentation only, never an authorization boundary.
+import {useCurrentUser} from '@oskar-lab/auth/useCurrentUser';
+const {user, loading, needsOnboarding} = useCurrentUser();
+```
+
+```ts
+// Server Component or route: verifies the incoming cookie with the central service.
+import {getCurrentUser, requireCurrentUser} from '@oskar-lab/auth/platformUser';
+const optionalUser = await getCurrentUser(); // null for guests / unfinished onboarding
+const user = await requireCurrentUser();    // throws without a completed account
+// Use user.id for ownership checks; never trust an ID submitted by the client.
+```
+
+Server helpers fail closed on account-service outages. Keep public pages independent of those helpers. The shared provider remains available even when the platform header is hidden. Integrated apps share the browser origin; unrelated production domains need a dedicated SSO flow, not cross-domain cookie copying.
+
+Auth.js stores the opaque backend credential only inside its encrypted HTTP-only session cookie, never in the public session JSON. The backend stores its SHA-256 digest, validates it on session reads, expires it after seven days and revokes it on logout. Passwords use salted PBKDF2-HMAC-SHA256 with 600,000 iterations. Login and registration have backend rate limits. The current limiter is in-process; multi-instance production deployments need a shared limiter and edge/IP limits. Schedule removal of expired database sessions as operational maintenance.
+
+### Terms and release requirements
+
+`/terms` contains a bilingual development draft; `/privacy` explains the account data and essential session cookie. Acceptance time and terms version are persisted. Keep `TERMS_VERSION` in the shared auth contract and `AccountService.TERMS_VERSION` synchronized when publishing updated terms. Existing accounts are not silently recorded as having accepted a new version.
+
+Before public release, supply the operator/contact details and complete and review the privacy notice. The draft leaves statutory liability intact; it is not a legal review. References: [BGB §307](https://www.gesetze-im-internet.de/bgb/__307.html), [BGB §309](https://www.gesetze-im-internet.de/bgb/__309.html), [DDG §5](https://www.gesetze-im-internet.de/ddg/__5.html).
+
+Local email addresses are not yet verified by email, and there is no email delivery/password-reset flow. They are not proof of ownership; provider linking therefore requires the existing password. Google OAuth must be tested with real configured credentials before release. Never enable unconditional email-based account linking.

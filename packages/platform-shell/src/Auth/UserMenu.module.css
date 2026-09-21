@@ -172,3 +172,6 @@
         white-space: nowrap;
     }
 }
+.panel { display: grid; gap: 8px; z-index: 100; }
+.loginButton { text-decoration: none; }
+.panel a { padding: 8px; color: var(--color-text); }

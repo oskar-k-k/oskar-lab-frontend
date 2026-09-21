@@ -19,7 +19,7 @@ export function createAppConfig(name) {
         outputFileTracingRoot: workspaceRoot,
         env: {NEXT_PUBLIC_APP_BASE_PATH: basePath},
         async redirects() {
-            if (!platform) return [];
+            if (!platform) return ["/account", "/terms", "/privacy"].map(source => ({source, destination:`${process.env.AUTH_PLATFORM_URL ?? "http://127.0.0.1:10030"}${source}`, permanent:false, basePath:false}));
             return [
                 {source:"/apps/core/:path*", destination:"/apps/core-design/:path*", permanent:true},
                 {source:"/projects/core/:path*", destination:"/apps/core-design/:path*", permanent:true},

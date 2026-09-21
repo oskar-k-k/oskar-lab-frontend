@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "exports": {
+    "./contracts": "./src/contracts.ts",
+    "./backend": "./src/backend.ts",
+    "./useCurrentUser": "./src/useCurrentUser.ts",
     "./AuthProvider": "./src/AuthProvider.tsx",
     "./platformUser": "./src/platformUser.ts",
     "./server": "./src/server.ts"
