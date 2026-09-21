@@ -1,0 +1,18 @@
+.range {min-width: 0; border: 0; margin: 0; padding: 0;}
+.range legend {font-size: .9rem; font-weight: 600; margin-bottom: 8px;}
+.values {display: flex; justify-content: space-between; gap: 16px;}
+.range .values label {display: flex; align-items: center; gap: 6px; font-size: .75rem; color: var(--color-text-muted);}
+.range .values input {width: 76px; min-height: 44px; padding: 6px; color: var(--color-text); background: var(--color-background-soft); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font: inherit; text-align: center;}
+.track {position: relative; height: 48px; margin: 0 12px;}
+.rail {position: absolute; top: 22px; height: 4px; width: 100%; border-radius: 4px; background: linear-gradient(to right, var(--color-border) var(--low), var(--color-primary) var(--low), var(--color-primary) var(--high), var(--color-border) var(--high));}
+.range .track .handle {position: absolute; inset: 0; width: 100%; height: 48px; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; appearance: none; pointer-events: none;}
+.handle::-webkit-slider-thumb {appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--color-primary); border: 3px solid var(--color-background); box-shadow: 0 0 0 1px var(--color-primary); pointer-events: auto; cursor: grab;}
+.handle::-moz-range-thumb {width: 20px; height: 20px; border-radius: 50%; background: var(--color-primary); border: 3px solid var(--color-background); pointer-events: auto; cursor: grab;}
+.handle:focus-visible::-webkit-slider-thumb {outline: 3px solid var(--color-focus); outline-offset: 3px;}
+.handle:focus-visible::-moz-range-thumb {outline: 3px solid var(--color-focus); outline-offset: 3px;}
+.range:disabled {opacity: .5;}
+.range:disabled .handle::-webkit-slider-thumb {pointer-events: none;}
+.range:disabled .handle::-moz-range-thumb {pointer-events: none;}
+
+.track[data-overlap="true"] .handle:first-of-type {transform: translateY(-8px);}
+.track[data-overlap="true"] .handle:last-of-type {transform: translateY(8px);}

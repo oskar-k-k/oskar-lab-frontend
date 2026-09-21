@@ -123,3 +123,7 @@ and type. A pending uncertain request freezes its payload until a safe retry.
 Confirmed saves clear the draft. Storage denial falls back to memory, with an
 unload warning for unfinished input. Reloading after a plan change starts a new
 draft; users must copy old values when a stale-plan conflict is reported.
+
+Plan editing uses shared two-handle RangeSlider controls for sets, targets and rests.
+Exact inputs retain the full supported numeric bounds; practical slider scales
+expand to include larger existing values. Open rests use an explicit checkbox.

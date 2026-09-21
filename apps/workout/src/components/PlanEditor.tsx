@@ -1,5 +1,6 @@
 "use client";
 
+import RangeSlider from "@oskar-lab/ui/RangeSlider/RangeSlider";
 import {useState} from "react";
 import {useI18n} from "@oskar-lab/i18n/I18nProvider";
 import {isPlan, moveEntry, newEntry, type Entry, type Exercise, type Plan} from "../model/workout";
@@ -7,7 +8,7 @@ import {trackingMode} from "../model/tracking";
 import styles from "./Workout.module.css";
 
 type Props = {initial: Plan; catalog: Exercise[]; busy: boolean; onSave: (plan: Plan) => void; onCancel: () => void};
-type NumberField = "setsMin" | "setsMax" | "targetMin" | "targetMax" | "restMin" | "restMax";
+
 
 /** Edits an isolated draft; cancel and failed saves never mutate persisted data. */
 export default function PlanEditor({initial, catalog, busy, onSave, onCancel}: Props) {
@@ -17,13 +18,6 @@ export default function PlanEditor({initial, catalog, busy, onSave, onCancel}: P
     const [selected, setSelected] = useState(catalog[0]?.id ?? "");
     function update(index: number, change: Partial<Entry>) {
         setDraft(current => ({...current, exercises: current.exercises.map((entry, i) => i === index ? {...entry, ...change} : entry)}));
-    }
-    function numeric(entry: Entry, index: number, key: NumberField) {
-        const sets = key.startsWith("sets");
-        return <label key={key}>{t(`workout.${key}`)}<input type="number" inputMode="numeric"
-            min={key.startsWith("rest") ? 0 : 1} max={sets ? 100 : 86400} step="1" required={sets || key.startsWith("target")}
-            value={Number.isNaN(entry[key]) ? "" : entry[key] ?? ""}
-            onChange={event => update(index, {[key]: event.target.value === "" ? sets ? NaN : null : Number(event.target.value)})} /></label>;
     }
     return <form className={styles.editor} onSubmit={event => {
         event.preventDefault();
@@ -45,16 +39,22 @@ export default function PlanEditor({initial, catalog, busy, onSave, onCancel}: P
                     </select></label>
                     <label>{t("workout.mode")}<select value={entry.mode} onChange={e => {
                         const mode = e.target.value as Entry["mode"];
-                        update(index, {mode, targetMin: null, targetMax: null});
+                        update(index, {mode, targetMin: mode === "unspecified" ? null : 1, targetMax: mode === "unspecified" ? null : 1});
                     }}>{(["reps", "seconds", "unspecified"] as const).map(mode => <option key={mode} value={mode}>{t(`workout.${mode}`)}</option>)}</select></label>
                 </div>
                 <label>{t("workout.trackingType")}<select value={trackingMode(entry)} onChange={event => update(index, {trackingMode: event.target.value as Entry["trackingMode"]})}>
                     {(["reps", "seconds", "weighted"] as const).map(mode => <option key={mode} value={mode}>{t(`workout.track.${mode}`)}</option>)}
                 </select></label>
-                <div className={styles.numbers}>
-                    {numeric(entry, index, "setsMin")}{numeric(entry, index, "setsMax")}
-                    {entry.mode !== "unspecified" && <>{numeric(entry, index, "targetMin")}{numeric(entry, index, "targetMax")}</>}
-                    {numeric(entry, index, "restMin")}{numeric(entry, index, "restMax")}
+                <div className={styles.rangeFields}>
+                    <RangeSlider label={t("workout.sets")} minLabel={t("common.minimum")} maxLabel={t("common.maximum")} min={1} max={100} sliderMax={20}
+                        value={[entry.setsMin, entry.setsMax]} onChange={([setsMin, setsMax]) => update(index, {setsMin, setsMax})} />
+                    {entry.mode !== "unspecified" && <RangeSlider label={t(entry.mode === "seconds" ? "workout.durationSeconds" : "workout.reps")}
+                        minLabel={t("common.minimum")} maxLabel={t("common.maximum")} min={1} max={86400} sliderMax={entry.mode === "seconds" ? 600 : 30}
+                        value={[entry.targetMin ?? 1, entry.targetMax ?? 1]} onChange={([targetMin, targetMax]) => update(index, {targetMin, targetMax})} />}
+                    <label className={styles.openRest}><input type="checkbox" checked={entry.restMin === null}
+                        onChange={event => update(index, {restMin: event.target.checked ? null : 60, restMax: event.target.checked ? null : 60})} />{t("workout.restUnspecified")}</label>
+                    {entry.restMin !== null && <RangeSlider label={t("workout.restSeconds")} minLabel={t("common.minimum")} maxLabel={t("common.maximum")}
+                        min={0} max={86400} sliderMax={300} value={[entry.restMin, entry.restMax ?? entry.restMin]} onChange={([restMin, restMax]) => update(index, {restMin, restMax})} />}
                 </div>
                 <div className={styles.fields}>
                     <label>{t("workout.superset")}<input maxLength={32} value={entry.superset} onChange={e => update(index, {superset: e.target.value})} /></label>

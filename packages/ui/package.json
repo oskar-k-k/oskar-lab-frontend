@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "exports": {
+    "./RangeSlider/RangeSlider": "./src/RangeSlider/RangeSlider.tsx",
     "./Tabs/Tabs": "./src/Tabs/Tabs.tsx",
     "./Buttons/Button.module.css": "./src/Buttons/Button.module.css",
     "./Buttons/Button": "./src/Buttons/Button.tsx",

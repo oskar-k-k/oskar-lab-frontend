@@ -114,3 +114,7 @@
 .history time {font-weight: 600; font-size: .9rem;}
 .historySet {display: flex; justify-content: space-between; gap: 12px; font-size: .85rem; padding-top: 10px;}
 .historySet strong {text-align: right; font-weight: 500;}
+
+.rangeFields {display: grid; gap: 16px; margin: 20px 0;}
+.editor .openRest {display: flex; align-items: center; gap: 10px;}
+.editor .openRest input {width: 20px; min-height: 20px;}
