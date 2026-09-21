@@ -1,0 +1,36 @@
+name: Deploy Oskar Lab frontend
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: oskar-lab-frontend-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and verify all applications
+        env:
+          PUBLIC_URL: ${{ vars.PUBLIC_URL }}
+        run: docker build --build-arg PUBLIC_URL="$PUBLIC_URL" -t "oskar-lab-frontend:$GITHUB_SHA" .
+      - name: Deploy through the restricted SSH command
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/oskar_lab
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/oskar_lab ~/.ssh/known_hosts
+          trap 'rm -f ~/.ssh/oskar_lab' EXIT
+          docker save "oskar-lab-frontend:$GITHUB_SHA" | gzip -1 | ssh -i ~/.ssh/oskar_lab -o BatchMode=yes -o StrictHostKeyChecking=yes "oskar-lab-ci@$DEPLOY_HOST" "deploy frontend $GITHUB_SHA"

@@ -1,0 +1,13 @@
+.git
+**/node_modules
+**/.next
+**/.next-standalone
+**/.env*
+**/*.tsbuildinfo
+**/next-env.d.ts
+**/*.log
+.idea
+.run
+coverage
+deploy/private
+**/__pycache__

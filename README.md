@@ -122,6 +122,11 @@ Use `localhost:10030` consistently for local login. With this AUTH_URL, the plat
 
 Start the built backend using `./start-local.ps1` in the backend directory. Start all frontends with `npm run dev`. For individual apps, `AUTH_PLATFORM_URL` identifies the central account service. Apps redirect account pages to that service and proxy session requests; they never need Google credentials.
 
+For container deployments, `AUTH_PLATFORM_INTERNAL_URL` optionally overrides only
+server-side session lookups; public redirects still use `AUTH_PLATFORM_URL`.
+Production setup, isolated Docker services, GitHub Actions, backups and domain
+configuration are documented in [deploy/README.md](deploy/README.md).
+
 ### Checking identity in apps
 
 ```tsx

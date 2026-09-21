@@ -1,0 +1,102 @@
+name: oskar-lab-production
+
+x-web: &web
+  image: ${FRONTEND_IMAGE:?Set FRONTEND_IMAGE}
+  restart: unless-stopped
+  init: true
+  mem_limit: 288m
+  cpus: 0.5
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  logging: &logging
+    driver: json-file
+    options: {max-size: 10m, max-file: "3"}
+  environment: &web-env
+    AUTH_PLATFORM_URL: ${PUBLIC_URL:?Set PUBLIC_URL}
+    AUTH_PLATFORM_INTERNAL_URL: http://platform:3000
+    AUTH_BACKEND_URL: http://backend:8080
+    WORKOUT_PUBLIC_URL: ${PUBLIC_URL}
+  networks: [app]
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+    environment:
+      POSTGRES_DB: oskarlab
+      POSTGRES_USER: oskarlab
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD}
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    networks: [data]
+    logging: *logging
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U oskarlab -d oskarlab"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  backend:
+    image: ${BACKEND_IMAGE:?Set BACKEND_IMAGE}
+    restart: unless-stopped
+    mem_limit: 640m
+    cpus: 0.75
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/oskarlab
+      DATABASE_USERNAME: oskarlab
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      AUTH_BRIDGE_SECRET: ${AUTH_BRIDGE_SECRET:?Set AUTH_BRIDGE_SECRET}
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "false"
+    depends_on:
+      postgres: {condition: service_healthy}
+    networks: [app, data]
+    logging: *logging
+  platform:
+    <<: *web
+    environment:
+      <<: *web-env
+      APP_NAME: oskar-lab
+      AUTH_URL: ${PUBLIC_URL}
+      AUTH_TRUST_HOST: "true"
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET}
+      AUTH_BRIDGE_SECRET: ${AUTH_BRIDGE_SECRET}
+      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
+      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
+    ports: ["127.0.0.1:10030:3000"]
+    networks:
+      app:
+      edge:
+        aliases: [oskar-lab-platform]
+  workout:
+    <<: *web
+    environment:
+      <<: *web-env
+      APP_NAME: workout
+      AUTH_BRIDGE_SECRET: ${AUTH_BRIDGE_SECRET}
+  chess:
+    <<: *web
+    environment: {<<: *web-env, APP_NAME: chess}
+  cloth-lab:
+    <<: *web
+    environment: {<<: *web-env, APP_NAME: cloth-lab}
+  neon-vault:
+    <<: *web
+    environment: {<<: *web-env, APP_NAME: neon-vault}
+  portfolio:
+    <<: *web
+    environment: {<<: *web-env, APP_NAME: portfolio}
+  core-design:
+    <<: *web
+    environment: {<<: *web-env, APP_NAME: core-design}
+
+networks:
+  app:
+  data:
+    internal: true
+  edge:
+    external: true
+    name: oskar-lab-edge
+volumes:
+  postgres-data:

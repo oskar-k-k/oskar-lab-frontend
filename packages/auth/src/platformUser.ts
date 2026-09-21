@@ -13,7 +13,7 @@ export type PlatformUser = Readonly<{
 /** Returns a completed platform identity, or null for guests and unfinished onboarding. */
 export async function getCurrentUser(): Promise<PlatformUser | null> {
     const requestHeaders = await headers();
-    const response = await fetch(`${process.env.AUTH_PLATFORM_URL ?? "http://localhost:10030"}/api/auth/session`, {
+    const response = await fetch(`${process.env.AUTH_PLATFORM_INTERNAL_URL ?? process.env.AUTH_PLATFORM_URL ?? "http://localhost:10030"}/api/auth/session`, {
         headers: {cookie: requestHeaders.get("cookie") ?? ""}, cache: "no-store", signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) throw new Error("Account service unavailable");
