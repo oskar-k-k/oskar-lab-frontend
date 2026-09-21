@@ -2,6 +2,11 @@ export const locales = ["en", "de"] as const;
 export type Locale = typeof locales[number];
 
 const en = {
+    "workout.backToPlans": "Back to plans",
+    "workout.session": "Your session",
+    "workout.planNotes": "Plan notes",
+    "workout.exerciseNotes": "Technique & combination notes",
+    "workout.notFound": "This plan could not be found. Return to your plans to choose another session.",
     "workout.oneExercise": "1 exercise",
     "workout.oneSet": "set",
     "workout.kicker": "Training, on your terms",
@@ -168,6 +173,11 @@ const en = {
 } as const;
 
 const de: Record<keyof typeof en, string> = {
+    "workout.backToPlans": "Zurück zu den Plänen",
+    "workout.session": "Deine Session",
+    "workout.planNotes": "Planhinweise",
+    "workout.exerciseNotes": "Technik- & Kombinationshinweise",
+    "workout.notFound": "Dieser Plan wurde nicht gefunden. Kehre zu deinen Plänen zurück und wähle eine andere Session.",
     "workout.oneExercise": "1 Übung",
     "workout.oneSet": "Satz",
     "workout.kicker": "Training in deinem Rhythmus",

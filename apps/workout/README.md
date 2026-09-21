@@ -66,3 +66,11 @@ Verified locally: PostgreSQL 16 migrations and schema validation; all frontend
 workspace checks and builds; 43 frontend tests and 16 backend tests; browser
 create/edit/reload through the platform proxy at a 390px viewport. The browser
 check used a synthetic local account, including save retry after a service restart.
+
+## Focused session navigation
+
+Selecting a plan opens `/sessions/{id}` with only that session and a sticky
+back-to-plans header. The URL survives reloads and direct visits. Personal session
+links require their owner to sign in. Session rows are compact on mobile; long
+technique/combination notes and plan notes remain available in disclosures.
+The same dedicated session route is used on desktop.

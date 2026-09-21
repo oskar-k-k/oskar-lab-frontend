@@ -1,6 +1,9 @@
 "use client";
 
 import {useEffect, useState} from "react";
+import Link from "next/link";
+import {useRouter} from "next/navigation";
+import {appPath} from "@oskar-lab/config/paths";
 import {useCurrentUser} from "@oskar-lab/auth/useCurrentUser";
 import {useI18n} from "@oskar-lab/i18n/I18nProvider";
 import {isExercise, isPlan, isPlanPage, type Exercise, type Plan} from "../model/workout";
@@ -13,14 +16,15 @@ const isPlans = (v: unknown): v is Plan[] => Array.isArray(v) && v.every(isPlan)
 const range = (min: number, max: number) => min === max ? String(min) : `${min}–${max}`;
 
 /** Reloads account-scoped UI on identity changes so drafts cannot cross accounts. */
-export default function WorkoutApp() {
+export default function WorkoutApp({planId}: {planId?: string}) {
     const {user, loading} = useCurrentUser();
     const {t} = useI18n();
     if (loading) return <main className={styles.page}><p role="status">{t("workout.loading")}</p></main>;
-    return <Sessions key={user?.id ?? "guest"} signedIn={!!user} />;
+    return <Sessions key={`${user?.id ?? "guest"}:${planId ?? "overview"}`} signedIn={!!user} planId={planId} />;
 }
 
-function Sessions({signedIn}: {signedIn: boolean}) {
+function Sessions({signedIn, planId}: {signedIn: boolean; planId?: string}) {
+    const router = useRouter();
     const {t, locale} = useI18n();
     const [catalog, setCatalog] = useState<Exercise[]>([]);
     const [templates, setTemplates] = useState<Plan[]>([]);
@@ -37,15 +41,16 @@ function Sessions({signedIn}: {signedIn: boolean}) {
     useEffect(() => {
         let active = true;
         Promise.all([request("exercises", isCatalog), request("templates", isPlans),
-            signedIn ? request("plans", isPlanPage) : Promise.resolve({plans: [], hasMore: false})])
-            .then(([exercises, starters, personal]) => {
+            signedIn && !planId ? request("plans", isPlanPage) : Promise.resolve({plans: [], hasMore: false})])
+            .then(async ([exercises, starters, personal]) => {
+                const session = planId ? starters.find(plan => plan.id === planId) ?? await request(`plans/${planId}`, isPlan) : null;
                 if (!active) return;
                 setCatalog(exercises); setTemplates(starters); setPlans(personal.plans);
-                setHasMore(personal.hasMore); setPage(0); setError(null); setSelected(null);
+                setHasMore(personal.hasMore); setPage(0); setError(null); setSelected(session);
             }).catch(e => {if (active) setError(e instanceof WorkoutError ? e.status : 503);})
             .finally(() => {if (active) setLoading(false);});
         return () => {active = false;};
-    }, [signedIn, reload]);
+    }, [signedIn, reload, planId]);
     useEffect(() => {
         if (!editing) return;
         const prevent = (event: BeforeUnloadEvent) => event.preventDefault();
@@ -65,6 +70,8 @@ function Sessions({signedIn}: {signedIn: boolean}) {
             const result = await request(editing.create ? "plans" : `plans/${plan.id}`, isPlan, plan, editing.create ? "POST" : "PUT");
             setPlans(current => [result, ...current.filter(p => p.id !== result.id)]);
             setSelected(result); setEditing(null); setSaved(true);
+            if (planId !== result.id) router.push(`/sessions/${result.id}`);
+            else window.scrollTo({top: 0});
         } catch (e) {setError(e instanceof WorkoutError ? e.status : 503);}
         finally {setBusy(false);}
     }
@@ -78,35 +85,36 @@ function Sessions({signedIn}: {signedIn: boolean}) {
         finally {setBusy(false);}
     }
     function cards(items: Plan[]) {
-        return <div className={styles.cards}>{items.map(plan => <button className={styles.card} key={plan.id} onClick={() => {setSelected(plan); setSaved(false);}} aria-pressed={selected?.id === plan.id}>
+        return <div className={styles.cards}>{items.map(plan => <Link className={styles.card} key={plan.id} href={`/sessions/${plan.id}`}>
             <span className={styles.badge}>{plan.template ? plan.name.charAt(0) : "↗"}</span>
             <strong>{plan.name}</strong><span className={styles.muted}>{t(plan.exercises.length === 1 ? "workout.oneExercise" : "workout.exerciseCount", {count: plan.exercises.length})}</span>
-        </button>)}</div>;
+        </Link>)}</div>;
     }
-    return <main className={styles.page}>
-        <header className={styles.hero}>
+    return <main className={`${styles.page} ${planId ? styles.sessionPage : ""}`}>
+        {!planId && <header className={styles.hero}>
             <p className={styles.kicker}>{t("workout.kicker")}</p>
             <h1>{t("workout.title")}</h1><p>{t("workout.intro")}</p>
             {!editing && signedIn && <button className={styles.primary} disabled={loading || !catalog.length} onClick={() => edit()}>{t("workout.create")}</button>}
-        </header>
-        {!signedIn && <p className={styles.notice}>{t("workout.signInHint")} <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL ?? ""}/account`}>{t("workout.signIn")}</a></p>}
+        </header>}
+        {!planId && !signedIn && <p className={styles.notice}>{t("workout.signInHint")} <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL ?? ""}/account`}>{t("workout.signIn")}</a></p>}
         {loading && <p role="status">{t("workout.loading")}</p>}
         {saved && <p role="status" className={styles.success}>{t("workout.saved")}</p>}
         {error && <div className={styles.error} role="alert">
-            <p>{t(error === 401 || error === 403 ? "workout.unauthorized" : error === 409 ? "workout.conflict" : error === 400 ? "workout.invalid" : "workout.unavailable")}</p>
+            <p>{t(error === 401 || error === 403 ? "workout.unauthorized" : error === 409 ? "workout.conflict" : error === 404 ? "workout.notFound" : error === 400 ? "workout.invalid" : "workout.unavailable")}</p>
+            {(error === 401 || error === 403) && <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL ?? ""}/account?returnTo=${encodeURIComponent(appPath(planId ? `/sessions/${planId}` : "/"))}`}>{t("workout.signIn")}</a>}
             {!editing && <button onClick={() => {setLoading(true); setReload(reload + 1);}}>{t("workout.retry")}</button>}
         </div>}
         {editing ? <PlanEditor key={editing.plan.id} initial={editing.plan} catalog={catalog} busy={busy} onSave={save} onCancel={() => {setEditing(null); setError(null);}} /> : !loading && <>
-            {signedIn && <section className={styles.section} aria-labelledby="personal-title"><h2 id="personal-title">{t("workout.personal")}</h2>
+            {!planId && signedIn && <section className={styles.section} aria-labelledby="personal-title"><h2 id="personal-title">{t("workout.personal")}</h2>
                 {!plans.length && !error && <p className={styles.muted}>{t("workout.empty")}</p>}{cards(plans)}
                 {hasMore && <button disabled={busy} onClick={more}>{t("workout.more")}</button>}
             </section>}
-            <section className={styles.section} aria-labelledby="templates-title"><h2 id="templates-title">{t("workout.templates")}</h2>{cards(templates)}</section>
+            {!planId && <section className={styles.section} aria-labelledby="templates-title"><h2 id="templates-title">{t("workout.templates")}</h2>{cards(templates)}</section>}
             {selected && <section className={styles.detail} aria-label={selected.name}>
-                <div className={styles.detailHeader}><div><p className={styles.kicker}>{t(selected.template ? "workout.template" : "workout.personal")}</p><h2>{selected.name}</h2></div>
+                <div className={styles.detailHeader}><div><p className={styles.kicker}>{t(selected.template ? "workout.template" : "workout.personal")}</p><h1>{selected.name}</h1></div>
                     {signedIn && <button className={styles.primary} onClick={() => edit(selected)}>{t(selected.template ? "workout.useTemplate" : "workout.edit")}</button>}
                 </div>
-                {selected.notes && <p className={styles.muted}>{selected.notes}</p>}
+                {selected.notes && <details className={styles.planNotes}><summary>{t("workout.planNotes")}</summary><p className={styles.muted}>{selected.notes}</p></details>}
                 <ol className={styles.exercises}>{selected.exercises.map((entry, index) => <li key={index}>
                     <span className={styles.position} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span><div>
                         <h3>{catalog.find(e => e.id === entry.exerciseId)?.[locale === "de" ? "nameDe" : "name"]}</h3>
@@ -114,7 +122,7 @@ function Sessions({signedIn}: {signedIn: boolean}) {
                             {entry.targetMin !== null && entry.targetMax !== null && <> × {range(entry.targetMin, entry.targetMax)} {t(entry.mode === "seconds" ? "workout.secondsShort" : "workout.reps")}</>}</p>
                         <p className={styles.muted}>{entry.restMin === null || entry.restMax === null ? t("workout.restUnspecified") : t("workout.restValue", {value: range(entry.restMin, entry.restMax)})}</p>
                         {entry.superset && <span className={styles.tag}>{t("workout.group", {group: entry.superset})}</span>}
-                        {entry.notes && <p className={styles.note}>{entry.notes}</p>}
+                        {entry.notes && (entry.notes.length > 80 ? <details className={styles.note}><summary>{t("workout.exerciseNotes")}</summary><p>{entry.notes}</p></details> : <p className={styles.note}>{entry.notes}</p>)}
                     </div>
                 </li>)}</ol>
             </section>}
