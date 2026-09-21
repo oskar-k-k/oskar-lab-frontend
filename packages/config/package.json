@@ -1,0 +1,10 @@
+{
+  "name": "@oskar-lab/config",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./next": "./src/next.mjs",
+    "./paths": "./src/paths.ts"
+  },
+  "dependencies": {}
+}

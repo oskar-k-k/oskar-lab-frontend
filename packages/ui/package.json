@@ -1,0 +1,32 @@
+{
+  "name": "@oskar-lab/ui",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./Buttons/Button.module.css": "./src/Buttons/Button.module.css",
+    "./Buttons/Button": "./src/Buttons/Button.tsx",
+    "./Cards/Card.module.css": "./src/Cards/Card.module.css",
+    "./Cards/Card": "./src/Cards/Card.tsx",
+    "./Grids/Grid.module.css": "./src/Grids/Grid.module.css",
+    "./Grids/Grid": "./src/Grids/Grid.tsx",
+    "./Grids/SquareView": "./src/Grids/SquareView.tsx",
+    "./LanguageSwitch/LanguageSwitch.module.css": "./src/LanguageSwitch/LanguageSwitch.module.css",
+    "./LanguageSwitch/LanguageSwitch": "./src/LanguageSwitch/LanguageSwitch.tsx",
+    "./Layouts/StandardLayout.module.css": "./src/Layouts/StandardLayout.module.css",
+    "./Layouts/StandardLayout": "./src/Layouts/StandardLayout.tsx",
+    "./Search/Search.module.css": "./src/Search/Search.module.css",
+    "./Search/Search": "./src/Search/Search.tsx",
+    "./styles/globals.css": "./src/styles/globals.css",
+    "./styles/reset.css": "./src/styles/reset.css",
+    "./styles/variables.css": "./src/styles/variables.css"
+  },
+  "dependencies": {
+    "@oskar-lab/core": "*",
+    "@oskar-lab/i18n": "*"
+  },
+  "peerDependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "next": "^16.2.10"
+  }
+}

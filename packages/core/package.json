@@ -1,0 +1,10 @@
+{
+  "name": "@oskar-lab/core",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./Array2D": "./src/Array2D.ts",
+    "./Vector": "./src/Vector.ts"
+  },
+  "dependencies": {}
+}

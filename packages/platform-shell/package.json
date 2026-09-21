@@ -1,0 +1,22 @@
+{
+  "name": "@oskar-lab/platform-shell",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./AppDocument": "./src/AppDocument.tsx",
+    "./Auth/UserMenu.module.css": "./src/Auth/UserMenu.module.css",
+    "./Auth/UserMenu": "./src/Auth/UserMenu.tsx",
+    "./Header/Header.module.css": "./src/Header/Header.module.css",
+    "./Header/Header": "./src/Header/Header.tsx"
+  },
+  "dependencies": {
+    "@oskar-lab/ui": "*",
+    "@oskar-lab/i18n": "*",
+    "@oskar-lab/auth": "*"
+  },
+  "peerDependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "next": "^16.2.10"
+  }
+}

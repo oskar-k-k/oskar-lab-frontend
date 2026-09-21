@@ -1,0 +1,15 @@
+{
+  "name": "@oskar-lab/i18n",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./I18nProvider": "./src/I18nProvider.tsx",
+    "./messages": "./src/messages.ts"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "next": "^16.2.10"
+  }
+}

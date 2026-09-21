@@ -1,14 +1,14 @@
 {
-  "name": "frontend",
+  "name": "oskar-lab-workspace",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 10030",
-    "build": "next build",
-    "start": "next start --port 10030",
-    "lint": "eslint",
+    "dev": "node scripts/dev.mjs",
+    "dev:app": "node scripts/dev.mjs",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint apps packages scripts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "build": "npm run build --workspaces --if-present",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build"
   },
   "dependencies": {
@@ -28,5 +28,9 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.11"
-  }
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

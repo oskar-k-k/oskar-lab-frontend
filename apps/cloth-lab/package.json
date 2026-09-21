@@ -1,0 +1,23 @@
+{
+  "name": "@oskar-lab/cloth-lab",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 10032",
+    "build": "next build",
+    "start": "next start --port 10032",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.2.10",
+    "next-auth": "^5.0.0-beta.32",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "@oskar-lab/core": "*",
+    "@oskar-lab/ui": "*",
+    "@oskar-lab/i18n": "*",
+    "@oskar-lab/auth": "*",
+    "@oskar-lab/platform-shell": "*",
+    "@oskar-lab/config": "*"
+  }
+}
