@@ -74,7 +74,7 @@
 .chevron {color: var(--color-text-subtle); font-size: 1.3rem;}
 .exerciseFocus {padding-top: 12px;}
 .exerciseFocus h1 {font-size: clamp(1.5rem, 5vw, 2rem); font-weight: 650; line-height: 1.25;}
-.focusTarget {margin: 20px 0 28px; font-size: clamp(1.5rem, 6vw, 2.4rem); font-weight: 600; color: var(--color-accent-green);}
+.focusTitle {margin: 4px 0 12px; font-size: 1.1rem; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere;}
 .facts {margin: 0;}
 .facts > div {display: flex; justify-content: space-between; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--color-border-muted);}
 .facts dt {color: var(--color-text-muted);}

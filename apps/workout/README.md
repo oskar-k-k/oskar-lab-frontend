@@ -80,7 +80,8 @@ The same dedicated session route is used on desktop.
 Session rows show only the exercise name and prescription. Opening a row navigates
 to `/sessions/{id}/exercises/{position}`; the zero-based position distinguishes
 repeated exercises and refers to the current plan order. This full-page view shows
-sets, targets, rest, superset group and all exercise notes. Its back link returns
+compact rows for sets, repetitions or duration, and rest, followed by exercise notes.
+The superset label appears once above the tabs. Its back link returns
 to the session, including after a direct visit or reload. Invalid positions show
 a recoverable message. Plan notes remain collapsed below the session list.
 

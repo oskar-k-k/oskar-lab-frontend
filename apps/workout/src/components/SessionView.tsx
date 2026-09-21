@@ -37,11 +37,11 @@ export default function SessionView({plan, catalog, exercisePosition, canEdit, o
                 items={positions.map(position => {
                     const entry = plan.exercises[position];
                     return {id: String(position), label: name(entry) ?? "", content: <>
-                        <p className={styles.focusTarget}>{prescription(entry)}</p>
+                        <h2 className={styles.focusTitle}>{name(entry)}</h2>
                         <dl className={styles.facts}>
                             <div><dt>{t("workout.sets")}</dt><dd>{range(entry.setsMin, entry.setsMax)}</dd></div>
-                            <div><dt>{t("workout.rest")}</dt><dd>{entry.restMin !== null && entry.restMax !== null ? duration(entry.restMin, entry.restMax) : t("workout.restUnspecified")}</dd></div>
-                            {entry.superset && <div><dt>{t("workout.combination")}</dt><dd>{t("workout.group", {group: entry.superset})}</dd></div>}
+                            {entry.mode !== "unspecified" && <div><dt>{t(entry.mode === "seconds" ? "workout.duration" : "workout.reps")}</dt><dd>{entry.targetMin !== null && entry.targetMax !== null ? (entry.mode === "seconds" ? duration(entry.targetMin, entry.targetMax) : range(entry.targetMin, entry.targetMax)) : t("workout.open")}</dd></div>}
+                            <div><dt>{t("workout.rest")}</dt><dd>{entry.restMin !== null && entry.restMax !== null ? duration(entry.restMin, entry.restMax) : t("workout.open")}</dd></div>
                         </dl>
                         {entry.notes && <section className={styles.focusNotes}><h2>{t("workout.exerciseNotes")}</h2><p>{entry.notes}</p></section>}
                         </>};
