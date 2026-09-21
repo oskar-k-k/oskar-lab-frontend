@@ -1,6 +1,7 @@
 "use client";
 
 import {useMemo, useState} from "react";
+import Tabs from "@oskar-lab/ui/Tabs/Tabs";
 import Button from "@oskar-lab/ui/Buttons/Button";
 import Card from "@oskar-lab/ui/Cards/Card";
 import Grid from "@oskar-lab/ui/Grids/Grid";
@@ -22,11 +23,13 @@ type DesignReference = SearchReference & Readonly<{token?: string}>;
 type ComponentReference = SearchReference & Readonly<{wide?: boolean}>;
 function createDesignReferences(t: Translate): readonly DesignReference[] { return [
     ...colors.map(color => ({id: `color-${color}`, title: color, description: t("core.globalColor", {token: `--color-${color}`}), keywords: ["farbe", "color", "token", "css", ...(color.startsWith("background") ? ["hintergrund"] : [])], token: color})),
+    {id: "tabs", title: "Tabs", description: t("core.tabsDescription"), keywords: ["tabs", "navigation", "content"]},
     {id: "typography", title: t("core.typography"), description: t("core.typographyDescription"), keywords: ["text", "schrift", "heading", "typography", "typografie"]},
     {id: "forms", title: t("core.forms"), description: t("core.formsDescription"), keywords: ["input", "form", "formular", "select", "textfield"]},
     {id: "structured-content", title: t("core.listsTablesStatus"), description: t("core.structuredContentDescription"), keywords: ["table", "tabelle", "list", "liste", "badge", "status"]},
 ]; }
 function createComponentReferences(t: Translate): readonly ComponentReference[] { return [
+    {id: "tabs", title: "Tabs", description: t("core.tabsDescription"), keywords: ["tabs", "navigation", "content"], wide: true},
     {id: "button", title: "Button", description: t("core.primaryActions"), keywords: ["buttons", "knopf", "aktion"]},
     {id: "card", title: "Card", description: t("core.contentCards"), keywords: ["cards", "karte", "project"]},
     {id: "grid", title: "Grid", description: t("core.responsiveGrid"), keywords: ["grids", "raster", "layout"]},
@@ -53,9 +56,18 @@ function DocumentationList({files}: Readonly<{files: readonly SourceDocumentatio
     ))}</div>;
 }
 
+function TabsPreview() {
+    const {t} = useI18n();
+    return <Tabs label={t("core.tabsLabel")} items={[
+        {id: "overview", label: t("core.tabDesign"), content: <p>{t("core.tabsDescription")}</p>},
+        {id: "details", label: t("core.tabComponents"), content: <p>{t("core.liveComponentsDescription")}</p>},
+    ]} />;
+}
+
 function DesignTab() {
     const {t} = useI18n();
     return <div className={styles.tabContent}>
+        <section className={styles.section}><h2>Tabs</h2><TabsPreview /></section>
         <section className={styles.section}>
             <h2>{t("core.colors")}</h2><p className={styles.intro}>{t("core.colorsDescription")}</p>
             <div className={styles.colorGrid}>{colors.map(color => <article className={styles.colorCard} key={color}><div className={styles.swatch} style={{background: `var(--color-${color})`}} /><strong>{color}</strong><code>--color-{color}</code></article>)}</div>
@@ -82,6 +94,7 @@ function ComponentGallery({references}: Readonly<{references: readonly Component
     const [previewQuery, setPreviewQuery] = useState("");
     const {t} = useI18n();
     return <div className={styles.previewGrid}>{references.map(reference => <article className={`${styles.preview} ${reference.wide ? styles.widePreview : ""}`} key={reference.id}><h3>{reference.title}</h3>
+        {reference.id === "tabs" && <TabsPreview />}
         {reference.id === "button" && <div className={styles.demoRow}><Button variant="primary">Primary</Button><Button>Secondary</Button><Button disabled>Disabled</Button></div>}
         {reference.id === "card" && <Card title="Project Card" description={t("core.previewCardDescription")} />}
         {reference.id === "grid" && <Grid cardWidth={70} gap={8}>{[1, 2, 3].map(item => <div className={styles.gridItem} key={item}>{item}</div>)}</Grid>}

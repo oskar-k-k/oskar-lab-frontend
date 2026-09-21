@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Tabs from "@oskar-lab/ui/Tabs/Tabs";
 import {useI18n} from "@oskar-lab/i18n/I18nProvider";
 import type {Entry, Exercise, Plan} from "../model/workout";
 import {supersetPositions} from "../model/supersets";
@@ -30,30 +31,21 @@ export default function SessionView({plan, catalog, exercisePosition, canEdit, o
         if (!entry) return <p role="alert">{t("workout.exerciseMissing")}</p>;
         const positions = supersetPositions(plan.exercises, exercisePosition);
         return <article className={styles.exerciseFocus}>
-            <h1 className={styles.screenReaderOnly}>{name(entry)}</h1>
+            <h1 className={styles.screenReaderOnly}>{t("workout.exerciseDetails")}</h1>
             {positions.length > 1 && <p className={styles.supersetCaption}>{t("workout.group", {group: entry.superset})}</p>}
-            <div className={styles.exerciseTabs} role="tablist" aria-label={t("workout.exerciseDetails")}>
-                {positions.map(position => <Link key={position} role="tab" id={`exercise-tab-${position}`}
-                    aria-selected={position === exercisePosition} aria-controls="exercise-panel"
-                    tabIndex={position === exercisePosition ? 0 : -1}
-                    href={`/sessions/${plan.id}/exercises/${position}`} scroll={false}
-                    onKeyDown={event => {
-                        const tabs = Array.from(event.currentTarget.parentElement!.querySelectorAll<HTMLAnchorElement>('[role="tab"]'));
-                        const index = tabs.indexOf(event.currentTarget);
-                        const next = event.key === "ArrowRight" ? (index + 1) % tabs.length : event.key === "ArrowLeft" ? (index - 1 + tabs.length) % tabs.length : event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : null;
-                        if (next !== null) {event.preventDefault(); tabs[next].focus();}
-                        if (event.key === " ") {event.preventDefault(); event.currentTarget.click();}
-                    }}>{name(plan.exercises[position])}</Link>)}
-            </div>
-            <div role="tabpanel" id="exercise-panel" aria-labelledby={`exercise-tab-${exercisePosition}`} tabIndex={0}>
-            <p className={styles.focusTarget}>{prescription(entry)}</p>
-            <dl className={styles.facts}>
-                <div><dt>{t("workout.sets")}</dt><dd>{range(entry.setsMin, entry.setsMax)}</dd></div>
-                <div><dt>{t("workout.rest")}</dt><dd>{entry.restMin !== null && entry.restMax !== null ? duration(entry.restMin, entry.restMax) : t("workout.restUnspecified")}</dd></div>
-                {entry.superset && <div><dt>{t("workout.combination")}</dt><dd>{t("workout.group", {group: entry.superset})}</dd></div>}
-            </dl>
-            {entry.notes && <section className={styles.focusNotes}><h2>{t("workout.exerciseNotes")}</h2><p>{entry.notes}</p></section>}
-            </div>
+            <Tabs key={`${plan.id}:${exercisePosition}`} label={t("workout.exerciseDetails")} defaultValue={String(exercisePosition)}
+                items={positions.map(position => {
+                    const entry = plan.exercises[position];
+                    return {id: String(position), label: name(entry) ?? "", content: <>
+                        <p className={styles.focusTarget}>{prescription(entry)}</p>
+                        <dl className={styles.facts}>
+                            <div><dt>{t("workout.sets")}</dt><dd>{range(entry.setsMin, entry.setsMax)}</dd></div>
+                            <div><dt>{t("workout.rest")}</dt><dd>{entry.restMin !== null && entry.restMax !== null ? duration(entry.restMin, entry.restMax) : t("workout.restUnspecified")}</dd></div>
+                            {entry.superset && <div><dt>{t("workout.combination")}</dt><dd>{t("workout.group", {group: entry.superset})}</dd></div>}
+                        </dl>
+                        {entry.notes && <section className={styles.focusNotes}><h2>{t("workout.exerciseNotes")}</h2><p>{entry.notes}</p></section>}
+                        </>};
+                })} />
         </article>;
     }
     return <section className={styles.detail} aria-label={plan.name}>

@@ -86,6 +86,8 @@ a recoverable message. Plan notes remain collapsed below the session list.
 
 Superset rows share a bordered visual group and labeled connection line without
 changing exercise order. Exercise pages expose all members of the selected group
-as URL-backed tabs; single exercises get one tab. Keyboard users can focus tabs
-with arrows/Home/End and activate them with Enter or Space. Non-adjacent members
+using the shared Tabs component; single exercises get one tab. All group content
+is loaded together and switches locally without navigation or new requests. The
+URL retains the entry exercise, which is selected again on reload. Arrow keys and
+Home/End activate tabs immediately; hidden panels preserve their local state. Non-adjacent members
 retain their original list positions and share the same group label and tabs.
