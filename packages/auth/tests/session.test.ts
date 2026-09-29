@@ -12,6 +12,7 @@ vi.mock("../src/backend", () => ({
     parseLogin: (value: unknown) => value,
 }));
 import "../src/server";
+import {AccountError} from "../src/backend";
 
 const identity = {id: "internal-id", name: "test_user", email: "test@example.invalid", complete: true, termsVersion: "2026-09-21"};
 type JwtArguments = Parameters<NonNullable<NonNullable<NextAuthConfig["callbacks"]>["jwt"]>>[0];
@@ -42,4 +43,19 @@ describe("platform session security", () => {
         expect(await jwt({token: {pendingGoogle: {subject: "s", email: "a@example.invalid", expires: 0}}, trigger: "update", session: {action: "link", password: "test"}})).toBeNull();
         expect(state.request).not.toHaveBeenCalled();
     });
+    it("keeps the credential during an outage and verifies it again on recovery", async () => {
+        state.request.mockRejectedValueOnce(new AccountError("unavailable", 503));
+        const token = await jwt({token: {backendToken: "real-token", identity}});
+        expect(token?.backendToken).toBe("real-token");
+        expect(token?.sessionUnavailable).toBe(true);
+        state.request.mockResolvedValueOnce(identity);
+        const recovered = await jwt({token: token!});
+        expect(recovered?.sessionUnavailable).toBeUndefined();
+        expect(recovered?.identity).toEqual(identity);
+    });
+    it("still invalidates expired or revoked sessions", async () => {
+        state.request.mockRejectedValueOnce(new AccountError("unauthorized", 401));
+        expect(await jwt({token: {backendToken: "expired", identity}})).toBeNull();
+    });
+
 });

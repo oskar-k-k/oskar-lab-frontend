@@ -7,6 +7,7 @@ import {isExercise, type Exercise} from "../model/workout";
 import {request} from "../services/client";
 import ExerciseTracking from "./ExerciseTracking";
 import styles from "./Workout.module.css";
+import {useResume} from "../hooks/useResume";
 
 const isCatalog = (value: unknown): value is Exercise[] => Array.isArray(value) && value.every(isExercise);
 
@@ -18,6 +19,7 @@ export default function ExerciseCatalog({exerciseId}: {exerciseId?: string}) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [retry, setRetry] = useState(0);
+    useResume(() => {if (error) setRetry(value => value + 1);});
     useEffect(() => {
         let active = true;
         request("exercises", isCatalog).then(data => {if (active) {setCatalog(data); setError(false);}})

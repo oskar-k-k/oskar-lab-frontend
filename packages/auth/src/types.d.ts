@@ -6,6 +6,7 @@ declare module "next-auth" {
         user: {id: string; provider: string; complete: boolean; termsVersion: string | null} & DefaultSession["user"];
         linkRequired?: boolean;
         accountError?: string;
+        sessionUnavailable?: boolean;
     }
 }
 
@@ -16,5 +17,6 @@ declare module "@auth/core/jwt" {
         identity?: PlatformIdentity;
         pendingGoogle?: {subject: string; email: string; expires: number};
         accountError?: string;
+        sessionUnavailable?: boolean;
     }
 }

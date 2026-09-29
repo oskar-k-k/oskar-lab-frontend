@@ -6,6 +6,16 @@ export class WorkoutError extends Error {
 }
 /** Uses bounded requests; a failed save leaves the editor draft intact. */
 export async function request<T>(path: string, validate: (value: unknown) => value is T, body?: unknown, method = "GET"): Promise<T> {
+    for (let attempt = 0; ; attempt++) {
+        try { return await send(path, validate, body, method); }
+        catch (error) {
+            if (method !== "GET" || attempt >= 2 || !(error instanceof WorkoutError) || error.status < 500) throw error;
+            await new Promise(resolve => setTimeout(resolve, attempt === 0 ? 500 : 1500));
+        }
+    }
+}
+
+async function send<T>(path: string, validate: (value: unknown) => value is T, body: unknown, method: string): Promise<T> {
     let response: Response;
     try {
         response = await fetch(appPath(`/api/workout/${path}`), {
@@ -14,7 +24,7 @@ export async function request<T>(path: string, validate: (value: unknown) => val
         });
     } catch { throw new WorkoutError(503); }
     if (!response.ok) throw new WorkoutError(response.status);
-    const data: unknown = await response.json();
+    const data: unknown = await response.json().catch(() => {throw new WorkoutError(503);});
     if (!validate(data)) throw new WorkoutError(503);
     return data;
 }

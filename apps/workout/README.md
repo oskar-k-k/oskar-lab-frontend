@@ -121,5 +121,11 @@ payload until a safe retry. Confirmed saves clear the draft. Storage denial fall
 back to memory with an unload warning for unfinished input.
 
 Plan editing uses shared two-handle RangeSlider controls for sets, targets and rests.
+
+Mobile resume (`visibilitychange`, `pageshow`, focus and reconnect) refreshes session
+data and history in place, preserving exercise tabs and unsaved set drafts. Plan
+editors are not refreshed while being edited. Transient read failures retry twice;
+writes are never replayed automatically. Failed routes offer recovery at the same
+URL. Authentication links retain the exercise route when a real sign-in is needed.
 Exact inputs retain the full supported numeric bounds; practical slider scales
 expand to include larger existing values. Open rests use an explicit checkbox.

@@ -145,6 +145,12 @@ const user = await requireCurrentUser();    // throws without a completed accoun
 
 Server helpers fail closed on account-service outages. Keep public pages independent of those helpers. The shared provider remains available even when the platform header is hidden. Integrated apps share the browser origin; unrelated production domains need a dedicated SSO flow, not cross-domain cookie copying.
 
+Temporary account-service failures retain the encrypted session credential for a
+later verification attempt and mark the session `sessionUnavailable`. Cached
+identity may keep existing UI mounted, but server identity helpers reject access
+until verification succeeds. Expired or revoked credentials still invalidate the
+session; temporary recovery does not extend the backend credential's lifetime.
+
 Auth.js stores the opaque backend credential only inside its encrypted HTTP-only session cookie, never in the public session JSON. The backend stores its SHA-256 digest, validates it on session reads, expires it after seven days and revokes it on logout. Passwords use salted PBKDF2-HMAC-SHA256 with 600,000 iterations. Login and registration have backend rate limits. The current limiter is in-process; multi-instance production deployments need a shared limiter and edge/IP limits. Schedule removal of expired database sessions as operational maintenance.
 
 ### Terms and release requirements

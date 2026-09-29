@@ -11,6 +11,7 @@ import {request, WorkoutError} from "../services/client";
 import PlanEditor from "./PlanEditor";
 import SessionView from "./SessionView";
 import styles from "./Workout.module.css";
+import {useResume} from "../hooks/useResume";
 
 const isCatalog = (v: unknown): v is Exercise[] => Array.isArray(v) && v.every(isExercise);
 const isPlans = (v: unknown): v is Plan[] => Array.isArray(v) && v.every(isPlan);
@@ -39,6 +40,7 @@ function Sessions({signedIn, planId, exercisePosition}: {signedIn: boolean; plan
     const [reload, setReload] = useState(0);
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(false);
+    useResume(() => {if (!editing && !busy) setReload(value => value + 1);});
     useEffect(() => {
         let active = true;
         Promise.all([request("exercises", isCatalog), request("templates", isPlans),
@@ -103,8 +105,8 @@ function Sessions({signedIn, planId, exercisePosition}: {signedIn: boolean; plan
         {saved && <p role="status" className={styles.success}>{t("workout.saved")}</p>}
         {error && <div className={styles.error} role="alert">
             <p>{t(error === 401 || error === 403 ? "workout.unauthorized" : error === 409 ? "workout.conflict" : error === 404 ? "workout.notFound" : error === 400 ? "workout.invalid" : "workout.unavailable")}</p>
-            {(error === 401 || error === 403) && <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL ?? ""}/account?returnTo=${encodeURIComponent(appPath(planId ? `/sessions/${planId}` : "/"))}`}>{t("workout.signIn")}</a>}
-            {!editing && <button onClick={() => {setLoading(true); setReload(reload + 1);}}>{t("workout.retry")}</button>}
+            {(error === 401 || error === 403) && <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL ?? ""}/account?returnTo=${encodeURIComponent(appPath(planId ? `/sessions/${planId}${exercisePosition === undefined ? "" : `/exercises/${exercisePosition}`}` : "/"))}`}>{t("workout.signIn")}</a>}
+            {!editing && <button onClick={() => {setLoading(!selected); setReload(value => value + 1);}}>{t("workout.retry")}</button>}
         </div>}
         {editing ? <PlanEditor key={editing.plan.id} initial={editing.plan} catalog={catalog} busy={busy} onSave={save} onCancel={() => {setEditing(null); setError(null);}} /> : !loading && <>
             {!planId && signedIn && <section className={styles.section} aria-labelledby="personal-title"><h2 id="personal-title">{t("workout.personal")}</h2>

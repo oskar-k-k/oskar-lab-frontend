@@ -1,6 +1,7 @@
 "use client";
 
 import {useEffect, useState} from "react";
+import {usePathname} from "next/navigation";
 import {useCurrentUser} from "@oskar-lab/auth/useCurrentUser";
 import {useI18n} from "@oskar-lab/i18n/I18nProvider";
 import {appPath} from "@oskar-lab/config/paths";
@@ -8,6 +9,7 @@ import type {Exercise} from "../model/workout";
 import {completedSets, isExerciseLog, isHistory, isSaveLog, type TrackingMode, type ExerciseLog, type SaveLog, type SetDraft} from "../model/tracking";
 import {request, WorkoutError} from "../services/client";
 import styles from "./Workout.module.css";
+import {useResume} from "../hooks/useResume";
 
 type Props = {exercise: Exercise; initialSets?: number; initialMode?: TrackingMode};
 type Draft = {rows: SetDraft[]; pending: SaveLog | null; unit: "reps" | "seconds"; withWeight: boolean};
@@ -28,9 +30,10 @@ function readDraft(key: string, count: number, initialMode: TrackingMode): Draft
 /** Captures actual sets and displays personal history; guests use the central sign-in flow. */
 export default function ExerciseTracking(props: Props) {
     const {user} = useCurrentUser();
+    const pathname = usePathname();
     const {t} = useI18n();
     if (!user) return <section className={styles.tracking}><p className={styles.muted}>{t("workout.trackingLogin")}</p>
-        <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL ?? ""}/account?returnTo=${encodeURIComponent(appPath(`/exercises/${props.exercise.id}`))}`}>{t("workout.signIn")}</a></section>;
+        <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL ?? ""}/account?returnTo=${encodeURIComponent(appPath(pathname))}`}>{t("workout.signIn")}</a></section>;
     return <PersonalTracking key={`${user.id}:${props.exercise.id}`} {...props} ownerId={user.id} />;
 }
 
@@ -48,6 +51,7 @@ function PersonalTracking({exercise, initialSets = 3, initialMode = "reps", owne
     const [hasMore, setHasMore] = useState(false);
     const [page, setPage] = useState(0);
     const [reload, setReload] = useState(0);
+    useResume(() => {if (!busy) {setPage(0); setReload(value => value + 1);}});
     const dirty = draft.rows.some(row => row.value !== "" || row.weight !== "");
     useEffect(() => {
         try {

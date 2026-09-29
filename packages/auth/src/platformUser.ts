@@ -10,7 +10,7 @@ export type PlatformUser = Readonly<{
     provider: string;
 }>;
 
-/** Returns a completed platform identity, or null for guests and unfinished onboarding. */
+/** Returns a verified identity; temporary account-service failures deny access without clearing the cookie. */
 export async function getCurrentUser(): Promise<PlatformUser | null> {
     const requestHeaders = await headers();
     const response = await fetch(`${process.env.AUTH_PLATFORM_INTERNAL_URL ?? process.env.AUTH_PLATFORM_URL ?? "http://localhost:10030"}/api/auth/session`, {
@@ -18,6 +18,8 @@ export async function getCurrentUser(): Promise<PlatformUser | null> {
     });
     if (!response.ok) throw new Error("Account service unavailable");
     const session: unknown = await response.json();
+    if (session && typeof session === "object" && "sessionUnavailable" in session && session.sessionUnavailable)
+        throw new Error("Account service unavailable");
     if (!session || typeof session !== "object" || !("user" in session)) return null;
     const user = session.user;
     if (!isIdentity(user) || !user.complete) return null;

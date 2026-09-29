@@ -73,8 +73,14 @@ export const {handlers, auth, signIn, signOut} = NextAuth({
                     const identity = await accountRequest("current", {}, token.backendToken);
                     if (!isIdentity(identity)) return null;
                     token.identity = identity;
+                    delete token.sessionUnavailable;
                 } catch (error) {
                     if (error instanceof AccountError && error.status === 401) return null;
+                    if (error instanceof AccountError && (error.status >= 500 || error.status === 429)) {
+                        // Preserve the encrypted credential for recovery, but deny private API access.
+                        token.sessionUnavailable = true;
+                        return token;
+                    }
                     throw error;
                 }
             }
@@ -85,6 +91,7 @@ export const {handlers, auth, signIn, signOut} = NextAuth({
             else Object.assign(session.user, {id: "", name: null, email: "", image: null, provider: "google", complete: false, termsVersion: null});
             session.linkRequired = Boolean(token.pendingGoogle);
             session.accountError = token.accountError;
+            session.sessionUnavailable = token.sessionUnavailable === true;
             return session;
         },
     },
