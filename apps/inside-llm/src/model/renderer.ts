@@ -1,4 +1,4 @@
-import {clampTime} from "./timeline";
+import {clampTime, noise} from "./timeline";
 import {exampleModel} from "./transformer";
 import {formatActivation, OUTPUT_PROBABILITIES} from "./data";
 import type {SceneLabels} from "./dataAnnotations";
@@ -51,6 +51,27 @@ function line(ctx: CanvasRenderingContext2D, project: Project, a: Point, b: Poin
     const from = project(a), to = project(b);
     ctx.strokeStyle = color; ctx.lineWidth = width;
     ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
+}
+
+function cable(ctx: CanvasRenderingContext2D, project: Project, from: Point, to: Point, color: string, time: number, seed: number, width = 0.8) {
+    const a = project(from), b = project(to);
+    const phase = seed * 1.71 + time * 1.25;
+    const length = Math.hypot(to.x - from.x, to.y - from.y, to.z - from.z);
+    const amplitude = Math.min(26, length * 0.07);
+    const control = (fraction: number, offset: number) => project({
+        x: from.x + (to.x - from.x) * fraction + Math.sin(phase + offset) * amplitude,
+        y: from.y + (to.y - from.y) * fraction + Math.cos(phase * 0.83 + offset) * amplitude,
+        z: from.z + (to.z - from.z) * fraction + Math.sin(phase * 0.61 + offset) * amplitude * 0.5,
+    });
+    const c = control(0.33, 0), d = control(0.67, 1.6);
+    ctx.strokeStyle = color; ctx.lineWidth = width;
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.bezierCurveTo(c.x, c.y, d.x, d.y, b.x, b.y); ctx.stroke();
+    if (seed % 13 === 0) {
+        const t = (time * 0.45 + seed * 0.017) % 1, u = 1 - t;
+        const x = u ** 3 * a.x + 3 * u * u * t * c.x + 3 * u * t * t * d.x + t ** 3 * b.x;
+        const y = u ** 3 * a.y + 3 * u * u * t * c.y + 3 * u * t * t * d.y + t ** 3 * b.y;
+        ctx.fillStyle = "#d5f5ff"; ctx.beginPath(); ctx.arc(x, y, 1.7, 0, Math.PI * 2); ctx.fill();
+    }
 }
 
 function plane(ctx: CanvasRenderingContext2D, project: Project, z: number, color: string) {
@@ -110,6 +131,31 @@ function attention(ctx: CanvasRenderingContext2D, project: Project, block: numbe
     worldText(ctx, project, {x: 0, y: 232, z}, labels.causal, 15, "#8faab6");
 }
 
+function networkPoint(block: number, token: number, column: number, row: number): Point {
+    const seed = token * 179 + row * 23 + column * 53;
+    const count = column === 1 ? 10 : 6;
+    return {
+        x: -400 + token * 200 + (noise(seed) - 0.5) * 260,
+        y: -125 + row * 290 / (count - 1) + (noise(seed + 9) - 0.5) * 64,
+        z: block * 430 + 130 + column * 80 + (noise(seed + 17) - 0.5) * 48,
+    };
+}
+
+function fan(ctx: CanvasRenderingContext2D, project: Project, from: Point, to: Point, color: string, time: number, offset: number) {
+    const pointAt = (t: number): Point => {
+        const blend = ease(t);
+        return {x: from.x + (to.x - from.x) * blend, y: from.y + (to.y - from.y) * blend + Math.sin(t * Math.PI) * Math.sin(time * 1.2 + offset * 0.7 + t * 3) * 12, z: from.z + (to.z - from.z) * t};
+    };
+    for (let step = 1; step <= 24; step++) line(ctx, project, pointAt((step - 1) / 24), pointAt(step / 24), `${color}85`, 1);
+    const p = project(pointAt((time * 0.35 + offset * 0.037) % 1));
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2); ctx.fill();
+}
+
+function billboard(ctx: CanvasRenderingContext2D, project: Project, z: number) {
+    const p = project({x: 0, y: 0, z});
+    ctx.translate(p.x, p.y); ctx.scale(p.scale * 0.65, p.scale * 0.65); ctx.translate(-800, -450);
+}
+
 function network(ctx: CanvasRenderingContext2D, project: Project, block: number, time: number, labels: SceneLabels) {
     const z = block * 430 + 210;
     const active = time >= 12 + block * 9 && time < 16 + block * 9;
@@ -121,11 +167,11 @@ function network(ctx: CanvasRenderingContext2D, project: Project, block: number,
         for (let column = 0; column < 3; column++) {
             const count = column === 1 ? 10 : 6;
             for (let row = 0; row < count; row++) {
-                const point = {x, y: -112 + row * 270 / (count - 1), z: z + (column - 1) * 80};
+                const point = networkPoint(block, token, column, row);
                 if (column < 2) {
                     const nextCount = column === 0 ? 10 : 6;
                     for (let next = 0; next < nextCount; next++) {
-                        line(ctx, project, point, {x, y: -112 + next * 270 / (nextCount - 1), z: z + column * 80}, (next + row) % 2 ? "#e78e7052" : "#63baca52", active ? 1.2 : 0.7);
+                        cable(ctx, project, point, networkPoint(block, token, column + 1, next), (next + row) % 2 ? "#e78e7070" : "#63baca70", time, block * 701 + token * 131 + column * 61 + row * 13 + next, active ? 1.2 : 0.7);
                     }
                 }
                 const p = project(point);
@@ -137,14 +183,12 @@ function network(ctx: CanvasRenderingContext2D, project: Project, block: number,
         }
         worldText(ctx, project, {x, y: -165, z}, labels.tokens[token], 22, COLORS[token]);
         worldText(ctx, project, {x, y: 204, z}, formatActivation(MODEL[block].output[token][0]), 20, COLORS[token]);
-        for (const offset of [0, 1]) {
-            const fromZ = offset === 0 ? z - 210 : z;
-            const toZ = offset === 0 ? z : z + 220;
-            if (block === 3 && offset === 1) continue;
-            line(ctx, project, {x, y: 160, z: fromZ}, {x, y: 160, z: toZ}, `${COLORS[token]}65`, 1.2);
-            if (active) {
-                const p = project({x, y: 160, z: fromZ + (toZ - fromZ) * ((time * 0.8) % 1)});
-                ctx.fillStyle = COLORS[token]; ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
+        for (let row = 0; row < 6; row++) {
+            const input = {x, y: -83 + row * 43, z: block * 430 + 95};
+            const output = {x, y: -83 + row * 43, z: (block + 1) * 430};
+            for (let node = 0; node < 6; node++) {
+                cable(ctx, project, input, networkPoint(block, token, 0, node), `${COLORS[token]}45`, time, token * 61 + row * 17 + node);
+                if (block < 3) cable(ctx, project, networkPoint(block, token, 2, node), output, `${COLORS[token]}45`, time, token * 67 + row * 19 + node);
             }
         }
     }
@@ -159,8 +203,7 @@ function network(ctx: CanvasRenderingContext2D, project: Project, block: number,
 }
 
 function chat(ctx: CanvasRenderingContext2D, project: Project, time: number, labels: SceneLabels) {
-    plane(ctx, project, -520, "#65999e");
-    ctx.save(); worldSurface(ctx, project, {x: -520, y: -290, z: -522}); ctx.scale(0.65, 0.65);
+    ctx.save(); billboard(ctx, project, -520);
     text(ctx, labels.chat, 800, 300, 64);
     ctx.fillStyle = "#182126"; ctx.strokeStyle = "#43515a"; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.roundRect(300, 360, 1000, 170, 24); ctx.fill(); ctx.stroke();
@@ -178,8 +221,7 @@ function chat(ctx: CanvasRenderingContext2D, project: Project, time: number, lab
 }
 
 function output(ctx: CanvasRenderingContext2D, project: Project, time: number, labels: SceneLabels) {
-    plane(ctx, project, 1850, "#8bd4ad");
-    ctx.save(); worldSurface(ctx, project, {x: -520, y: -290, z: 1848}); ctx.scale(0.65, 0.65);
+    ctx.save(); billboard(ctx, project, 1850);
     text(ctx, labels.outputPipeline, 800, 95, 20, "#a1b5bd");
     text(ctx, labels.nextToken, 800, 160, 25, "#8bd4ad");
     text(ctx, labels.tokens.join(" ").replace(" ?", "?"), 800, 235, 40);
@@ -209,22 +251,18 @@ export function renderFrame(ctx: CanvasRenderingContext2D, width: number, height
         line(ctx, project, {x: -650, y: 340, z}, {x: 650, y: 340, z}, "#354d5825");
     }
     for (let x = -600; x <= 600; x += 200) line(ctx, project, {x, y: 340, z: -650}, {x, y: 340, z: 2000}, "#354d5825");
-    output(ctx, project, time, labels);
     for (let block = 3; block >= 0; block--) {
         network(ctx, project, block, time, labels);
         attention(ctx, project, block, time, labels);
     }
     for (let token = 0; token < 5; token++) {
-        const x = -400 + token * 200;
         for (let row = 0; row < 6; row++) {
-            const y = -83 + row * 43;
-            line(ctx, project, {x, y, z: -425}, {x, y, z: 0}, `${COLORS[token]}55`);
-            for (let block = 0; block < 4; block++) {
-                line(ctx, project, {x, y, z: block * 430 + 95}, {x, y, z: block * 430 + 130}, `${COLORS[token]}45`);
-                line(ctx, project, {x, y, z: block * 430 + 290}, {x, y, z: block === 3 ? 1850 : (block + 1) * 430}, `${COLORS[token]}45`);
-            }
+            const endpoint = {x: -400 + token * 200, y: -83 + row * 43, z: 0};
+            fan(ctx, project, {x: 0, y: 0, z: -520}, endpoint, COLORS[token], time, token * 6 + row);
+            fan(ctx, project, networkPoint(3, token, 2, row), {x: 0, y: 0, z: 1850}, COLORS[token], time, token * 6 + row);
         }
     }
+    output(ctx, project, time, labels);
     chat(ctx, project, time, labels);
     text(ctx, labels.example, 1555, 873, 13, "#74858e", "right");
     ctx.restore();
