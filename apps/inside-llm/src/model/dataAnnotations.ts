@@ -33,9 +33,11 @@ function paintLayerData(ctx: CanvasRenderingContext2D, time: number, project: Pr
     const camera = cameraAt(time);
     for (let layer = 0; layer < LAYER_COUNT; layer++) {
         const x = layerCenter(layer);
-        worldText(ctx, project, {x, y: -235, z: 0}, `${labels.transformer} ${String(layer + 1).padStart(2, "0")}`, 20, "#d6baff");
-        worldText(ctx, project, {x: x - 38, y: -225, z: -45}, labels.attention, 12, "#6feaff");
-        worldText(ctx, project, {x: x + 42, y: -205, z: -45}, labels.feedForward, 12, "#ff9fcd");
+        const near = Math.abs(x - camera.x) < 420;
+        const number = String(layer + 1).padStart(2, "0");
+        worldText(ctx, project, {x, y: -235, z: 0}, near ? `${labels.transformer} ${number}` : number, 16, "#d6baff");
+        if (near) worldText(ctx, project, {x: x - 38, y: -225, z: -45}, labels.attention, 12, "#6feaff");
+        if (near) worldText(ctx, project, {x: x + 42, y: -205, z: -45}, labels.feedForward, 12, "#ff9fcd");
         if (Math.abs(x - camera.x) > 470 && camera.distance < 1400) continue;
         const nodes = camera.distance > 1400 ? [7, 67, 107] : [7, 27, 47, 62, 67, 84, 89, 104, 109];
         for (const node of nodes) {
