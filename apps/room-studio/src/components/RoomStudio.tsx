@@ -272,7 +272,7 @@ export default function RoomStudio() {
           {t("room.outsideCount", { count: outsideCount })}
         </p>
       )}
-      <div className={styles.workspace}>
+      <div className={editingPlan ? styles.blueprintWorkspace : styles.workspace}>
         {editingPlan ? (
           <FloorPlanEditor
             room={room}

@@ -1,0 +1,19 @@
+{
+  "name": "@oskar-lab/blueprint",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./model": "./src/model/blueprint.ts",
+    "./measurements": "./src/model/measurements.ts",
+    "./BlueprintEditor": "./src/components/BlueprintEditor.tsx",
+    "./Measure": "./src/components/Measure.tsx",
+    "./MeasurementSettings": "./src/components/MeasurementSettings.tsx"
+  },
+  "dependencies": {
+    "@oskar-lab/i18n": "*"
+  },
+  "peerDependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  }
+}

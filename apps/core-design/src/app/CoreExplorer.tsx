@@ -1,6 +1,7 @@
 "use client";
 
 import {useMemo, useState} from "react";
+import BlueprintPreview from "./BlueprintPreview";
 import RangeSlider from "@oskar-lab/ui/RangeSlider/RangeSlider";
 import Tabs from "@oskar-lab/ui/Tabs/Tabs";
 import Button from "@oskar-lab/ui/Buttons/Button";
@@ -31,6 +32,7 @@ function createDesignReferences(t: Translate): readonly DesignReference[] { retu
     {id: "structured-content", title: t("core.listsTablesStatus"), description: t("core.structuredContentDescription"), keywords: ["table", "tabelle", "list", "liste", "badge", "status"]},
 ]; }
 function createComponentReferences(t: Translate): readonly ComponentReference[] { return [
+    {id:"blueprint", title:"Blueprint", description:t("blueprint.previewDescription"), keywords:["blueprint","vertices","edges","drawing","2d","punkte","kanten"], wide:true},
     {id: "range-slider", title: "RangeSlider", description: t("core.rangeSliderDescription"), keywords: ["range", "slider", "min", "max"]},
     {id: "tabs", title: "Tabs", description: t("core.tabsDescription"), keywords: ["tabs", "navigation", "content"], wide: true},
     {id: "button", title: "Button", description: t("core.primaryActions"), keywords: ["buttons", "knopf", "aktion"]},
@@ -77,6 +79,7 @@ function TabsPreview() {
 function DesignTab() {
     const {t} = useI18n();
     return <div className={styles.tabContent}>
+        <section className={styles.section}><h2>Blueprint</h2><BlueprintPreview /></section>
         <section className={styles.section}><h2>RangeSlider</h2><RangePreview /></section>
         <section className={styles.section}><h2>Tabs</h2><TabsPreview /></section>
         <section className={styles.section}>
@@ -105,6 +108,7 @@ function ComponentGallery({references}: Readonly<{references: readonly Component
     const [previewQuery, setPreviewQuery] = useState("");
     const {t} = useI18n();
     return <div className={styles.previewGrid}>{references.map(reference => <article className={`${styles.preview} ${reference.wide ? styles.widePreview : ""}`} key={reference.id}><h3>{reference.title}</h3>
+        {reference.id === "blueprint" && <BlueprintPreview />}
         {reference.id === "range-slider" && <RangePreview />}
         {reference.id === "tabs" && <TabsPreview />}
         {reference.id === "button" && <div className={styles.demoRow}><Button variant="primary">Primary</Button><Button>Secondary</Button><Button disabled>Disabled</Button></div>}
