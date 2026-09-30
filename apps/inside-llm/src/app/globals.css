@@ -1,11 +1,11 @@
 :root {
     color-scheme:dark;
-    --bg:#080d14;
+    --bg:#080810;
     --panel:#0c141e;
     --line:#202e3d;
     --text:#e6edf5;
     --muted:#8193a6;
-    --cyan:#8de7ed;
+    --cyan:#bb9bff;
     --gold:#efc191;
     --font:Arial,Helvetica,sans-serif
 }
@@ -166,180 +166,6 @@ h1 {
     inset:0;
     width:100%;
     height:100%
-}
-.stageTop,.stageBottom {
-    position:absolute;
-    left:3.2%;
-    right:3.2%;
-    display:flex;
-    justify-content:space-between;
-    font:clamp(7px,.85cqw,12px) monospace;
-    letter-spacing:1.5px;
-    color:#91a9ba
-}
-.stageTop {
-    top:5%
-}
-.stageTop span:last-child {
-    color:#5f7d8c
-}
-.stageTop b {
-    color:var(--cyan);
-    font-weight:400;
-    margin-left:15px
-}
-.stageBottom {
-    bottom:8%;
-    letter-spacing:1px
-}
-.stageBottom b {
-    color:#516b7e;
-    font-weight:400;
-    margin:0 8px
-}
-.watermark {
-    position:absolute;
-    bottom:2.7%;
-    left:3.2%;
-    font:clamp(6px,.7cqw,10px) monospace;
-    color:#668393;
-    letter-spacing:.4px
-}
-.sceneContent {
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    pointer-events:none
-}
-.sceneLabel {
-    font:clamp(8px,1cqw,14px) monospace;
-    letter-spacing:3px;
-    color:var(--cyan);
-    margin:0 0 24px
-}
-.promptScene {
-    text-align:center;
-    margin-top:-2%;
-    width:90%;
-    text-shadow:0 2px 24px #06121d
-}
-.promptScene h2 {
-    font-size:5.1cqw;
-    font-weight:400;
-    letter-spacing:-.15cqw;
-    margin:0
-}
-.promptRule {
-    height:1px;
-    width:50px;
-    background:var(--cyan);
-    margin:35px auto 0;
-    box-shadow:0 0 16px var(--cyan)
-}
-.tokens {
-    display:flex;
-    justify-content:center;
-    gap:1cqw
-}
-.tokens>span {
-    display:flex;
-    flex-direction:column;
-    gap:14px;
-    background:#0a1b29e6;
-    border:1px solid #52818d;
-    border-radius:7px;
-    padding:1.4cqw;
-    font-size:3.4cqw;
-    box-shadow:0 0 30px #85eeff0b
-}
-.tokens small {
-    font:1cqw monospace;
-    color:var(--cyan)
-}
-.tokens>span:nth-child(even) {
-    border-color:#a48c71
-}
-.tokens>span:nth-child(even) small {
-    color:var(--gold)
-}
-.candidates {
-    width:42%;
-    padding:2.2cqw;
-    background:#08131ed9;
-    border:1px solid #294353;
-    border-radius:10px;
-    box-shadow:0 10px 100px #0007
-}
-.candidates .sceneLabel {
-    font-size:.82cqw;
-    letter-spacing:1px;
-    margin-bottom:2.5cqw
-}
-.candidate {
-    display:flex;
-    align-items:center;
-    gap:1.5cqw;
-    margin:1.7cqw 0;
-    font-size:1.6cqw
-}
-.candidate>span {
-    width:5.8cqw
-}
-.candidate>div {
-    flex:1;
-    height:5px;
-    background:#142732
-}
-.candidate i {
-    height:100%;
-    display:block;
-    background:#739dac
-}
-.candidate b {
-    font:1cqw monospace;
-    color:#86a1b0;
-    font-weight:400
-}
-.candidate.chosen {
-    color:var(--gold)
-}
-.candidate.chosen i {
-    background:var(--gold);
-    box-shadow:0 0 16px #efc19170
-}
-.selected {
-    display:block;
-    color:var(--gold);
-    font:1cqw monospace;
-    padding-top:.8cqw
-}
-.answerScene {
-    width:69%;
-    text-align:center
-}
-.answerScene h2 {
-    font-size:3.2cqw;
-    font-weight:400;
-    line-height:1.5;
-    letter-spacing:-.06cqw;
-    min-height:10cqw;
-    margin:0;
-    text-shadow:0 0 30px #000
-}
-.cursor {
-    height:1em;
-    width:2px;
-    background:var(--gold);
-    display:inline-block;
-    margin-left:5px;
-    vertical-align:middle
-}
-.endLine {
-    font:1.1cqw monospace;
-    color:var(--gold);
-    margin-top:2cqw
 }
 .transport {
     background:#0d151f;
@@ -677,3 +503,14 @@ footer {
         transition:none!important
     }
 }
+
+.stage { aspect-ratio: 16/9; }
+.intro { padding-top: 30px; padding-bottom: 24px; }
+.chapterSection { padding-bottom: 25px; }
+.player { border-color: #40315b; box-shadow: 0 15px 85px #712cff14; }
+.playButton { background: #c5a9ff; border-color: #c5a9ff; }
+.chapterGrid button.active { border-color: #b28bfa; background: #211a34; }
+.cinema:has(.controlsHidden) { cursor: none; }
+
+.loopButton[aria-pressed="true"] { color: #c9aaff; border-color: #9272b7; background: #251a38; }
+@media(max-width:430px) { .viewControls { gap: 3px; } .loopButton { padding: 6px; } .playButton { min-width: 80px; padding: 8px; } }

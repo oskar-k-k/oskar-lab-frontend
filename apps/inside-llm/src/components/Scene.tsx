@@ -20,11 +20,11 @@ export default function Scene({time}: Readonly<{time: number}>) {
             const width = Math.round(element.clientWidth * scale);
             const height = Math.round(element.clientHeight * scale);
             if (element.width !== width || element.height !== height) { element.width = width; element.height = height; }
-            renderFrame(ctx, width, height, time);
+            renderFrame(ctx, width, height, time, [t("llm.scenePrompt"), t("llm.sceneOutput")]);
         }
         draw();
         const observer = new ResizeObserver(draw); observer.observe(element);
         return () => observer.disconnect();
-    }, [time]);
+    }, [time, t]);
     return <><canvas ref={canvas} aria-label={t("llm.canvas")} role="img" />{failed && <p role="alert" className="canvasError">{t("llm.canvasError")}</p>}</>;
 }

@@ -1,5 +1,5 @@
-export const DURATION = 90;
-export const CHAPTER_STARTS = [0, 12, 26, 43, 60, 73] as const;
+export const DURATION = 60;
+export const CHAPTER_STARTS = [0, 8, 18, 29, 40, 51] as const;
 
 /** Clamps untrusted timeline values to the finite film interval. */
 export function clampTime(value: number): number {

@@ -5,17 +5,14 @@ import {useI18n} from "@oskar-lab/i18n/I18nProvider";
 import type {TranslationKey} from "@oskar-lab/i18n/messages";
 import {CHAPTER_STARTS, clampTime, DURATION, filmState, timestamp} from "../model/timeline";
 import Scene from "./Scene";
-import SceneOverlay from "./SceneOverlay";
 import {useFilmPlayback} from "../hooks/useFilmPlayback";
 
 const chapterKeys: TranslationKey[] = ["llm.chapter1", "llm.chapter2", "llm.chapter3", "llm.chapter4", "llm.chapter5", "llm.chapter6"];
-const detailKeys: TranslationKey[] = ["llm.detail1", "llm.detail2", "llm.detail3", "llm.detail4", "llm.detail5", "llm.detail6"];
-const stageKeys: TranslationKey[] = ["llm.tokenization", "llm.vectors", "llm.layers", "llm.heads", "llm.sampling", "llm.sampling"];
 
 /** Coordinates film playback, chapter navigation and a clean recording surface. */
 export default function Film({platformUrl}: Readonly<{platformUrl: string}>) {
     const {t, locale, setLocale} = useI18n();
-    const {time, setTime, playing, setPlaying, speed, setSpeed, toggle} = useFilmPlayback();
+    const {time, setTime, playing, setPlaying, speed, setSpeed, loop, setLoop, toggle} = useFilmPlayback();
     const [cinema, setCinema] = useState(false);
     const [controlsVisible, setControlsVisible] = useState(true);
     const [error, setError] = useState("");
@@ -79,19 +76,7 @@ export default function Film({platformUrl}: Readonly<{platformUrl: string}>) {
             <section className="player" aria-label={t("llm.title")}>
                 <div className="stage">
                     <Scene time={time} />
-                    <div className="stageTop">
-                        <span>
-                            <i className={playing ? "liveDot playing" : "liveDot"} /> {t("llm.chapterLabel", {number: chapter + 1})}</span>
-                        <span>INSIDE / LLM <b>001</b>
-                        </span>
-                    </div>
-                    <SceneOverlay chapter={chapter} progress={progress} />
-                    <div className="stageBottom">
-                        <span>{String(chapter + 1).padStart(2, "0")} <b>/</b> {t(stageKeys[chapter])}</span>
-                        <span>{timestamp(time)} <b>/ 1:30</b>
-                        </span>
-                    </div>
-                    <span className="watermark">{t("llm.note")}</span>
+
                 </div>
                 <div className={`transport ${cinema && !controlsVisible ? "controlsHidden" : ""}`} onFocusCapture={event => {if (event.target.matches(":focus-visible")) {setControlsVisible(true); if (hideTimer.current) clearTimeout(hideTimer.current);} else revealControls();}}>
                     <div className="scrubber">
@@ -102,10 +87,11 @@ export default function Film({platformUrl}: Readonly<{platformUrl: string}>) {
                             <button className="playButton" onClick={toggle}>
                                 <span aria-hidden="true">{playing ? "Ⅱ" : "▶"}</span>{t(playing ? "llm.pause" : time >= DURATION ? "llm.replay" : "llm.play")}</button>
                             <button className="iconButton" onClick={() => {setTime(0); setPlaying(false);}} aria-label={t("llm.restart")}>↺</button>
-                            <span className="timecode">{timestamp(time)} <b>/ 1:30</b>
+                            <span className="timecode">{timestamp(time)} <b>/ {timestamp(DURATION)}</b>
                             </span>
                         </div>
                         <div className="viewControls">
+                            <button className="loopButton" aria-label={t("llm.loop")} aria-pressed={loop} onClick={() => setLoop(value => !value)}>∞</button>
                             <label>
                                 <span className="srOnly">{t("llm.speed")}</span>
                                 <select value={speed} onChange={event => setSpeed(Number(event.target.value))}>{[0.5, 1, 1.5, 2].map(value => <option key={value} value={value}>{value}×</option>)}</select>
@@ -130,10 +116,7 @@ export default function Film({platformUrl}: Readonly<{platformUrl: string}>) {
                         <i style={{width: chapter > index ? "100%" : chapter === index ? `${progress * 100}%` : "0%"}} />
                     </span>
                 </button>)}</nav>
-                <div className="explanation">
-                    <span className="explanationMark">↳</span>
-                    <p>{t(detailKeys[chapter])}</p>
-                </div>
+
             </section>
             <footer>
                 <span>{t("llm.note")}</span>

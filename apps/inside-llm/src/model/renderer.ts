@@ -1,136 +1,186 @@
-import {filmState, noise} from "./timeline";
+import {cameraAt, layerCenter, LAYER_COUNT, PARTICLE_COUNT, particlePosition, type Vector3} from "./choreography";
+import {clampTime, noise} from "./timeline";
 
-type Point = {x: number; y: number; scale: number};
-const CYAN = "103,224,244";
-const GOLD = "255,195,128";
+type ScreenPoint = {x: number; y: number; scale: number; visible: boolean};
+type Camera = ReturnType<typeof cameraAt>;
+const COLORS = ["#58f7ff", "#a47bff", "#ff529c", "#ffb95a", "#82ffcb"];
+let glowSprites: HTMLCanvasElement[] | undefined;
 
-function dot(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, color: string, alpha: number) {
-    ctx.fillStyle = `rgba(${color},${alpha})`;
-    ctx.beginPath(); ctx.arc(x, y, Math.max(0.2, radius), 0, Math.PI * 2); ctx.fill();
+function createGlowSprites(): HTMLCanvasElement[] {
+    return COLORS.map(color => {
+        const sprite = document.createElement("canvas");
+        sprite.width = 64;
+        sprite.height = 64;
+        const ctx = sprite.getContext("2d");
+        if (!ctx) return sprite;
+        const glow = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+        glow.addColorStop(0, "#ffffff");
+        glow.addColorStop(0.08, color);
+        glow.addColorStop(0.3, `${color}65`);
+        glow.addColorStop(1, `${color}00`);
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, 64, 64);
+        return sprite;
+    });
 }
 
-function line(ctx: CanvasRenderingContext2D, a: Point, b: Point, alpha: number, color = CYAN) {
-    ctx.strokeStyle = `rgba(${color},${alpha})`; ctx.lineWidth = 0.65;
-    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+function makeProjection(camera: Camera) {
+    const cy = Math.cos(camera.yaw), sy = Math.sin(camera.yaw);
+    const cp = Math.cos(camera.pitch), sp = Math.sin(camera.pitch);
+    const cr = Math.cos(camera.roll), sr = Math.sin(camera.roll);
+    return ({x, y, z}: Vector3): ScreenPoint => {
+        const rx = (x - camera.x) * cy + z * sy;
+        const rz = z * cy - (x - camera.x) * sy;
+        const ry = y * cp - rz * sp;
+        const depth = y * sp + rz * cp + camera.distance;
+        const scale = 1050 / Math.max(110, depth);
+        const px = 800 + (rx * cr - ry * sr) * scale;
+        const py = 450 + (rx * sr + ry * cr) * scale;
+        return {x: px, y: py, scale, visible: depth > 110 && px > -100 && px < 1700 && py > -100 && py < 1000};
+    };
 }
 
-function project(x: number, y: number, z: number, time: number, chapter: number): Point {
-    const travel = chapter === 2 ? Math.sin((time - 26) / 17 * Math.PI) : 0;
-    const angle = -0.47 + Math.sin(time * 0.025) * 0.13 - travel * 0.55;
-    const turnX = x * Math.cos(angle) + z * Math.sin(angle);
-    const turnZ = z * Math.cos(angle) - x * Math.sin(angle);
-    const zoom = chapter === 2 ? 1 + travel * 0.85 : chapter === 5 ? 1.1 - filmState(time).progress * 0.4 : 1;
-    const scale = 760 / (1050 + turnZ) * zoom;
-    return {x: 800 + turnX * scale, y: 418 + (y + turnZ * 0.17) * scale, scale};
-}
-
-function background(ctx: CanvasRenderingContext2D, time: number) {
-    ctx.fillStyle = "#050b13"; ctx.fillRect(0, 0, 1600, 900);
-    const glow = ctx.createRadialGradient(830, 415, 20, 830, 415, 740);
-    glow.addColorStop(0, "#0b2735"); glow.addColorStop(0.5, "#081723"); glow.addColorStop(1, "#050b13");
-    ctx.fillStyle = glow; ctx.fillRect(0, 0, 1600, 900);
-    for (let i = 0; i < 210; i++) {
-        const x = (noise(i) * 1600 + time * (0.3 + noise(i + 500))) % 1600;
-        const y = noise(i + 900) * 900;
-        dot(ctx, x, y, noise(i + 600) * 1.2 + 0.3, CYAN, 0.1 + noise(i + 100) * 0.3);
+function paintBackground(ctx: CanvasRenderingContext2D, time: number) {
+    ctx.fillStyle = "#04030c";
+    ctx.fillRect(0, 0, 1600, 900);
+    const colors = ["#501273", "#072a52", "#54122f"];
+    for (let i = 0; i < 3; i++) {
+        const x = 800 + Math.sin(time * Math.PI / 15 + i * 2) * 520;
+        const y = 450 + Math.cos(time * Math.PI / 30 + i * 2) * 260;
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 670);
+        gradient.addColorStop(0, `${colors[i]}80`);
+        gradient.addColorStop(1, `${colors[i]}00`);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 1600, 900);
     }
-    ctx.strokeStyle = "rgba(103,224,244,0.035)"; ctx.lineWidth = 1;
-    for (let x = -1200; x <= 2800; x += 140) {
-        ctx.beginPath(); ctx.moveTo(800 + (x - 800) * 0.2, 490); ctx.lineTo(x, 900); ctx.stroke();
+    ctx.fillStyle = "#a39ec3";
+    for (let i = 0; i < 120; i++) {
+        const x = (noise(i + 9000) * 1600 + Math.sin(time * Math.PI / 30) * (12 + i % 4)) % 1600;
+        ctx.globalAlpha = 0.12 + noise(i) * 0.35;
+        ctx.fillRect(x, noise(i + 9500) * 900, 1.2, 1.2);
     }
-    for (let i = 0; i < 9; i++) {
-        const y = 490 + i * i * 6.2;
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1600, y); ctx.stroke();
+    ctx.globalAlpha = 1;
+}
+
+function strokeLink(ctx: CanvasRenderingContext2D, a: ScreenPoint, b: ScreenPoint, color: string, opacity: number) {
+    if (!a.visible || !b.visible) return;
+    const distance = Math.hypot(a.x - b.x, a.y - b.y);
+    if (distance > 160) return;
+    ctx.strokeStyle = color;
+    ctx.globalAlpha = opacity;
+    ctx.lineWidth = Math.min(3, a.scale * 1.7);
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+}
+
+function paintConnections(ctx: CanvasRenderingContext2D, points: ScreenPoint[], time: number) {
+    for (let i = 720; i < 1800; i++) {
+        const layer = Math.floor((i - 720) / 120);
+        const color = COLORS[layer % COLORS.length];
+        const energy = 0.3 + 0.25 * Math.sin(time * Math.PI / 0.75 - layer * 0.9);
+        if ((i - 720) % 30 < 29) strokeLink(ctx, points[i], points[i + 1], color, 0.8);
+        if ((i - 720) % 120 < 90) strokeLink(ctx, points[i], points[i + 30], color, 0.4);
+        if (i < 1680 && i % 4 === 0) strokeLink(ctx, points[i], points[i + 120], color, energy);
     }
 }
 
-function network(ctx: CanvasRenderingContext2D, time: number, chapter: number) {
-    const layers: Point[][] = [];
-    for (let layer = 0; layer < 12; layer++) {
-        const points: Point[] = [];
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 7; col++) points.push(project((layer - 5.5) * 119, (row - 4) * 48, (col - 3) * 47, time, chapter));
+function paintParticles(ctx: CanvasRenderingContext2D, points: ScreenPoint[], time: number) {
+    glowSprites ??= createGlowSprites();
+    const previousProjection = makeProjection(cameraAt(Math.max(0, time - 0.035)));
+    for (let i = 0; i < points.length; i++) {
+        const point = points[i];
+        if (!point.visible) continue;
+        const colorIndex = i < 720 ? Math.floor(i / 144) : i < 1800 ? Math.floor((i - 720) / 120) % COLORS.length : i < 2160 ? 3 : 0;
+        const bright = 0.5 + 0.5 * Math.sin(time * Math.PI / 0.75 - i * 0.035);
+        const size = Math.min(52, (12 + bright * 10) * point.scale);
+        if (i < 720 || i % 3 === 0) {
+            const previous = previousProjection(particlePosition(i, Math.max(0, time - 0.035)));
+            strokeLink(ctx, previous, point, COLORS[colorIndex], 0.5);
         }
-        layers.push(points);
+        ctx.globalAlpha = Math.min(0.95, 0.3 + point.scale * 0.26 + bright * 0.25);
+        ctx.drawImage(glowSprites[colorIndex], point.x - size / 2, point.y - size / 2, size, size);
     }
-    const pulse = (time * 0.75) % 12;
-    for (let layer = 0; layer < 12; layer++) {
-        const points = layers[layer];
-        const energy = Math.exp(-Math.pow(layer - pulse, 2) / 1.1);
-        for (let i = 0; i < points.length; i++) {
-            const point = points[i];
-            if (i % 7 < 6) line(ctx, point, points[i + 1], 0.11);
-            if (i < 56) line(ctx, point, points[i + 7], 0.11);
-            if (layer < 11 && i % 3 === 0) {
-                const next = layers[layer + 1][(i * 11 + layer * 7) % 63];
-                line(ctx, point, next, 0.10 + energy * 0.28, layer > 8 ? GOLD : CYAN);
-                const flow = (time * 0.65 + noise(i + layer * 60)) % 1;
-                dot(ctx, point.x + (next.x - point.x) * flow, point.y + (next.y - point.y) * flow, 1.8, CYAN, 0.2 + energy * 0.6);
+    ctx.globalAlpha = 1;
+}
+
+function paintArchitecture(ctx: CanvasRenderingContext2D, time: number) {
+    const project = makeProjection(cameraAt(time));
+    for (let layer = 0; layer < LAYER_COUNT; layer++) {
+        const x = layerCenter(layer);
+        const color = COLORS[layer % COLORS.length];
+        const corners = [{x, y: -215, z: -215}, {x, y: 215, z: -215}, {x, y: 215, z: 215}, {x, y: -215, z: 215}].map(project);
+        if (corners.every(point => point.visible)) {
+            ctx.globalAlpha = 0.028;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            corners.forEach((point, index) => index === 0 ? ctx.moveTo(point.x, point.y) : ctx.lineTo(point.x, point.y));
+            ctx.closePath();
+            ctx.fill();
+        }
+        for (let ring = 0; ring < 2; ring++) {
+            let previous: ScreenPoint | undefined;
+            for (let i = 0; i <= 80; i++) {
+                const angle = i / 80 * Math.PI * 2;
+                const radius = 214 + ring * 11;
+                const point = project({x: x + ring * 8, y: Math.cos(angle) * radius, z: Math.sin(angle) * radius});
+                if (previous) strokeLink(ctx, previous, point, color, 0.7);
+                previous = point;
             }
-            dot(ctx, point.x, point.y, (1.9 + energy * 2.4) * point.scale, layer > 8 ? GOLD : CYAN, 0.4 + energy * 0.6);
-            if (energy > 0.35) dot(ctx, point.x, point.y, 7 * point.scale, CYAN, energy * 0.04);
         }
-        const top = project((layer - 5.5) * 119, -243, -141, time, chapter);
-        ctx.font = "11px monospace"; ctx.fillStyle = `rgba(${CYAN},0.45)`;
-        ctx.fillText(String(layer + 1).padStart(2, "0"), top.x, top.y);
     }
 }
 
-function vectors(ctx: CanvasRenderingContext2D, time: number) {
-    for (let column = 0; column < 9; column++) {
-        const x = 325 + column * 118;
-        for (let row = 0; row < 15; row++) {
-            const value = noise(column * 31 + row);
-            const wave = (Math.sin(time * 1.7 - row * 0.42 + column) + 1) / 2;
-            ctx.fillStyle = `rgba(${column === 4 ? GOLD : CYAN},${0.15 + wave * 0.65})`;
-            ctx.font = "16px monospace";
-            ctx.fillText((value * 2 - 1).toFixed(3), x, 230 + row * 24);
+function paintSignalRibbons(ctx: CanvasRenderingContext2D, time: number) {
+    const project = makeProjection(cameraAt(time));
+    for (let ribbon = 0; ribbon < 5; ribbon++) {
+        let previous: ScreenPoint | undefined;
+        for (let step = 0; step <= 120; step++) {
+            const phase = step / 120;
+            const angle = phase * 13 - time * Math.PI / 1.5 + ribbon * Math.PI * 0.4;
+            const radius = Math.sin(phase * Math.PI) * 105;
+            const point = project({x: -970 + phase * 1940, y: Math.sin(angle) * radius, z: Math.cos(angle) * radius});
+            if (previous) strokeLink(ctx, previous, point, COLORS[ribbon], 0.58);
+            previous = point;
         }
-        ctx.strokeStyle = `rgba(${CYAN},0.22)`; ctx.strokeRect(x - 15, 198, 90, 405);
     }
 }
 
-function attention(ctx: CanvasRenderingContext2D, time: number) {
-    const progress = filmState(time).progress;
-    for (let head = 0; head < 3; head++) {
-        const center = 430 + head * 370;
-        const color = head === 1 ? GOLD : CYAN;
-        for (let row = 0; row < 7; row++) {
-            for (let col = 0; col <= row; col++) {
-                const strength = noise(row * 7 + col + head * 51);
-                const wave = 0.7 + Math.sin(time * 1.5 + row) * 0.3;
-                ctx.fillStyle = `rgba(${color},${0.07 + strength * wave * 0.7})`;
-                ctx.fillRect(center - 105 + col * 29, 310 + row * 29, 24, 24);
-            }
-        }
-        for (let i = 0; i < 7; i++) {
-            const x = center - 112 + i * 36;
-            dot(ctx, x, 250, 4, color, 0.9);
-            for (let j = 0; j <= i; j++) {
-                ctx.strokeStyle = `rgba(${color},${0.08 + noise(i * 7 + j + head) * 0.28})`;
-                ctx.beginPath(); ctx.moveTo(x, 250);
-                ctx.quadraticCurveTo((x + center - 112 + j * 36) / 2, 95 + (i - j) * 12, center - 112 + j * 36, 250); ctx.stroke();
-            }
-        }
-        const active = Math.min(6, Math.floor(progress * 7));
-        ctx.strokeStyle = `rgba(${color},0.8)`; ctx.strokeRect(center - 109, 306 + active * 29, 210, 31);
+function paintEndpoints(ctx: CanvasRenderingContext2D, time: number, labels: readonly string[]) {
+    const project = makeProjection(cameraAt(time));
+    for (const [index, x] of [-980, 960].entries()) {
+        const point = project({x, y: -255, z: 0});
+        if (!point.visible) continue;
+        ctx.globalAlpha = 0.78;
+        ctx.textAlign = "center";
+        ctx.font = `${Math.min(23, Math.max(14, point.scale * 19))}px sans-serif`;
+        ctx.fillStyle = index === 0 ? COLORS[0] : COLORS[3];
+        ctx.fillText(labels[index], point.x, point.y);
     }
+    ctx.globalAlpha = 1;
 }
 
-/** Renders a deterministic frame in a logical 1600×900 space, independent of display size. */
-export function renderFrame(ctx: CanvasRenderingContext2D, width: number, height: number, time: number) {
-    ctx.save(); ctx.scale(width / 1600, height / 900);
-    const {chapter} = filmState(time);
-    background(ctx, time);
-    if (chapter === 1) vectors(ctx, time);
-    else if (chapter === 3) attention(ctx, time);
-    else {
-        ctx.globalAlpha = chapter === 0 ? 0.56 : chapter === 4 ? 0.22 : chapter === 5 ? 0.45 : 1;
-        network(ctx, time, chapter);
-        ctx.globalAlpha = 1;
-    }
-    const vignette = ctx.createRadialGradient(800, 420, 330, 800, 420, 920);
-    vignette.addColorStop(0, "transparent"); vignette.addColorStop(1, "rgba(2,5,11,0.75)");
-    ctx.fillStyle = vignette; ctx.fillRect(0, 0, 1600, 900);
+/** Draws one continuous model from input to output with a sixty-second camera path. */
+export function renderFrame(ctx: CanvasRenderingContext2D, width: number, height: number, value: number, labels: readonly string[]) {
+    const time = clampTime(value);
+    ctx.save();
+    ctx.scale(width / 1600, height / 900);
+    paintBackground(ctx, time);
+    const project = makeProjection(cameraAt(time));
+    const points = Array.from({length: PARTICLE_COUNT}, (_, i) => project(particlePosition(i, time)));
+    ctx.globalCompositeOperation = "lighter";
+    paintArchitecture(ctx, time);
+    paintConnections(ctx, points, time);
+    paintSignalRibbons(ctx, time);
+    paintParticles(ctx, points, time);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.globalAlpha = 1;
+    const vignette = ctx.createRadialGradient(800, 450, 350, 800, 450, 960);
+    vignette.addColorStop(0, "#04030c00");
+    vignette.addColorStop(1, "#04030caa");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, 1600, 900);
+    paintEndpoints(ctx, time, labels);
     ctx.restore();
 }
