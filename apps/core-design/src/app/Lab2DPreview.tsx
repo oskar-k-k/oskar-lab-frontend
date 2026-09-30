@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Editor2D from "@oskar-lab/2d-lab/Editor2D";
+import SceneEditor from "@oskar-lab/2d-lab/SceneEditor";
+import type { Scene2D } from "@oskar-lab/2d-lab/scene";
 import MeasurementSettings from "@oskar-lab/2d-lab/MeasurementSettings";
 import { defaultMeasurements } from "@oskar-lab/2d-lab/measurements";
 import { type Mesh2D } from "@oskar-lab/2d-lab/model";
@@ -34,16 +35,19 @@ const example: Mesh2D = {
 export default function Lab2DPreview() {
   const { t } = useI18n();
   const [history, setHistory] = useState({
-    past: [] as Mesh2D[],
-    present: example,
-    future: [] as Mesh2D[],
+    past: [] as Scene2D[],
+    present: {
+      version: 1,
+      objects: [{ id: "example", name: "Mesh", mesh: example }],
+    } as Scene2D,
+    future: [] as Scene2D[],
   });
   const [measurements, setMeasurements] = useState(defaultMeasurements);
   return (
     <div>
       <p>{t("lab2d.previewDescription")}</p>
       <MeasurementSettings value={measurements} onChange={setMeasurements} />
-      <Editor2D
+      <SceneEditor
         value={history.present}
         measurements={measurements}
         onChange={(present) =>

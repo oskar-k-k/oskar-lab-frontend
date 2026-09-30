@@ -37,6 +37,8 @@ import styles from "./Lab2D.module.css";
 
 /** Controlled editor: the host owns persistence, history and product-specific rules. */
 export type Editor2DProps = {
+  /** Restricts hit testing to one topology type; all preserves the embedded editor behavior. */
+  selectionMode?: "all" | "vertex" | "edge" | "face";
   /** Validated graph; changing the component key resets document-local view state. */
   value: Mesh2D;
   /** Display unit and physical movement increment, independent of topology. */
@@ -65,6 +67,7 @@ type Gesture = {
 
 /** Edits a bounded vertex/edge graph with pointer gestures and equivalent form/list controls. */
 export default function Editor2D({
+  selectionMode = "all",
   value,
   measurements = defaultMeasurements,
   constraints = defaultConstraints,
@@ -474,6 +477,11 @@ export default function Editor2D({
             {plan.vertices.map((vertex) => (
               <button
                 key={vertex.id}
+                disabled={
+                  selectionMode !== "all" &&
+                  selectionMode !== "vertex" &&
+                  tool !== "draw"
+                }
                 aria-pressed={selectedVertex?.id === vertex.id}
                 onClick={() => {
                   setSelection({ kind: "vertex", id: vertex.id });
@@ -494,6 +502,7 @@ export default function Editor2D({
             {(plan.faces ?? []).map((face, index) => (
               <button
                 key={face.id}
+                disabled={selectionMode !== "all" && selectionMode !== "face"}
                 aria-pressed={
                   selection?.kind === "face" && selection.id === face.id
                 }
@@ -662,8 +671,15 @@ export default function Editor2D({
                 }
                 fillOpacity={0.55}
                 className={styles.faceHandle}
+                pointerEvents={
+                  selectionMode === "all" || selectionMode === "face"
+                    ? "auto"
+                    : "none"
+                }
                 role="button"
-                tabIndex={0}
+                tabIndex={
+                  selectionMode === "all" || selectionMode === "face" ? 0 : -1
+                }
                 aria-label={t("lab2d.faceNumber", { number: index + 1 })}
                 aria-pressed={
                   selection?.kind === "face" && selection.id === face.id
@@ -691,8 +707,15 @@ export default function Editor2D({
               return (
                 <g
                   key={edge.id}
+                  pointerEvents={
+                    selectionMode === "all" || selectionMode === "edge"
+                      ? "auto"
+                      : "none"
+                  }
                   role="button"
-                  tabIndex={0}
+                  tabIndex={
+                    selectionMode === "all" || selectionMode === "edge" ? 0 : -1
+                  }
                   aria-label={`${edgeLabel}: ${vertexName(a.id)} – ${vertexName(b.id)}, ${length(edgeLength(plan, edge))}`}
                   aria-pressed={selectedEdge?.id === edge.id}
                   className={styles.edgeHandle}
@@ -767,8 +790,21 @@ export default function Editor2D({
               <g
                 key={vertex.id}
                 className={styles.vertexHandle}
+                pointerEvents={
+                  selectionMode === "all" ||
+                  selectionMode === "vertex" ||
+                  tool === "draw"
+                    ? "auto"
+                    : "none"
+                }
                 role="button"
-                tabIndex={0}
+                tabIndex={
+                  selectionMode === "all" ||
+                  selectionMode === "vertex" ||
+                  tool === "draw"
+                    ? 0
+                    : -1
+                }
                 aria-label={vertexName(vertex.id)}
                 aria-pressed={selectedVertex?.id === vertex.id}
                 onPointerDown={(event) => beginVertex(event, vertex.id)}

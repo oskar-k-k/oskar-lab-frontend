@@ -40,6 +40,25 @@ Drag a point, edge or face directly. Draw edges from points with clicks or drags
 
 The model imports no React or browser code. The SVG components have no Three.js, Next.js, furniture, storage or network dependency. Styles are scoped; `--lab2d-ink` and `--lab2d-fill` customize the appearance.
 
-Core & Design includes a live two-face example with a shared edge and generated API documentation. Room Studio uses the same package through an adapter. This is a private npm workspace package, renamed from Blueprint; imports now use `@oskar-lab/2d-lab` and `Editor2D`. It implements basic direct mesh editing, not the full Blender toolset (no extrusion, modifiers or multi-object scenes).
+Core & Design includes a live scene example with a shared-edge mesh and generated API documentation. Room Studio uses the same package through an adapter. This is a private npm workspace package, renamed from Blueprint; imports now use `@oskar-lab/2d-lab` and `Editor2D`.
+
+## Scenes and the independent app
+
+`apps/2d-lab` is the standalone product, linked from the platform launcher. `Scene2D` contains independent `SceneObject` records; each owns its mesh and name. IDs inside different object meshes may repeat. Coordinates are world X/Y coordinates in metres, with no hidden transform stack. `moveObject` moves all points once; `replaceObjectMesh` edits only its owning object. Mesh connectivity is preserved. Separate objects can overlap and do not merge automatically.
+
+```tsx
+import SceneEditor from "@oskar-lab/2d-lab/SceneEditor";
+import {defaultEnginePolicy, type Scene2D} from "@oskar-lab/2d-lab/scene";
+
+<SceneEditor value={scene} onChange={setScene}
+  policy={{...defaultEnginePolicy, maxObjects: 8, modes: ["object", "vertex", "edge"], createFaces: false}}
+  onEvent={event => { /* selection notification or validated scene commit */ }}/>
+```
+
+`EnginePolicy` defines available selection modes, object/face creation and mesh/count limits. The model enforces validation limits for scene parsing and mutations; creation flags govern creation commands and UI tools, not access control. The host owns authorization. Use `Editor2D` directly when only one mesh is needed, as Room Studio does, with `constraints`, `allowFaceCreation` and optional `selectionMode`. The room host rejects crossings and branches; the independent app permits both for free edges. Face boundaries always remain valid simple polygons.
+
+`SceneEditor` provides object selection, dragging, duplication, deletion and exact position fields. Other modes isolate the selected mesh and restrict SVG hit testing to vertices, edges or faces. The host receives one immutable change per completed gesture through `onChange`; optional `onEvent` reports selection and committed scenes for extensions. Product-specific UI can compose around this component or use the model commands directly. No global event bus or app-to-app dependency is required.
+
+`parseScene` validates versioned JSON at the storage/import boundary. `exportSceneSvg` emits escaped, standalone SVG with a group for each object. The app adds JSON project import/export, history and local persistence. Default scene limit is 64 objects. This is a focused 2D mesh editor, not the entire Blender feature set: no curves, modifiers, animation, boolean operations or arbitrary SVG import.
 
 Run workspace `npm run check`. Package tests cover shared movement, face creation/validation/deletion, edge subdivision, graph rules, serialization and dependency boundaries.
