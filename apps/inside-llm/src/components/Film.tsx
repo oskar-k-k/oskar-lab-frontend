@@ -13,7 +13,7 @@ const chapterKeys: TranslationKey[] = ["llm.chapter1", "llm.chapter2", "llm.chap
 /** Coordinates film playback, chapter navigation and a clean recording surface. */
 export default function Film({platformUrl}: Readonly<{platformUrl: string}>) {
     const {t, locale, setLocale} = useI18n();
-    const {time, setTime, playing, setPlaying, speed, setSpeed, loop, setLoop, toggle} = useFilmPlayback();
+    const {clock, time, setTime, playing, setPlaying, speed, setSpeed, loop, setLoop, toggle} = useFilmPlayback();
     const music = useSoundtrack(time, playing, speed);
     const [cinema, setCinema] = useState(false);
     const [controlsVisible, setControlsVisible] = useState(true);
@@ -77,7 +77,7 @@ export default function Film({platformUrl}: Readonly<{platformUrl: string}>) {
             </section>
             <section className="player" aria-label={t("llm.title")}>
                 <div className="stage">
-                    <Scene time={time} />
+                    <Scene clock={clock} />
 
                 </div>
                 <div className={`transport ${cinema && !controlsVisible ? "controlsHidden" : ""}`} onFocusCapture={event => {if (event.target.matches(":focus-visible")) {setControlsVisible(true); if (hideTimer.current) clearTimeout(hideTimer.current);} else revealControls();}}>

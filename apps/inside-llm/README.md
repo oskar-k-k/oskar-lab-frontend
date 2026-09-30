@@ -30,3 +30,11 @@ Sources checked 2026-09-30:
 - https://cloud.google.com/blog/products/infrastructure/measuring-the-environmental-impact-of-ai-inference
 - https://huggingface.co/Qwen/Qwen3-8B
 - https://neurips2023-enlsp.github.io/papers/paper_75.pdf
+
+## Rendering performance
+
+The playhead publishes directly from requestAnimationFrame to the canvas. React transport and audio synchronization update at 10 Hz; seeking remains immediate. One persistent ResizeObserver updates cached backing dimensions, avoiding repeated observer installation and duplicate drawing. Labels, neuron geometry, camera trigonometry and sphere sprites are reused. Cable paths are batched by style, and each curved fan/attention arc is stroked once instead of once per segment. Node counts, edge counts, animation and the existing device-pixel-ratio cap are retained.
+
+Canvas data attributes expose `data-render-ms`, `data-mean-render-ms` and `data-frame-fps` for local diagnostics. The latter averages 60 rendered frames and is not a GPU presentation guarantee. Browser scheduling, screen refresh and recording software can still limit actual delivered frame rate.
+
+Dense moving cables and attention/fan curves additionally use an optional WebGL layer with a single buffered draw call. The text/box layer remains Canvas 2D at unchanged resolution. WebGL loss switches immediately to the Canvas path and restoration rebuilds GPU resources. No network edges or neurons are removed. GPU line tessellation uses sixteen segments per cubic cable; this changes rasterization rather than model detail.

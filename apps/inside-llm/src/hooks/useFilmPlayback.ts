@@ -1,40 +1,40 @@
 "use client";
 
 import {useCallback, useEffect, useState} from "react";
-import {clampTime, DURATION} from "../model/timeline";
+import {DURATION} from "../model/timeline";
+import {PlaybackClock} from "../model/playbackClock";
 
-/** Advances film time only during visible playback and holds the final frame. */
+/** Renders on the browser clock while updating transport controls at ten hertz. */
 export function useFilmPlayback() {
-    const [time, setTime] = useState(0);
+    const [clock] = useState(() => new PlaybackClock());
+    const [time, updateTime] = useState(0);
     const [playing, setPlaying] = useState(false);
     const [speed, setSpeed] = useState(1);
     const [loop, setLoop] = useState(true);
+    const setTime = useCallback((value: number) => { clock.seek(value); updateTime(clock.time); }, [clock]);
     const toggle = useCallback(() => {
-        if (time >= DURATION) setTime(0);
+        if (clock.time >= DURATION) { clock.seek(0); updateTime(0); }
+        updateTime(clock.time);
         setPlaying(value => !value);
-    }, [time]);
+    }, [clock]);
 
     useEffect(() => {
         if (!playing) return;
         let frame = 0;
         let previous: number | null = null;
+        let lastUi = 0;
         const tick = (now: number) => {
-            if (previous !== null) {
-                const delta = Math.min((now - previous) / 1000, 0.1) * speed;
-                setTime(value => loop && value + delta >= DURATION ? (value + delta) % DURATION : clampTime(value + delta));
-            }
+            if (previous !== null) clock.advance((now - previous) / 1000 * speed, loop);
             previous = now;
+            if (now - lastUi >= 100 || clock.time >= DURATION) { updateTime(clock.time); lastUi = now; }
+            if (!loop && clock.time >= DURATION) { setPlaying(false); return; }
             frame = requestAnimationFrame(tick);
         };
         frame = requestAnimationFrame(tick);
-        const visibility = () => { previous = null; if (document.hidden) setPlaying(false); };
+        const visibility = () => { previous = null; if (document.hidden) { updateTime(clock.time); setPlaying(false); } };
         document.addEventListener("visibilitychange", visibility);
         return () => { cancelAnimationFrame(frame); document.removeEventListener("visibilitychange", visibility); };
-    }, [playing, speed, loop]);
+    }, [clock, playing, speed, loop]);
 
-    useEffect(() => {
-        if (time >= DURATION && playing) queueMicrotask(() => setPlaying(false));
-    }, [time, playing]);
-
-    return {time, setTime, playing, setPlaying, speed, setSpeed, loop, setLoop, toggle};
+    return {clock, time, setTime, playing, setPlaying, speed, setSpeed, loop, setLoop, toggle};
 }
