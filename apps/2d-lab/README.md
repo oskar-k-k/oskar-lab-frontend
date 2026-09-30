@@ -15,6 +15,18 @@ Run `npm run check` at the frontend root. Tests cover scene isolation, host rest
 
 ## Navigation and multi-selection
 
-The scene viewport pans without positional limits. Use middle/right-button drag, Space + left drag, or the Pan view button (also available to touch users). Wheel zoom is anchored at the cursor; zoom buttons use the view center. Frame scene restores the drawing bounds. Navigation changes only the viewport, never saved geometry or undo history. SVG text selection, native dragging and context menus are disabled only inside the canvas; property inputs remain normal editable fields.
+The scene viewport pans without positional limits. Use middle-button drag, Space + left drag, or the Pan view button (also available to touch users). Wheel zoom is anchored at the cursor; zoom buttons use the view center. Frame scene restores the drawing bounds. Navigation changes only the viewport, never saved geometry or undo history. SVG text selection, native dragging and browser context menus are disabled only inside the canvas; property inputs remain normal editable fields.
 
 Ctrl-click (Cmd-click on macOS) adds or removes objects, vertices, edges or faces in the current mode. Drag a selected element to move the whole selection; arrow keys also move a focused selection. Shared vertices are translated once, and group edits are validated atomically. Switching selection modes clears the selection while retaining the camera. `moveSceneSelections` exposes this behavior to other engine consumers. A plain click on an already selected element preserves the group for dragging; click blank space to clear it.
+
+
+### Context wheel
+
+Right-click opens the selection wheel at the cursor (clamped to the viewport). Right-clicking an unselected element selects it; right-clicking a selected element or the background preserves the current group. With no selection, the wheel offers points, edge drawing, rectangles and triangles at the clicked scene position. The Actions button and Shift+F10 also open the wheel; Escape goes back or closes it. Arrow keys/Tab navigate commands. The middle mouse button and Space-drag still pan; the right button is reserved for the wheel.
+
+- Points: delete, extend a single point, connect two points, or create a face from three or more points in one object. Face points are ordered geometrically around their center and invalid boundaries are rejected.
+- Edges: insert midpoints, form a face from one connected chain/loop, or delete with/without endpoints. An open chain is closed automatically.
+- Faces: delete only faces, delete their boundary edges while keeping points, or delete their points and dependent topology.
+- Objects: duplicate or delete the entire selected group. Cross-object topology joins are disabled; deleting and subdividing work across objects.
+
+Every command is validated against the host policy and commits once for undo/redo. Deleting edges or points also removes dependent faces; removing shared boundary edges can therefore remove neighboring faces. Disabled joins indicate an invalid/existing boundary or a selection spanning independent objects. Canvas text selection remains disabled; names and property fields stay editable.

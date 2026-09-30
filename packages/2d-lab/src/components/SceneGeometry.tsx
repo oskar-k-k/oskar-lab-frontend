@@ -1,4 +1,4 @@
-import type { KeyboardEvent, PointerEvent } from "react";
+import type { KeyboardEvent, PointerEvent, MouseEvent } from "react";
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import type { SceneObject, SelectionMode } from "../model/scene";
 import { meshBounds, type MeshSelection } from "../model/mesh";
@@ -12,12 +12,17 @@ export default function SceneGeometry({
   size,
   begin,
   keyboard,
+  contextMenu,
 }: {
   object: SceneObject;
   mode: SelectionMode;
   selections: MeshSelection[];
   size: number;
   begin: (event: PointerEvent<SVGElement>, selection: MeshSelection) => void;
+  contextMenu: (
+    event: MouseEvent<SVGElement>,
+    selection: MeshSelection,
+  ) => void;
   keyboard: (
     event: KeyboardEvent<SVGElement>,
     selection: MeshSelection,
@@ -37,6 +42,10 @@ export default function SceneGeometry({
         ? selections.some(
             (s) => s?.kind === selection?.kind && s?.id === selection?.id,
           )
+        : undefined,
+    onContextMenu:
+      mode === kind
+        ? (event: MouseEvent<SVGElement>) => contextMenu(event, selection)
         : undefined,
     onPointerDown:
       mode === kind

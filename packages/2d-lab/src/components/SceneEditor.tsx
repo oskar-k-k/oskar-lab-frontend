@@ -7,6 +7,7 @@ import {
   useState,
   type PointerEvent,
   type KeyboardEvent,
+  type MouseEvent,
 } from "react";
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import {
@@ -33,6 +34,13 @@ import {
   snapCoordinate,
   type Measurements,
 } from "../model/measurements";
+import {
+  applySelectionAction,
+  canApplySelectionAction,
+  validSceneSelections,
+  type SelectionAction,
+} from "../model/selectionActions";
+import SelectionWheel, { type WheelItem } from "./SelectionWheel";
 import SceneGeometry from "./SceneGeometry";
 import Inspector2D from "./Inspector2D";
 import Measure from "./Measure";
@@ -83,6 +91,12 @@ export default function SceneEditor({
   const [picks, setPicks] = useState<SceneSelection[]>(
     value.objects[0] ? [{ objectId: value.objects[0].id, target: null }] : [],
   );
+  const [wheel, setWheel] = useState<{
+    x: number;
+    y: number;
+    point: Point;
+    picks: SceneSelection[];
+  } | null>(null);
   const [panTool, setPanTool] = useState(false);
   const spaceHeld = useRef(false);
   const hovered = useRef(false);
@@ -137,7 +151,11 @@ export default function SceneEditor({
       }
     }
     function release(event?: Event) {
-      if (!(event instanceof globalThis.KeyboardEvent) || event.code === "Space") spaceHeld.current = false;
+      if (
+        !(event instanceof globalThis.KeyboardEvent) ||
+        event.code === "Space"
+      )
+        spaceHeld.current = false;
     }
     window.addEventListener("keydown", keyDown);
     window.addEventListener("keyup", release);
@@ -221,7 +239,6 @@ export default function SceneEditor({
   function startPan(event: PointerEvent<SVGSVGElement>) {
     if (!(
       event.button === 1 ||
-      event.button === 2 ||
       (event.button === 0 && (spaceHeld.current || panTool))
     ))
       return;
@@ -263,7 +280,7 @@ export default function SceneEditor({
       return false;
     }
   }
-  function add(shape: "rectangle" | "triangle" | "empty") {
+  function add(shape: "rectangle" | "triangle" | "empty", position?: Point) {
     try {
       const id = crypto.randomUUID();
       const next = addObject(
@@ -273,16 +290,17 @@ export default function SceneEditor({
         shape,
         policy,
       );
-      commit(next);
+      if (!commit(position ? moveObject(next, id, position, policy) : next))
+        return;
       select(id);
-      setPicks(activeMode === "object" ? [{objectId:id,target:null}] : []);
+      setPicks(activeMode === "object" ? [{ objectId: id, target: null }] : []);
       if (shape === "empty" && policy.modes.includes("vertex"))
         setMode("vertex");
     } catch {
       setError(true);
     }
   }
-  function point(event: PointerEvent): Point {
+  function point(event: { clientX: number; clientY: number }): Point {
     const matrix = svg.current?.getScreenCTM();
     if (!matrix) return { x: 0, y: 0 };
     const result = new DOMPoint(event.clientX, event.clientY).matrixTransform(
@@ -335,8 +353,12 @@ export default function SceneEditor({
           ...mesh.vertices,
           {
             id,
-            x: snapCoordinate(position.x, measurements),
-            y: snapCoordinate(position.y, measurements),
+            x: measurements.snap
+              ? snapCoordinate(position.x, measurements)
+              : position.x,
+            y: measurements.snap
+              ? snapCoordinate(position.y, measurements)
+              : position.y,
           },
         ];
     const edges =
@@ -361,6 +383,7 @@ export default function SceneEditor({
     target: MeshSelection,
   ) {
     if (event.button !== 0 || !event.isPrimary) return;
+    setWheel(null);
     event.stopPropagation();
     if (drawing && target?.kind === "vertex" && objectId === selectedId) {
       appendPoint(point(event), target.id);
@@ -407,6 +430,7 @@ export default function SceneEditor({
   }
 
   function cancel() {
+    setWheel(null);
     gesture.current = null;
     pan.current = null;
     setDraft(null);
@@ -443,14 +467,213 @@ export default function SceneEditor({
       );
       commit(moveObject(next, id, { x: 0.5, y: 0.5 }, policy));
       select(id);
-      setPicks(activeMode === "object" ? [{objectId:id,target:null}] : []);
+      setPicks(activeMode === "object" ? [{ objectId: id, target: null }] : []);
     } catch {
       setError(true);
     }
   }
+  function closeWheel() {
+    setWheel(null);
+    svg.current?.focus({ preventScroll: true });
+  }
+  function openWheelAt(x: number, y: number, targets: SceneSelection[]) {
+    cancel();
+    hovered.current = false;
+    spaceHeld.current = false;
+    setDrawing(false);
+    setWheel({
+      x,
+      y,
+      point: point({ clientX: x, clientY: y }),
+      picks: targets,
+    });
+  }
+  function openWheel(event: MouseEvent<SVGElement>, target?: SceneSelection) {
+    event.preventDefault();
+    event.stopPropagation();
+    const targets = target
+      ? choose(target.objectId, target.target, false)
+      : validSceneSelections(value, picks);
+    openWheelAt(event.clientX, event.clientY, targets);
+  }
+  function runAction(action: SelectionAction, targets: SceneSelection[]) {
+    try {
+      const next = applySelectionAction(value, targets, action, policy);
+      if (!commit(next.scene)) return;
+      setPicks(next.selections);
+      const active = next.selections.at(-1);
+      select(active?.objectId ?? null);
+      setSelection(active?.target ?? null);
+      const nextMode = active?.target?.kind ?? "object";
+      if (active && policy.modes.includes(nextMode)) setMode(nextMode);
+      setAnchor(null);
+      setDrawing(false);
+    } catch {
+      setError(true);
+    }
+  }
+  function createAtCursor(edge: boolean) {
+    if (!wheel) return;
+    try {
+      const objectId = selected?.id ?? crypto.randomUUID();
+      const next = selected
+        ? value
+        : addObject(
+            value,
+            objectId,
+            t("scene2d.objectNumber", { number: value.objects.length + 1 }),
+            "empty",
+            policy,
+          );
+      const object = next.objects.find((o) => o.id === objectId)!;
+      const vertexId = crypto.randomUUID();
+      const position = measurements.snap
+        ? {
+            x: snapCoordinate(wheel.point.x, measurements),
+            y: snapCoordinate(wheel.point.y, measurements),
+          }
+        : wheel.point;
+      const mesh = {
+        ...object.mesh,
+        vertices: [...object.mesh.vertices, { id: vertexId, ...position }],
+      };
+      if (!commit(replaceObjectMesh(next, objectId, mesh, policy))) return;
+      select(objectId);
+      setMode("vertex");
+      setPicks([{ objectId, target: { kind: "vertex", id: vertexId } }]);
+      setSelection({ kind: "vertex", id: vertexId });
+      setAnchor(edge ? vertexId : null);
+      setDrawing(edge);
+    } catch {
+      setError(true);
+    }
+  }
+  function wheelItems(): WheelItem[] {
+    if (!wheel) return [];
+    const targets = wheel.picks;
+    const kind = targets[0]?.target?.kind ?? "object";
+    const sameKind = targets.every(
+      (p) => (p.target?.kind ?? "object") === kind,
+    );
+    const command = (
+      action: SelectionAction,
+      label: Parameters<typeof t>[0],
+      icon: string,
+    ): WheelItem => ({
+      id: action,
+      label: t(label),
+      icon,
+      disabled: !canApplySelectionAction(value, targets, action, policy),
+      hint:
+        action === "face" || action === "connect"
+          ? t("scene2d.wheelJoinHint")
+          : undefined,
+      run: () => runAction(action, targets),
+    });
+    const creation: WheelItem[] = [];
+    if (policy.modes.includes("vertex") && (selected || policy.createObjects)) {
+      const disabled = !selected && value.objects.length >= policy.maxObjects;
+      creation.push(
+        {
+          id: "point",
+          label: t("scene2d.wheelPoint"),
+          icon: "•",
+          disabled,
+          run: () => createAtCursor(false),
+        },
+        {
+          id: "edge",
+          label: t("lab2d.drawEdges"),
+          icon: "╱",
+          disabled,
+          run: () => createAtCursor(true),
+        },
+      );
+    }
+    if (policy.createObjects)
+      for (const shape of ["rectangle", "triangle"] as const)
+        creation.push({
+          id: shape,
+          label: t(`scene2d.${shape}`),
+          icon: shape === "rectangle" ? "□" : "△",
+          disabled: value.objects.length >= policy.maxObjects,
+          run: () => add(shape, wheel.point),
+        });
+    if (!targets.length) return creation;
+    const items: WheelItem[] = [];
+    if (kind === "edge" && sameKind)
+      items.push(command("split", "lab2d.splitEdge", "⊙"));
+    if (kind === "vertex" && sameKind && targets.length === 1)
+      items.push({
+        id: "extend",
+        label: t("lab2d.extendVertex"),
+        icon: "↗",
+        run: () => {
+          select(targets[0].objectId);
+          setAnchor(targets[0].target!.id);
+          setDrawing(true);
+          setMode("vertex");
+        },
+      });
+    if (kind === "vertex" && sameKind && targets.length === 2)
+      items.push(command("connect", "scene2d.wheelConnect", "↔"));
+    if (
+      sameKind &&
+      policy.createFaces &&
+      ((kind === "vertex" && targets.length >= 3) ||
+        (kind === "edge" && targets.length >= 2))
+    )
+      items.push(command("face", "lab2d.createFace", "▰"));
+    if (kind === "object" && sameKind && policy.createObjects)
+      items.push(command("duplicate", "scene2d.duplicate", "⧉"));
+    const remove = command(
+      "delete",
+      kind === "edge"
+        ? "scene2d.wheelKeepVertices"
+        : kind === "face"
+          ? "scene2d.wheelOnlyFaces"
+          : "scene2d.wheelDelete",
+      "×",
+    );
+    if (kind === "edge" || kind === "face") {
+      const children = [remove];
+      if (kind === "face")
+        children.push(command("deleteBoundary", "scene2d.wheelWithEdges", "⌁"));
+      children.push(
+        command("deleteVertices", "scene2d.wheelWithVertices", "×"),
+      );
+      items.push({
+        id: "deleteMenu",
+        label: t("scene2d.wheelDelete"),
+        icon: "×",
+        children,
+      });
+    } else items.push(remove);
+    if (creation.length)
+      items.push({
+        id: "addMenu",
+        label: t("scene2d.wheelAdd"),
+        icon: "＋",
+        children: creation,
+      });
+    return items;
+  }
   const center = selected ? meshBounds(selected.mesh) : null;
   return (
     <div className={styles.editor}>
+      {wheel && (
+        <SelectionWheel
+          x={wheel.x}
+          y={wheel.y}
+          title={
+            wheel.picks.length
+              ? t("scene2d.selectionCount", { count: wheel.picks.length })
+              : t("scene2d.wheelAdd")
+          }
+          items={wheelItems()}
+          close={closeWheel}
+        />
+      )}
       <div className={styles.toolbar}>
         <div
           role="group"
@@ -561,13 +784,6 @@ export default function SceneEditor({
                       });
                     else event.target.value = selected.name;
                   }}
-                  onKeyDownCapture={(event) => {
-                    if (event.code === "Space") {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      spaceHeld.current = true;
-                    }
-                  }}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") event.currentTarget.blur();
                   }}
@@ -590,7 +806,9 @@ export default function SceneEditor({
                       (object) => object.id !== selected.id,
                     ),
                   });
-                  setPicks(p=>p.filter(item=>item.objectId!==selected.id));
+                  setPicks((p) =>
+                    p.filter((item) => item.objectId !== selected.id),
+                  );
                   select(null);
                 }}
               >
@@ -624,6 +842,18 @@ export default function SceneEditor({
         <div className={styles.surface}>
           <>
             <div className={styles.viewTools}>
+              <button
+                onClick={() => {
+                  const rect = svg.current!.getBoundingClientRect();
+                  openWheelAt(
+                    rect.left + rect.width / 2,
+                    rect.top + rect.height / 2,
+                    validSceneSelections(value, picks),
+                  );
+                }}
+              >
+                {t("scene2d.wheelActions")}
+              </button>
               <button
                 aria-pressed={panTool}
                 onClick={() => setPanTool((p) => !p)}
@@ -662,7 +892,7 @@ export default function SceneEditor({
               }}
               tabIndex={0}
               onPointerDownCapture={startPan}
-              onContextMenu={(event) => event.preventDefault()}
+              onContextMenu={(event) => openWheel(event)}
               onDragStart={(event) => event.preventDefault()}
               onKeyUp={(event) => {
                 if (event.code === "Space") spaceHeld.current = false;
@@ -675,6 +905,8 @@ export default function SceneEditor({
               role="img"
               aria-label={t("scene2d.canvas")}
               onPointerDown={(event) => {
+                if (event.button !== 0) return;
+                setWheel(null);
                 if (event.target === event.currentTarget) {
                   if (drawing) appendPoint(point(event));
                   else {
@@ -733,6 +965,24 @@ export default function SceneEditor({
                 }
               }}
               onKeyDown={(event) => {
+                if (
+                  event.key === "ContextMenu" ||
+                  (event.shiftKey && event.key === "F10")
+                ) {
+                  event.preventDefault();
+                  const rect = (
+                    event.target as SVGElement
+                  ).getBoundingClientRect();
+                  openWheelAt(
+                    rect.left + rect.width / 2,
+                    rect.top + rect.height / 2,
+                    validSceneSelections(value, picks),
+                  );
+                }
+                if (event.key === "Delete" || event.key === "Backspace") {
+                  event.preventDefault();
+                  runAction("delete", validSceneSelections(value, picks));
+                }
                 if (event.key.toLowerCase() === "f") {
                   event.preventDefault();
                   fillFace();
@@ -784,6 +1034,9 @@ export default function SceneEditor({
                     .map((p) => p.target)}
                   size={size}
                   begin={(event, target) => begin(event, object.id, target)}
+                  contextMenu={(event, target) =>
+                    openWheel(event, { objectId: object.id, target })
+                  }
                   keyboard={(event, target) =>
                     keyboard(event, object.id, target)
                   }

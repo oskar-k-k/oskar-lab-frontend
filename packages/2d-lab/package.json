@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "exports": {
+    "./actions": "./src/model/selectionActions.ts",
     "./scene": "./src/model/scene.ts",
     "./SceneEditor": "./src/components/SceneEditor.tsx",
     "./model": "./src/model/mesh.ts",
