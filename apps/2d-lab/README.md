@@ -40,3 +40,12 @@ Dragging renders at most one preview per animation frame, without pairwise geome
 
 
 Selection is highlighted in orange across geometry and the outliner. Selection modes use accessible SVG icon buttons with translated hover/focus tooltips. The context wheel uses clickable annular segments with icons and labels, including nested command rings. Mouse focus does not draw a canvas border; keyboard focus retains an orange indicator.
+
+
+### Rotation and origins
+
+Each object has a persistent world-space origin, shown as a small point in object mode. Legacy version-1 documents without `origin` migrate to the initial geometry bounding-box center when parsed; newly created primitives use (0, 0), translated to their placement position. Object dragging and position fields move both geometry and origin. Editing mesh points leaves the origin fixed. The origin fields move only the pivot, and Origin to geometry center resets it without moving geometry. JSON persistence and duplication retain origins; SVG export contains baked world geometry.
+
+Select Rotate in the context wheel or toolbar, then drag the orange ring (or selected geometry). Shift snaps to 15-degree increments; Escape cancels a drag. Exact relative angles and ±90° buttons are available in the inspector. Positive angles rotate clockwise because the canvas uses Y-down coordinates. One object rotates about its origin; a group rotates about the mean of selected origins, including moving those origins. Edges, faces and selections of two or more unique points rotate about the mean of selected points, across objects if needed. Shared points transform once, dependent geometry follows, and partial mesh rotation does not move object origins. Each completed rotation creates one undo step.
+
+The public scene API includes `objectOrigin`, `setObjectOrigin`, `rotationPivot` and `rotateSceneSelections`. Commands validate the complete result against the host policy and do not mutate input scenes.

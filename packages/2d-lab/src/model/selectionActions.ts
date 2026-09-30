@@ -9,6 +9,7 @@ import {
 import {
   defaultEnginePolicy,
   parseScene,
+  objectOrigin,
   type EnginePolicy,
   type Scene2D,
   type SceneSelection,
@@ -113,6 +114,7 @@ export function applySelectionAction(
   action: SelectionAction,
   policy: EnginePolicy = defaultEnginePolicy,
 ): { scene: Scene2D; selections: SceneSelection[] } {
+  scene = parseScene(scene, policy);
   const picks = validSceneSelections(scene, selections);
   if (!picks.length || picks.length !== selections.length)
     throw new Error("Invalid selection");
@@ -137,6 +139,10 @@ export function applySelectionAction(
       const copy = {
         ...object,
         id: id(),
+        origin: {
+          x: objectOrigin(object).x + 0.5,
+          y: objectOrigin(object).y + 0.5,
+        },
         mesh: {
           ...object.mesh,
           vertices: object.mesh.vertices.map((v) => ({

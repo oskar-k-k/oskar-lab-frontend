@@ -1,5 +1,6 @@
 import type { KeyboardEvent, PointerEvent, MouseEvent } from "react";
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
+import { objectOrigin } from "../model/scene";
 import type { SceneObject, SelectionMode } from "../model/scene";
 import { meshBounds, type MeshSelection } from "../model/mesh";
 import styles from "./SceneEditor.module.css";
@@ -174,6 +175,21 @@ export default function SceneGeometry({
           )}
         </g>
       ))}
+      {mode === "object" && (
+        <g pointerEvents="auto">
+          <title>{t("scene2d.origin")}</title>
+          <circle
+            cx={objectOrigin(object).x}
+            cy={objectOrigin(object).y}
+            r={size / 110}
+            fill={
+              selections.includes(null) ? "var(--scene-selected)" : "#607f92"
+            }
+            stroke="white"
+            strokeWidth={size / 500}
+          />
+        </g>
+      )}
       {!!object.mesh.vertices.length && (
         <text
           x={bounds.centerX}

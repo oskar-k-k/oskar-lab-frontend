@@ -236,3 +236,29 @@
 .modes > button:focus-visible .modeTooltip {
   opacity: 1;
 }
+
+.rotationGizmo {
+  cursor: crosshair;
+}
+.rotationGizmo circle:focus-visible {
+  outline: none;
+  stroke: var(--scene-selected);
+  stroke-dasharray: 0.05 0.05;
+}
+.transformPanel {
+  border: 1px solid var(--scene-border);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 0 0 16px;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.transformPanel label {
+  display: grid;
+  margin: 0;
+}
+.transformPanel input {
+  width: 100%;
+  min-width: 0;
+}

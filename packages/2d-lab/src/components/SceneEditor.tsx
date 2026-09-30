@@ -14,6 +14,10 @@ import {
   addObject,
   defaultEnginePolicy,
   moveObject,
+  objectOrigin,
+  setObjectOrigin,
+  rotationPivot,
+  rotateSceneSelections,
   moveSceneSelections,
   type SceneSelection,
   parseScene,
@@ -66,7 +70,10 @@ export type SceneEditorProps = {
 
 function bounds(scene: Scene2D) {
   return meshBounds({
-    vertices: scene.objects.flatMap((object) => object.mesh.vertices),
+    vertices: scene.objects.flatMap((object) => [
+      ...object.mesh.vertices,
+      { id: `origin-${object.id}`, ...objectOrigin(object) },
+    ]),
     edges: [],
   });
 }
@@ -98,6 +105,8 @@ export default function SceneEditor({
     point: Point;
     picks: SceneSelection[];
   } | null>(null);
+  const [rotating, setRotating] = useState(false);
+  const [angle, setAngle] = useState("15");
   const [panTool, setPanTool] = useState(false);
   const spaceHeld = useRef(false);
   const hovered = useRef(false);
@@ -125,6 +134,7 @@ export default function SceneEditor({
     clientX: number;
     clientY: number;
     pointerId: number;
+    shiftKey?: boolean;
   } | null>(null);
   useEffect(
     () => () => {
@@ -138,6 +148,7 @@ export default function SceneEditor({
     id: string;
     start: Point;
     pointerId: number;
+    rotation?: { pivot: Point; startAngle: number };
     selections: SceneSelection[];
   } | null>(null);
   const scene = draft ?? value;
@@ -326,10 +337,25 @@ export default function SceneEditor({
     clientX: number;
     clientY: number;
     pointerId: number;
+    shiftKey?: boolean;
   }) {
     const current = gesture.current;
     if (!current || current.pointerId !== event.pointerId) return null;
     const target = point(event);
+    if (current.rotation) {
+      const { pivot, startAngle } = current.rotation;
+      let degrees =
+        ((Math.atan2(target.y - pivot.y, target.x - pivot.x) - startAngle) *
+          180) /
+        Math.PI;
+      if (event.shiftKey) degrees = Math.round(degrees / 15) * 15;
+      return rotateSceneSelections(
+        current.scene,
+        current.selections,
+        degrees,
+        policy,
+      );
+    }
     const snap = (number: number) =>
       measurements.snap ? snapCoordinate(number, measurements) : number;
     return moveSceneSelections(
@@ -411,6 +437,10 @@ export default function SceneEditor({
     event.currentTarget.focus();
     const selections = choose(objectId, target, event.ctrlKey || event.metaKey);
     if (event.ctrlKey || event.metaKey) return;
+    if (rotating && rotationPivot(value, selections)) {
+      startRotation(event, selections);
+      return;
+    }
     gesture.current = {
       scene: value,
       id: objectId,
@@ -459,6 +489,7 @@ export default function SceneEditor({
       clientX: event.clientX,
       clientY: event.clientY,
       pointerId: event.pointerId,
+      shiftKey: event.shiftKey,
     };
     if (previewFrame.current !== null) return;
     previewFrame.current = requestAnimationFrame(() => {
@@ -514,6 +545,48 @@ export default function SceneEditor({
       commit(moveObject(next, id, { x: 0.5, y: 0.5 }, policy));
       select(id);
       setPicks(activeMode === "object" ? [{ objectId: id, target: null }] : []);
+    } catch {
+      setError(true);
+    }
+  }
+  function rotateBy(degrees: number) {
+    try {
+      commit(
+        rotateSceneSelections(
+          value,
+          validSceneSelections(value, picks),
+          degrees,
+          policy,
+        ),
+      );
+    } catch {
+      setError(true);
+    }
+  }
+  function startRotation(event: PointerEvent<SVGElement>, targets = picks) {
+    if (event.button !== 0 || !event.isPrimary) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const pivot = rotationPivot(value, targets);
+    if (!pivot) return;
+    const start = point(event);
+    gesture.current = {
+      scene: value,
+      id: targets[0].objectId,
+      selections: targets,
+      start,
+      pointerId: event.pointerId,
+      rotation: {
+        pivot,
+        startAngle: Math.atan2(start.y - pivot.y, start.x - pivot.x),
+      },
+    };
+    svg.current?.setPointerCapture(event.pointerId);
+  }
+  function editOrigin(origin: Point) {
+    if (!selected) return;
+    try {
+      commit(setObjectOrigin(value, selected.id, origin, policy));
     } catch {
       setError(true);
     }
@@ -583,7 +656,17 @@ export default function SceneEditor({
         ...object.mesh,
         vertices: [...object.mesh.vertices, { id: vertexId, ...position }],
       };
-      if (!commit(replaceObjectMesh(next, objectId, mesh, policy))) return;
+      if (
+        !commit(
+          replaceObjectMesh(
+            selected ? next : setObjectOrigin(next, objectId, position, policy),
+            objectId,
+            mesh,
+            policy,
+          ),
+        )
+      )
+        return;
       select(objectId);
       setMode("vertex");
       setPicks([{ objectId, target: { kind: "vertex", id: vertexId } }]);
@@ -647,6 +730,13 @@ export default function SceneEditor({
         });
     if (!targets.length) return creation;
     const items: WheelItem[] = [];
+    if (rotationPivot(value, targets))
+      items.push({
+        id: "rotate",
+        label: t("scene2d.rotate"),
+        icon: "rotate",
+        run: () => setRotating(true),
+      });
     if (kind === "edge" && sameKind)
       items.push(command("split", "lab2d.splitEdge", "split"));
     if (kind === "vertex" && sameKind && targets.length === 1)
@@ -706,7 +796,8 @@ export default function SceneEditor({
       });
     return items;
   }
-  const center = selected ? meshBounds(selected.mesh) : null;
+  const center = selected ? objectOrigin(selected) : null;
+  const pivot = rotationPivot(scene, validSceneSelections(scene, picks));
   return (
     <div className={styles.editor}>
       {wheel && (
@@ -866,22 +957,22 @@ export default function SceneEditor({
               {center && activeMode === "object" && picks.length <= 1 && (
                 <>
                   <Measure
-                    label={t("lab2d.centerX")}
-                    value={center.centerX}
+                    label={t("scene2d.objectPositionX")}
+                    value={center.x}
                     unit={measurements.unit}
                     step={measurements.step}
                     min={-policy.mesh.coordinateLimit}
                     max={policy.mesh.coordinateLimit}
-                    onChange={(x) => nudge({ x: x - center.centerX, y: 0 })}
+                    onChange={(x) => nudge({ x: x - center.x, y: 0 })}
                   />
                   <Measure
-                    label={t("lab2d.centerY")}
-                    value={center.centerY}
+                    label={t("scene2d.objectPositionY")}
+                    value={center.y}
                     unit={measurements.unit}
                     step={measurements.step}
                     min={-policy.mesh.coordinateLimit}
                     max={policy.mesh.coordinateLimit}
-                    onChange={(y) => nudge({ x: 0, y: y - center.centerY })}
+                    onChange={(y) => nudge({ x: 0, y: y - center.y })}
                   />
                 </>
               )}
@@ -891,6 +982,15 @@ export default function SceneEditor({
         <div className={styles.surface}>
           <>
             <div className={styles.viewTools}>
+              <button
+                aria-label={t("scene2d.rotate")}
+                title={t("scene2d.rotate")}
+                disabled={!pivot}
+                aria-pressed={rotating}
+                onClick={() => setRotating((v) => !v)}
+              >
+                <LabIcon name="rotate" />
+              </button>
               <button
                 onClick={() => {
                   const rect = svg.current!.getBoundingClientRect();
@@ -1031,6 +1131,7 @@ export default function SceneEditor({
                   fillFace();
                 }
                 if (event.key === "Escape") {
+                  setRotating(false);
                   cancel();
                   setDrawing(false);
                   setAnchor(null);
@@ -1085,6 +1186,56 @@ export default function SceneEditor({
                   }
                 />
               ))}
+              {rotating && pivot && (
+                <g className={styles.rotationGizmo}>
+                  <circle
+                    cx={pivot.x}
+                    cy={pivot.y}
+                    r={size * 0.14}
+                    fill="none"
+                    stroke="var(--scene-selected)"
+                    strokeWidth={size / 400}
+                    pointerEvents="none"
+                  />
+                  <circle
+                    cx={pivot.x}
+                    cy={pivot.y}
+                    r={size * 0.14}
+                    fill="none"
+                    stroke="transparent"
+                    strokeWidth={size / 35}
+                    role="button"
+                    aria-label={t("scene2d.rotateHandle")}
+                    tabIndex={0}
+                    onPointerDown={(event) => startRotation(event)}
+                    onKeyDown={(event) => {
+                      if (
+                        event.key === "ArrowLeft" ||
+                        event.key === "ArrowRight"
+                      ) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        rotateBy(event.key === "ArrowLeft" ? -15 : 15);
+                      }
+                    }}
+                  />
+                  <circle
+                    cx={pivot.x}
+                    cy={pivot.y - size * 0.14}
+                    r={size / 70}
+                    fill="var(--scene-selected)"
+                    stroke="white"
+                    strokeWidth={size / 500}
+                    pointerEvents="none"
+                  />
+                  <path
+                    d={`M ${pivot.x - size / 100} ${pivot.y} h ${size / 50} M ${pivot.x} ${pivot.y - size / 100} v ${size / 50}`}
+                    stroke="var(--scene-selected)"
+                    strokeWidth={size / 400}
+                    pointerEvents="none"
+                  />
+                </g>
+              )}
             </svg>
             <p className={styles.hint}>
               {t("scene2d.navigationHint")} ·{" "}
@@ -1096,6 +1247,67 @@ export default function SceneEditor({
           </>
         </div>
         <div className={styles.details}>
+          {pivot && (
+            <fieldset className={styles.transformPanel}>
+              <legend>{t("scene2d.rotate")}</legend>
+              <label>
+                {t("scene2d.rotationAngle")}
+                <input
+                  type="number"
+                  step="1"
+                  value={angle}
+                  onChange={(event) => setAngle(event.target.value)}
+                />
+              </label>
+              <button
+                disabled={!angle.trim() || !Number.isFinite(Number(angle))}
+                onClick={() => rotateBy(Number(angle))}
+              >
+                {t("scene2d.applyRotation")}
+              </button>
+              <div className={styles.actions}>
+                <button onClick={() => rotateBy(-90)}>−90°</button>
+                <button onClick={() => rotateBy(90)}>+90°</button>
+              </div>
+              {rotating && <p>{t("scene2d.rotationHint")}</p>}
+            </fieldset>
+          )}
+          {selected &&
+            center &&
+            activeMode === "object" &&
+            picks.length === 1 && (
+              <fieldset className={styles.transformPanel}>
+                <legend>{t("scene2d.origin")}</legend>
+                <p>{t("scene2d.originHint")}</p>
+                <Measure
+                  label={t("scene2d.originX")}
+                  value={center.x}
+                  unit={measurements.unit}
+                  step={measurements.step}
+                  min={-policy.mesh.coordinateLimit}
+                  max={policy.mesh.coordinateLimit}
+                  onChange={(x) => editOrigin({ x, y: center.y })}
+                />
+                <Measure
+                  label={t("scene2d.originY")}
+                  value={center.y}
+                  unit={measurements.unit}
+                  step={measurements.step}
+                  min={-policy.mesh.coordinateLimit}
+                  max={policy.mesh.coordinateLimit}
+                  onChange={(y) => editOrigin({ x: center.x, y })}
+                />
+                <button
+                  onClick={() => {
+                    const b = meshBounds(selected.mesh);
+                    editOrigin({ x: b.centerX, y: b.centerY });
+                  }}
+                >
+                  {t("scene2d.centerOrigin")}
+                </button>
+              </fieldset>
+            )}
+
           {picks.length > 1 ? (
             <p>{t("scene2d.multiHint", { count: picks.length })}</p>
           ) : selected && activeMode !== "object" ? (

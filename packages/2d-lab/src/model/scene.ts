@@ -1,5 +1,6 @@
 import {
   freeDrawingConstraints,
+  meshBounds,
   parseMesh,
   rectangleMesh,
   createFace,
@@ -23,7 +24,7 @@ export function moveSceneSelections(
 ): Scene2D {
   if (!Number.isFinite(delta.x) || !Number.isFinite(delta.y))
     throw new Error("Invalid movement");
-  const objects = scene.objects.map((object) => {
+  const objects = parseScene(scene, policy).objects.map((object) => {
     const targets = selections.filter((item) => item.objectId === object.id);
     const ids = new Set(
       targets.flatMap((item) =>
@@ -32,9 +33,16 @@ export function moveSceneSelections(
           : object.mesh.vertices.map((v) => v.id),
       ),
     );
-    if (!ids.size) return object;
+    const whole = targets.some((item) => item.target === null);
+    if (!ids.size && !whole) return object;
     return {
       ...object,
+      origin: whole
+        ? {
+            x: objectOrigin(object).x + delta.x,
+            y: objectOrigin(object).y + delta.y,
+          }
+        : objectOrigin(object),
       mesh: {
         ...object.mesh,
         vertices: object.mesh.vertices.map((v) =>
@@ -72,7 +80,20 @@ export function moveSceneSelection(
 }
 
 /** Independent mesh with a stable identity and display name. Coordinates are in scene metres. */
-export type SceneObject = { id: string; name: string; mesh: Mesh2D };
+export type SceneObject = {
+  id: string;
+  name: string;
+  mesh: Mesh2D;
+  /** Optional only for legacy inputs; parsed scenes always contain an origin. */
+  origin?: Point;
+};
+
+/** Stable object position and pivot; legacy documents use their initial bounding-box center. */
+export function objectOrigin(object: SceneObject): Point {
+  if (object.origin) return object.origin;
+  const bounds = meshBounds(object.mesh);
+  return { x: bounds.centerX, y: bounds.centerY };
+}
 /** Versioned, JSON-serializable scene; object-local vertex IDs may repeat across objects. */
 export type Scene2D = { version: 1; objects: SceneObject[] };
 export type SelectionMode = "object" | "vertex" | "edge" | "face";
@@ -120,10 +141,25 @@ export function parseScene(
     )
       throw new Error("Invalid object identity");
     ids.add(object.id);
+    const mesh = parseMesh(object.mesh, policy.mesh);
+    const origin =
+      object.origin === undefined
+        ? objectOrigin({ id: object.id, name: object.name, mesh })
+        : (object.origin as Point);
+    if (
+      !origin ||
+      typeof origin !== "object" ||
+      !Number.isFinite(origin.x) ||
+      !Number.isFinite(origin.y) ||
+      Math.abs(origin.x) > policy.mesh.coordinateLimit ||
+      Math.abs(origin.y) > policy.mesh.coordinateLimit
+    )
+      throw new Error("Invalid origin");
     return {
       id: object.id,
       name: object.name.trim(),
-      mesh: parseMesh(object.mesh, policy.mesh),
+      mesh,
+      origin: { x: origin.x, y: origin.y },
     };
   });
   return { version: 1, objects };
@@ -141,7 +177,7 @@ export function replaceObjectMesh(
   return parseScene(
     {
       ...scene,
-      objects: scene.objects.map((object) =>
+      objects: parseScene(scene, policy).objects.map((object) =>
         object.id === id ? { ...object, mesh } : object,
       ),
     },
@@ -156,18 +192,14 @@ export function moveObject(
   delta: Point,
   policy = defaultEnginePolicy,
 ): Scene2D {
-  const object = scene.objects.find((object) => object.id === id);
-  if (!object || !Number.isFinite(delta.x) || !Number.isFinite(delta.y))
-    throw new Error("Invalid object movement");
-  const mesh = {
-    ...object.mesh,
-    vertices: object.mesh.vertices.map((vertex) => ({
-      ...vertex,
-      x: Math.round((vertex.x + delta.x) * 1e6) / 1e6,
-      y: Math.round((vertex.y + delta.y) * 1e6) / 1e6,
-    })),
-  };
-  return replaceObjectMesh(scene, id, mesh, policy);
+  if (!scene.objects.some((object) => object.id === id))
+    throw new Error("Unknown object");
+  return moveSceneSelections(
+    scene,
+    [{ objectId: id, target: null }],
+    delta,
+    policy,
+  );
 }
 
 /** Adds a rectangle, triangle or empty mesh using caller-supplied identity and translated name. */
@@ -195,7 +227,10 @@ export function addObject(
     );
   if (!policy.createFaces) mesh = { ...mesh, faces: [] };
   return parseScene(
-    { ...scene, objects: [...scene.objects, { id, name, mesh }] },
+    {
+      ...scene,
+      objects: [...scene.objects, { id, name, mesh, origin: { x: 0, y: 0 } }],
+    },
     policy,
   );
 }
@@ -260,4 +295,103 @@ export function exportSceneSvg(
     })
     .join("");
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX} ${minY} ${width} ${height}" width="${width * 100}" height="${height * 100}">${objects}</svg>`;
+}
+
+/** Moves only the pivot, leaving world-space geometry unchanged. */
+export function setObjectOrigin(
+  scene: Scene2D,
+  id: string,
+  origin: Point,
+  policy = defaultEnginePolicy,
+): Scene2D {
+  if (!scene.objects.some((o) => o.id === id))
+    throw new Error("Unknown object");
+  return parseScene(
+    {
+      ...scene,
+      objects: scene.objects.map((o) => (o.id === id ? { ...o, origin } : o)),
+    },
+    policy,
+  );
+}
+
+/** Returns one object's origin, the mean of selected object origins, or the mean of unique selected mesh points. */
+export function rotationPivot(
+  scene: Scene2D,
+  selections: readonly SceneSelection[],
+): Point | null {
+  const points: Point[] = [];
+  let whole = false;
+  for (const object of scene.objects) {
+    const local = selections.filter((s) => s.objectId === object.id);
+    if (local.some((s) => s.target === null)) {
+      points.push(objectOrigin(object));
+      whole = true;
+      continue;
+    }
+    const ids = new Set(
+      local.flatMap((s) => selectionVertices(object.mesh, s.target)),
+    );
+    points.push(...object.mesh.vertices.filter((v) => ids.has(v.id)));
+  }
+  if (!points.length || (!whole && points.length < 2)) return null;
+  return {
+    x: points.reduce((s, p) => s + p.x, 0) / points.length,
+    y: points.reduce((s, p) => s + p.y, 0) / points.length,
+  };
+}
+
+/** Rotates selected points once around the selection pivot; whole-object origins follow group rotation. Positive degrees rotate clockwise in Y-down coordinates. */
+export function rotateSceneSelections(
+  scene: Scene2D,
+  selections: readonly SceneSelection[],
+  degrees: number,
+  policy = defaultEnginePolicy,
+): Scene2D {
+  const source = parseScene(scene, policy);
+  const pivot = rotationPivot(source, selections);
+  if (!pivot || !Number.isFinite(degrees)) throw new Error("Invalid rotation");
+  const radians = ((degrees % 360) * Math.PI) / 180;
+  const cosine = Math.cos(radians);
+  const sine = Math.sin(radians);
+  const rounded = (value: number) => {
+    const result = Number(value.toFixed(6));
+    return Object.is(result, -0) ? 0 : result;
+  };
+  const rotate = (point: Point): Point => ({
+    x: rounded(
+      pivot.x + (point.x - pivot.x) * cosine - (point.y - pivot.y) * sine,
+    ),
+    y: rounded(
+      pivot.y + (point.x - pivot.x) * sine + (point.y - pivot.y) * cosine,
+    ),
+  });
+  return parseScene(
+    {
+      ...source,
+      objects: source.objects.map((object) => {
+        const local = selections.filter((s) => s.objectId === object.id);
+        const whole = local.some((s) => s.target === null);
+        const ids = new Set(
+          local.flatMap((s) =>
+            s.target
+              ? selectionVertices(object.mesh, s.target)
+              : object.mesh.vertices.map((v) => v.id),
+          ),
+        );
+        if (!local.length) return object;
+        return {
+          ...object,
+          origin: whole ? rotate(objectOrigin(object)) : object.origin,
+          mesh: {
+            ...object.mesh,
+            vertices: object.mesh.vertices.map((v) =>
+              ids.has(v.id) ? { ...v, ...rotate(v) } : v,
+            ),
+          },
+        };
+      }),
+    },
+    policy,
+  );
 }
