@@ -1,6 +1,7 @@
 import {
   freeDrawingConstraints,
   meshBounds,
+  pointInside,
   parseMesh,
   rectangleMesh,
   createFace,
@@ -347,10 +348,17 @@ export function rotateSceneSelections(
   selections: readonly SceneSelection[],
   degrees: number,
   policy = defaultEnginePolicy,
+  pivotOverride?: Point,
 ): Scene2D {
   const source = parseScene(scene, policy);
-  const pivot = rotationPivot(source, selections);
-  if (!pivot || !Number.isFinite(degrees)) throw new Error("Invalid rotation");
+  const pivot = pivotOverride ?? rotationPivot(source, selections);
+  if (
+    !pivot ||
+    !Number.isFinite(pivot.x) ||
+    !Number.isFinite(pivot.y) ||
+    !Number.isFinite(degrees)
+  )
+    throw new Error("Invalid rotation");
   const radians = ((degrees % 360) * Math.PI) / 180;
   const cosine = Math.cos(radians);
   const sine = Math.sin(radians);
@@ -393,5 +401,138 @@ export function rotateSceneSelections(
       }),
     },
     policy,
+  );
+}
+
+/** Scales selected geometry once per shared vertex around a temporary pivot; object origins follow whole-object transformations. */
+export function scaleSceneSelections(
+  scene: Scene2D,
+  selections: readonly SceneSelection[],
+  factors: Point,
+  policy = defaultEnginePolicy,
+  pivotOverride?: Point,
+): Scene2D {
+  const source = parseScene(scene, policy);
+  const pivot = pivotOverride ?? rotationPivot(source, selections);
+  if (
+    !pivot ||
+    ![pivot.x, pivot.y, factors.x, factors.y].every(Number.isFinite)
+  )
+    throw new Error("Invalid scale");
+  const transform = (p: Point): Point => ({
+    x: Math.round((pivot.x + (p.x - pivot.x) * factors.x) * 1e6) / 1e6,
+    y: Math.round((pivot.y + (p.y - pivot.y) * factors.y) * 1e6) / 1e6,
+  });
+  return parseScene(
+    {
+      ...source,
+      objects: source.objects.map((object) => {
+        const local = selections.filter((s) => s.objectId === object.id);
+        const whole = local.some((s) => s.target === null);
+        const ids = new Set(
+          local.flatMap((s) =>
+            s.target
+              ? selectionVertices(object.mesh, s.target)
+              : object.mesh.vertices.map((v) => v.id),
+          ),
+        );
+        if (!local.length) return object;
+        return {
+          ...object,
+          origin: whole ? transform(objectOrigin(object)) : object.origin,
+          mesh: {
+            ...object.mesh,
+            vertices: object.mesh.vertices.map((v) =>
+              ids.has(v.id) ? { ...v, ...transform(v) } : v,
+            ),
+          },
+        };
+      }),
+    },
+    policy,
+  );
+}
+
+function nearestOnSegment(point: Point, a: Point, b: Point): Point {
+  const length = (b.x - a.x) ** 2 + (b.y - a.y) ** 2;
+  const t = length
+    ? Math.max(
+        0,
+        Math.min(
+          1,
+          ((point.x - a.x) * (b.x - a.x) + (point.y - a.y) * (b.y - a.y)) /
+            length,
+        ),
+      )
+    : 0;
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+}
+
+/** Projects a temporary pivot onto selected edges/faces/points. Face interiors and boundaries are allowed; independent selections never create an imaginary connecting surface. */
+export function constrainSelectionPivot(
+  scene: Scene2D,
+  selections: readonly SceneSelection[],
+  point: Point,
+): Point | null {
+  if (!Number.isFinite(point.x) || !Number.isFinite(point.y))
+    throw new Error("Invalid pivot");
+  const candidates: Point[] = [];
+  for (const object of scene.objects) {
+    const local = selections.filter((s) => s.objectId === object.id);
+    if (!local.length) continue;
+    const whole = local.some((s) => s.target === null);
+    const ids = new Set(
+      local.flatMap((s) =>
+        s.target
+          ? selectionVertices(object.mesh, s.target)
+          : object.mesh.vertices.map((v) => v.id),
+      ),
+    );
+    const vertices = new Map(object.mesh.vertices.map((v) => [v.id, v]));
+    const faces = (object.mesh.faces ?? []).filter(
+      (f) =>
+        whole ||
+        local.some((s) => s.target?.kind === "face" && s.target.id === f.id),
+    );
+    for (const face of faces) {
+      const ring = face.vertices.map((id) => vertices.get(id)!);
+      if (pointInside(point, ring)) return { ...point };
+    }
+    const edges = object.mesh.edges.filter(
+      (e) =>
+        whole ||
+        local.some((s) => s.target?.kind === "edge" && s.target.id === e.id) ||
+        faces.some((f) =>
+          f.vertices.some((id, i) => {
+            const next = f.vertices[(i + 1) % f.vertices.length];
+            return (
+              (id === e.start && next === e.end) ||
+              (id === e.end && next === e.start)
+            );
+          }),
+        ) ||
+        (local.every((s) => s.target?.kind === "vertex") &&
+          ids.has(e.start) &&
+          ids.has(e.end)),
+    );
+    candidates.push(...object.mesh.vertices.filter((v) => ids.has(v.id)));
+    for (const edge of edges)
+      candidates.push(
+        nearestOnSegment(
+          point,
+          vertices.get(edge.start)!,
+          vertices.get(edge.end)!,
+        ),
+      );
+    if (whole && !ids.size) candidates.push(objectOrigin(object));
+  }
+  return candidates.reduce<Point | null>(
+    (best, p) =>
+      !best ||
+      Math.hypot(point.x - p.x, point.y - p.y) <
+        Math.hypot(point.x - best.x, point.y - best.y)
+        ? { x: p.x, y: p.y }
+        : best,
+    null,
   );
 }

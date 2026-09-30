@@ -178,15 +178,17 @@ export default function SceneGeometry({
       {mode === "object" && (
         <g pointerEvents="auto">
           <title>{t("scene2d.origin")}</title>
-          <circle
-            cx={objectOrigin(object).x}
-            cy={objectOrigin(object).y}
-            r={size / 110}
-            fill={
-              selections.includes(null) ? "var(--scene-selected)" : "#607f92"
-            }
+          <path
+            d={`M ${objectOrigin(object).x} ${objectOrigin(object).y - size / 65} l ${size / 65} ${size / 65} l ${-size / 65} ${size / 65} l ${-size / 65} ${-size / 65} Z`}
+            fill="#8363c7"
+            stroke="white"
+            strokeWidth={size / 450}
+          />
+          <path
+            d={`M ${objectOrigin(object).x - size / 140} ${objectOrigin(object).y} h ${size / 70} M ${objectOrigin(object).x} ${objectOrigin(object).y - size / 140} v ${size / 70}`}
             stroke="white"
             strokeWidth={size / 500}
+            pointerEvents="none"
           />
         </g>
       )}

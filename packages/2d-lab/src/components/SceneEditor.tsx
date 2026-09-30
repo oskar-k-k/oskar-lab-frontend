@@ -18,6 +18,8 @@ import {
   setObjectOrigin,
   rotationPivot,
   rotateSceneSelections,
+  scaleSceneSelections,
+  constrainSelectionPivot,
   moveSceneSelections,
   type SceneSelection,
   parseScene,
@@ -46,6 +48,7 @@ import {
 } from "../model/selectionActions";
 import SelectionWheel, { type WheelItem } from "./SelectionWheel";
 import LabIcon, { type LabIconName } from "./LabIcon";
+import TransformGizmo from "./TransformGizmo";
 import SceneGeometry from "./SceneGeometry";
 import Inspector2D from "./Inspector2D";
 import Measure from "./Measure";
@@ -106,6 +109,22 @@ export default function SceneEditor({
     picks: SceneSelection[];
   } | null>(null);
   const [rotating, setRotating] = useState(false);
+  const [scaling, setScaling] = useState(false);
+  const [scaleX, setScaleX] = useState("1");
+  const [scaleY, setScaleY] = useState("1");
+  const [temporaryPivots, setTemporaryPivots] = useState<
+    Partial<Record<"rotate" | "scale", { key: string; point: Point }>>
+  >({});
+  const [feedback, setFeedback] = useState<{
+    degrees: number | null;
+    factors: Point | null;
+  }>({ degrees: null, factors: null });
+  const pivotDrag = useRef<{
+    tool: "rotate" | "scale";
+    key: string;
+    previous: typeof temporaryPivots;
+    pointerId: number;
+  } | null>(null);
   const [angle, setAngle] = useState("15");
   const [panTool, setPanTool] = useState(false);
   const spaceHeld = useRef(false);
@@ -148,7 +167,8 @@ export default function SceneEditor({
     id: string;
     start: Point;
     pointerId: number;
-    rotation?: { pivot: Point; startAngle: number };
+    rotation?: { pivot: Point; lastAngle: number; total: number };
+    scale?: { pivot: Point; axis: "x" | "y" | "xy"; radius: number };
     selections: SceneSelection[];
   } | null>(null);
   const scene = draft ?? value;
@@ -343,17 +363,49 @@ export default function SceneEditor({
     if (!current || current.pointerId !== event.pointerId) return null;
     const target = point(event);
     if (current.rotation) {
-      const { pivot, startAngle } = current.rotation;
-      let degrees =
-        ((Math.atan2(target.y - pivot.y, target.x - pivot.x) - startAngle) *
-          180) /
+      const rotation = current.rotation;
+      const angle = Math.atan2(
+        target.y - rotation.pivot.y,
+        target.x - rotation.pivot.x,
+      );
+      const difference = angle - rotation.lastAngle;
+      rotation.total +=
+        (Math.atan2(Math.sin(difference), Math.cos(difference)) * 180) /
         Math.PI;
-      if (event.shiftKey) degrees = Math.round(degrees / 15) * 15;
+      rotation.lastAngle = angle;
+      const degrees = event.shiftKey
+        ? Math.round(rotation.total / 15) * 15
+        : rotation.total;
+      setFeedback({ degrees, factors: null });
       return rotateSceneSelections(
         current.scene,
         current.selections,
         degrees,
         policy,
+        rotation.pivot,
+      );
+    }
+    if (current.scale) {
+      const { pivot, axis, radius } = current.scale;
+      const dx = (target.x - current.start.x) / radius;
+      const dy = -(target.y - current.start.y) / radius;
+      const both = 1 + (dx + dy) / 1.5;
+      let factors = {
+        x: axis === "y" ? 1 : axis === "xy" ? both : 1 + dx,
+        y: axis === "x" ? 1 : axis === "xy" ? both : 1 + dy,
+      };
+      if (event.shiftKey)
+        factors = {
+          x: Math.round(factors.x * 10) / 10,
+          y: Math.round(factors.y * 10) / 10,
+        };
+      setFeedback({ degrees: null, factors });
+      return scaleSceneSelections(
+        current.scene,
+        current.selections,
+        factors,
+        policy,
+        pivot,
       );
     }
     const snap = (number: number) =>
@@ -506,6 +558,9 @@ export default function SceneEditor({
     });
   }
   function cancel() {
+    if (pivotDrag.current) setTemporaryPivots(pivotDrag.current.previous);
+    pivotDrag.current = null;
+    setFeedback({ degrees: null, factors: null });
     stopPreview();
     setWheel(null);
     gesture.current = null;
@@ -549,6 +604,72 @@ export default function SceneEditor({
       setError(true);
     }
   }
+  function selectionKey(targets = picks) {
+    return JSON.stringify(
+      targets
+        .map((p) => [p.objectId, p.target?.kind, p.target?.id])
+        .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
+    );
+  }
+  function pivotFor(tool: "rotate" | "scale", targets = picks): Point | null {
+    const custom = temporaryPivots[tool];
+    if (custom?.key === selectionKey(targets))
+      return constrainSelectionPivot(value, targets, custom.point);
+    return rotationPivot(value, validSceneSelections(value, targets));
+  }
+  function movePivot(position: Point) {
+    const tool = scaling ? "scale" : "rotate";
+    const next = constrainSelectionPivot(value, picks, position);
+    if (next)
+      setTemporaryPivots((current) => ({
+        ...current,
+        [tool]: { key: selectionKey(), point: next },
+      }));
+  }
+  function startPivotDrag(event: PointerEvent<SVGElement>) {
+    if (event.button !== 0 || !event.isPrimary) return;
+    event.preventDefault();
+    event.stopPropagation();
+    pivotDrag.current = {
+      tool: scaling ? "scale" : "rotate",
+      key: selectionKey(),
+      previous: temporaryPivots,
+      pointerId: event.pointerId,
+    };
+    svg.current?.setPointerCapture(event.pointerId);
+  }
+  function scaleBy(factors: Point) {
+    try {
+      commit(
+        scaleSceneSelections(
+          value,
+          validSceneSelections(value, picks),
+          factors,
+          policy,
+          pivotFor("scale") ?? undefined,
+        ),
+      );
+    } catch {
+      setError(true);
+    }
+  }
+  function startScale(event: PointerEvent<SVGElement>, axis: "x" | "y" | "xy") {
+    if (event.button !== 0 || !event.isPrimary) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const pivot = pivotFor("scale");
+    if (!pivot) return;
+    gesture.current = {
+      scene: value,
+      id: picks[0].objectId,
+      selections: picks,
+      start: point(event),
+      pointerId: event.pointerId,
+      scale: { pivot, axis, radius: size * 0.14 },
+    };
+    setFeedback({ degrees: null, factors: { x: 1, y: 1 } });
+    svg.current?.setPointerCapture(event.pointerId);
+  }
   function rotateBy(degrees: number) {
     try {
       commit(
@@ -557,6 +678,7 @@ export default function SceneEditor({
           validSceneSelections(value, picks),
           degrees,
           policy,
+          pivotFor("rotate") ?? undefined,
         ),
       );
     } catch {
@@ -567,7 +689,7 @@ export default function SceneEditor({
     if (event.button !== 0 || !event.isPrimary) return;
     event.preventDefault();
     event.stopPropagation();
-    const pivot = rotationPivot(value, targets);
+    const pivot = pivotFor("rotate", targets);
     if (!pivot) return;
     const start = point(event);
     gesture.current = {
@@ -578,9 +700,11 @@ export default function SceneEditor({
       pointerId: event.pointerId,
       rotation: {
         pivot,
-        startAngle: Math.atan2(start.y - pivot.y, start.x - pivot.x),
+        lastAngle: Math.atan2(start.y - pivot.y, start.x - pivot.x),
+        total: 0,
       },
     };
+    setFeedback({ degrees: 0, factors: null });
     svg.current?.setPointerCapture(event.pointerId);
   }
   function editOrigin(origin: Point) {
@@ -735,7 +859,20 @@ export default function SceneEditor({
         id: "rotate",
         label: t("scene2d.rotate"),
         icon: "rotate",
-        run: () => setRotating(true),
+        run: () => {
+          setRotating(true);
+          setScaling(false);
+        },
+      });
+    if (rotationPivot(value, targets))
+      items.push({
+        id: "scale",
+        label: t("scene2d.scale"),
+        icon: "scale",
+        run: () => {
+          setScaling(true);
+          setRotating(false);
+        },
       });
     if (kind === "edge" && sameKind)
       items.push(command("split", "lab2d.splitEdge", "split"));
@@ -797,7 +934,7 @@ export default function SceneEditor({
     return items;
   }
   const center = selected ? objectOrigin(selected) : null;
-  const pivot = rotationPivot(scene, validSceneSelections(scene, picks));
+  const pivot = pivotFor(scaling ? "scale" : "rotate");
   return (
     <div className={styles.editor}>
       {wheel && (
@@ -983,11 +1120,28 @@ export default function SceneEditor({
           <>
             <div className={styles.viewTools}>
               <button
+                aria-label={t("scene2d.scale")}
+                title={t("scene2d.scale")}
+                disabled={!pivot}
+                aria-pressed={scaling}
+                onClick={() => {
+                  cancel();
+                  setScaling((v) => !v);
+                  setRotating(false);
+                }}
+              >
+                <LabIcon name="scale" />
+              </button>
+              <button
                 aria-label={t("scene2d.rotate")}
                 title={t("scene2d.rotate")}
                 disabled={!pivot}
                 aria-pressed={rotating}
-                onClick={() => setRotating((v) => !v)}
+                onClick={() => {
+                  cancel();
+                  setRotating((v) => !v);
+                  setScaling(false);
+                }}
               >
                 <LabIcon name="rotate" />
               </button>
@@ -1066,6 +1220,10 @@ export default function SceneEditor({
                 }
               }}
               onPointerMove={(event) => {
+                if (pivotDrag.current?.pointerId === event.pointerId) {
+                  movePivot(point(event));
+                  return;
+                }
                 const p = pan.current;
                 if (p && p.pointerId === event.pointerId) {
                   setFrame((f) => ({
@@ -1078,6 +1236,10 @@ export default function SceneEditor({
                 queuePreview(event);
               }}
               onPointerUp={(event) => {
+                if (pivotDrag.current) {
+                  pivotDrag.current = null;
+                  return;
+                }
                 stopPreview();
                 if (pan.current) {
                   pan.current = null;
@@ -1091,13 +1253,18 @@ export default function SceneEditor({
                   setError(true);
                 }
                 gesture.current = null;
+                setFeedback({ degrees: null, factors: null });
                 setDraft(null);
               }}
               onPointerCancel={cancel}
               onLostPointerCapture={() => {
+                if (pivotDrag.current)
+                  setTemporaryPivots(pivotDrag.current.previous);
+                pivotDrag.current = null;
                 stopPreview();
                 pan.current = null;
                 gesture.current = null;
+                setFeedback({ degrees: null, factors: null });
                 setDraft(null);
               }}
               onKeyDownCapture={(event) => {
@@ -1132,6 +1299,7 @@ export default function SceneEditor({
                 }
                 if (event.key === "Escape") {
                   setRotating(false);
+                  setScaling(false);
                   cancel();
                   setDrawing(false);
                   setAnchor(null);
@@ -1186,55 +1354,28 @@ export default function SceneEditor({
                   }
                 />
               ))}
-              {rotating && pivot && (
-                <g className={styles.rotationGizmo}>
-                  <circle
-                    cx={pivot.x}
-                    cy={pivot.y}
-                    r={size * 0.14}
-                    fill="none"
-                    stroke="var(--scene-selected)"
-                    strokeWidth={size / 400}
-                    pointerEvents="none"
-                  />
-                  <circle
-                    cx={pivot.x}
-                    cy={pivot.y}
-                    r={size * 0.14}
-                    fill="none"
-                    stroke="transparent"
-                    strokeWidth={size / 35}
-                    role="button"
-                    aria-label={t("scene2d.rotateHandle")}
-                    tabIndex={0}
-                    onPointerDown={(event) => startRotation(event)}
-                    onKeyDown={(event) => {
-                      if (
-                        event.key === "ArrowLeft" ||
-                        event.key === "ArrowRight"
-                      ) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        rotateBy(event.key === "ArrowLeft" ? -15 : 15);
-                      }
-                    }}
-                  />
-                  <circle
-                    cx={pivot.x}
-                    cy={pivot.y - size * 0.14}
-                    r={size / 70}
-                    fill="var(--scene-selected)"
-                    stroke="white"
-                    strokeWidth={size / 500}
-                    pointerEvents="none"
-                  />
-                  <path
-                    d={`M ${pivot.x - size / 100} ${pivot.y} h ${size / 50} M ${pivot.x} ${pivot.y - size / 100} v ${size / 50}`}
-                    stroke="var(--scene-selected)"
-                    strokeWidth={size / 400}
-                    pointerEvents="none"
-                  />
-                </g>
+              {(rotating || scaling) && pivot && (
+                <TransformGizmo
+                  tool={scaling ? "scale" : "rotate"}
+                  pivot={pivot}
+                  size={size}
+                  degrees={feedback.degrees}
+                  factors={feedback.factors}
+                  onRotate={(event) => startRotation(event)}
+                  onScale={startScale}
+                  onPivot={startPivotDrag}
+                  onNudgePivot={(delta) =>
+                    movePivot({ x: pivot.x + delta.x, y: pivot.y + delta.y })
+                  }
+                  onStep={(direction, axis) =>
+                    scaling
+                      ? scaleBy({
+                          x: axis === "y" ? 1 : 1 + direction * 0.1,
+                          y: axis === "x" ? 1 : 1 + direction * 0.1,
+                        })
+                      : rotateBy(direction * 15)
+                  }
+                />
               )}
             </svg>
             <p className={styles.hint}>
@@ -1247,6 +1388,58 @@ export default function SceneEditor({
           </>
         </div>
         <div className={styles.details}>
+          {pivot && (
+            <fieldset className={styles.transformPanel}>
+              <legend>{t("scene2d.scale")}</legend>
+              <label>
+                {t("scene2d.scaleXFactor")}
+                <input
+                  type="number"
+                  step="0.1"
+                  value={scaleX}
+                  onChange={(e) => setScaleX(e.target.value)}
+                />
+              </label>
+              <label>
+                {t("scene2d.scaleYFactor")}
+                <input
+                  type="number"
+                  step="0.1"
+                  value={scaleY}
+                  onChange={(e) => setScaleY(e.target.value)}
+                />
+              </label>
+              <button
+                disabled={
+                  !scaleX.trim() ||
+                  !scaleY.trim() ||
+                  ![Number(scaleX), Number(scaleY)].every(Number.isFinite)
+                }
+                onClick={() =>
+                  scaleBy({ x: Number(scaleX), y: Number(scaleY) })
+                }
+              >
+                {t("scene2d.applyScale")}
+              </button>
+              {scaling && <p>{t("scene2d.scaleHint")}</p>}
+            </fieldset>
+          )}
+          {(rotating || scaling) && pivot && (
+            <>
+              <p>{t("scene2d.pivotHint")}</p>
+              <button
+                onClick={() =>
+                  setTemporaryPivots((current) => ({
+                    ...current,
+                    [scaling ? "scale" : "rotate"]: undefined,
+                  }))
+                }
+              >
+                {t("scene2d.resetPivot")}
+              </button>
+            </>
+          )}
+
           {pivot && (
             <fieldset className={styles.transformPanel}>
               <legend>{t("scene2d.rotate")}</legend>

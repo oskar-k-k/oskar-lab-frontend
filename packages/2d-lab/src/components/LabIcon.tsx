@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 const paths = {
+  scale: "M4 14v6h6 M4 20L20 4 M14 4h6v6 M4 4h5 M4 4v5 M15 20h5v-5",
   rotate: "M20 7a9 9 0 1 0 1 8 M20 2v6h-6",
   object:
     "M5 5h14v14H5z M2 5h3 M5 2v3 M19 2v3 M19 5h3 M2 19h3 M5 19v3 M19 19h3 M19 19v3",

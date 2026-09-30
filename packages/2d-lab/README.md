@@ -97,8 +97,17 @@ Selection is highlighted in orange across geometry and the outliner. Selection m
 
 ### Rotation and origins
 
-Each object has a persistent world-space origin, shown as a small point in object mode. Legacy version-1 documents without `origin` migrate to the initial geometry bounding-box center when parsed; newly created primitives use (0, 0), translated to their placement position. Object dragging and position fields move both geometry and origin. Editing mesh points leaves the origin fixed. The origin fields move only the pivot, and Origin to geometry center resets it without moving geometry. JSON persistence and duplication retain origins; SVG export contains baked world geometry.
+Each object has a persistent world-space origin, shown as a purple diamond with a white cross in object mode. Legacy version-1 documents without `origin` migrate to the initial geometry bounding-box center when parsed; newly created primitives use (0, 0), translated to their placement position. Object dragging and position fields move both geometry and origin. Editing mesh points leaves the origin fixed. The origin fields move only the pivot, and Origin to geometry center resets it without moving geometry. JSON persistence and duplication retain origins; SVG export contains baked world geometry.
 
 Select Rotate in the context wheel or toolbar, then drag the orange ring (or selected geometry). Shift snaps to 15-degree increments; Escape cancels a drag. Exact relative angles and ±90° buttons are available in the inspector. Positive angles rotate clockwise because the canvas uses Y-down coordinates. One object rotates about its origin; a group rotates about the mean of selected origins, including moving those origins. Edges, faces and selections of two or more unique points rotate about the mean of selected points, across objects if needed. Shared points transform once, dependent geometry follows, and partial mesh rotation does not move object origins. Each completed rotation creates one undo step.
 
 The public scene API includes `objectOrigin`, `setObjectOrigin`, `rotationPivot` and `rotateSceneSelections`. Commands validate the complete result against the host policy and do not mutate input scenes.
+
+
+### Temporary pivots and scaling
+
+During rotation, the ring handle follows the angle and a swept sector displays the live relative degrees, including multiple turns. Feedback resets on release. Drag the center cross to place a temporary pivot: selected edge segments and face interiors/boundaries constrain placement; disconnected selections never create an imaginary connecting surface. Arrow keys move the focused pivot. Rotation and scale keep independent temporary pivots for the current selection; Reset pivot restores the default. This does not edit the saved object origin.
+
+Scale offers X, Y and uniform XY handles with live factors. Shift snaps factors to 0.1 increments; Escape cancels. Exact X/Y factors are available in the inspector. Shared vertices transform once, whole-object origins follow the transformation, and partial topology edits retain origins. Zero and negative factors are permitted under the free editing policy. Each drag commits one undo step.
+
+`scaleSceneSelections` and `rotateSceneSelections` accept an optional world-space pivot override after the host policy. `constrainSelectionPivot` projects a requested point onto selected geometry. These public model APIs remain independent of React.
