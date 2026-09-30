@@ -5,7 +5,7 @@ import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import { fromDisplay, toDisplay, type Unit } from "../model/measurements";
 import styles from "./Lab2D.module.css";
 
-/** Commits a bounded measurement on blur or Enter, preserving the previous value for invalid input. */
+/** Commits a measurement with optional finite bounds on blur or Enter, preserving the previous value for invalid input. */
 export default function Measure({
   label,
   value,
@@ -36,8 +36,8 @@ export default function Measure({
         key={`${value}-${unit}`}
         type="number"
         defaultValue={Number(display(value).toFixed(3))}
-        min={display(min)}
-        max={display(max)}
+        min={Number.isFinite(display(min)) ? display(min) : undefined}
+        max={Number.isFinite(display(max)) ? display(max) : undefined}
         step={display(step)}
         aria-invalid={invalid}
         onBlur={(event) => {
@@ -58,7 +58,9 @@ export default function Measure({
       />
       {invalid && (
         <span role="alert">
-          {t("lab2d.numberRange", { min: display(min), max: display(max) })}
+          {Number.isFinite(min) && Number.isFinite(max)
+            ? t("lab2d.numberRange", { min: display(min), max: display(max) })
+            : t("scene2d.finiteNumber")}
         </span>
       )}
     </label>

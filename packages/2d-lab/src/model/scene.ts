@@ -1,5 +1,5 @@
 import {
-  defaultConstraints,
+  freeDrawingConstraints,
   parseMesh,
   rectangleMesh,
   createFace,
@@ -84,10 +84,10 @@ export type EnginePolicy = {
   createObjects: boolean;
   createFaces: boolean;
 };
-/** General-purpose defaults, independent of any floor-plan rules. */
+/** Free editing without geometry or object-count limits; hosts opt into stricter policies. */
 export const defaultEnginePolicy: EnginePolicy = {
-  maxObjects: 64,
-  mesh: defaultConstraints,
+  maxObjects: Number.POSITIVE_INFINITY,
+  mesh: freeDrawingConstraints,
   modes: ["object", "vertex", "edge", "face"],
   createObjects: true,
   createFaces: true,

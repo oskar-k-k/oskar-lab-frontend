@@ -135,12 +135,7 @@
   margin: 0;
   border-top: 1px solid var(--scene-border);
 }
-.error {
-  padding: 12px;
-  color: #9e3427;
-  background: #fff1e9;
-  margin: 0;
-}
+
 .empty {
   padding: 80px 24px;
   text-align: center;

@@ -18,7 +18,7 @@ Coordinates use X right / Y down, stored in metres. An edge references two verte
 
 `createFace` reuses edges and adds missing boundary edges. `splitEdge` inserts the new point into every affected face ring. Deleting a face retains its boundary; deleting an edge or vertex removes dependent faces. Mutations return new data and must pass `validateMesh` before being committed. `parseMesh` validates untrusted JSON and strips unknown properties. Older graph-only documents may omit `faces`.
 
-A face must have at least three distinct points, nonzero area, existing boundary edges and a non-self-intersecting outline. Face rings remain simple even when free edge crossings are allowed. Separate faces may overlap geometrically; this version has no boolean polygon operations, holes or automatic merging. `closedOutline` / `outlineArea` refer to one simple graph cycle; `faceArea` measures one explicit face.
+A face references at least three distinct point IDs and existing boundary edges. The strict mesh policy additionally requires nonzero area and simple outlines. Free scenes allow coincident points, collapsed faces and self-crossing outlines. Separate faces may overlap geometrically; this version has no boolean polygon operations, holes or automatic merging. `closedOutline` / `outlineArea` refer to one simple graph cycle; `faceArea` measures one explicit face.
 
 ## React editor
 
@@ -34,7 +34,7 @@ Mount inside the central `I18nProvider` (English/German). The host owns persiste
 
 Drag a point, edge or face directly. Draw edges from points with clicks or drags. To fill a face, choose boundary points in order using Shift-click or the face-creation checkboxes, then press F or the fill button. The order is visible in the picker. Invalid faces and movements show errors without modifying the document. Meter/centimetre display and movement step are independent of topology.
 
-`MeshConstraints` configures point/edge/face counts, coordinate limits, minimum separation, degree and free-edge intersections. Default limits: 256 points, 512 edges, 256 faces, ±1000 m, 1 mm separation, branching and crossing edges allowed. Consumers can set `allowFaceCreation={false}` and add product fields through `sidebarContent`. Room Studio applies its existing restrictive room policy and derives a movable floor face without changing its persisted X/Z document format.
+`MeshConstraints` configures point/edge/face counts, coordinate limits, minimum separation, degree and free-edge intersections. The lower-level `Editor2D` / `parseMesh` defaults remain strict for existing hosts: 256 points, 512 edges, 256 faces, ±1000 m, 1 mm separation, branching and crossing edges allowed. Consumers can set `allowFaceCreation={false}` and add product fields through `sidebarContent`. Room Studio applies its existing restrictive room policy and derives a movable floor face without changing its persisted X/Z document format.
 
 ## Boundaries and preview
 
@@ -55,11 +55,11 @@ import {defaultEnginePolicy, type Scene2D} from "@oskar-lab/2d-lab/scene";
   onEvent={event => { /* selection notification or validated scene commit */ }}/>
 ```
 
-`EnginePolicy` defines available selection modes, object/face creation and mesh/count limits. The model enforces validation limits for scene parsing and mutations; creation flags govern creation commands and UI tools, not access control. The host owns authorization. Use `Editor2D` directly when only one mesh is needed, as Room Studio does, with `constraints`, `allowFaceCreation` and optional `selectionMode`. The room host rejects crossings and branches; the independent app permits both for free edges. Face boundaries always remain valid simple polygons.
+`EnginePolicy` defines available selection modes, object/face creation and mesh/count limits. The model enforces validation limits for scene parsing and mutations; creation flags govern creation commands and UI tools, not access control. The host owns authorization. Use `Editor2D` directly when only one mesh is needed, as Room Studio does, with `constraints`, `allowFaceCreation` and optional `selectionMode`. The room host rejects crossings and branches; the independent app uses `freeDrawingConstraints`, permitting coincident points, zero-length edges, collapsed faces and self-crossing polygons.
 
 `SceneEditor` provides object selection, dragging, duplication, deletion and exact position fields. All modes share one stable SVG viewport and render every object. Modes restrict hit testing to objects, vertices, edges or faces; selecting any element also selects its owning object. Camera framing and zoom remain unchanged. The host receives one immutable change per completed gesture through `onChange`; optional `onEvent` reports selection and committed scenes for extensions. Product-specific UI can compose around this component or use the model commands directly. No global event bus or app-to-app dependency is required.
 
-`parseScene` validates versioned JSON at the storage/import boundary. `exportSceneSvg` emits escaped, standalone SVG with a group for each object. The app adds JSON project import/export, history and local persistence. Default scene limit is 64 objects. This is a focused 2D mesh editor, not the entire Blender feature set: no curves, modifiers, animation, boolean operations or arbitrary SVG import.
+`parseScene` validates versioned JSON at the storage/import boundary. `exportSceneSvg` emits escaped, standalone SVG with a group for each object. The app adds JSON project import/export, history and local persistence. The default scene policy imposes no object, point, edge, face-count or coordinate caps. Finite coordinates, unique identities and intact topology references are still required so save/load and editing remain reliable. This is a focused 2D mesh editor, not the entire Blender feature set: no curves, modifiers, animation, boolean operations or arbitrary SVG import.
 
 Run workspace `npm run check`. Package tests cover shared movement, face creation/validation/deletion, edge subdivision, graph rules, serialization and dependency boundaries.
 
@@ -75,7 +75,7 @@ Ctrl-click (Cmd-click on macOS) adds or removes objects, vertices, edges or face
 
 Right-click opens the selection wheel at the cursor (clamped to the viewport). Right-clicking an unselected element selects it; right-clicking a selected element or the background preserves the current group. With no selection, the wheel offers points, edge drawing, rectangles and triangles at the clicked scene position. The Actions button and Shift+F10 also open the wheel; Escape goes back or closes it. Arrow keys/Tab navigate commands. The middle mouse button and Space-drag still pan; the right button is reserved for the wheel.
 
-- Points: delete, extend a single point, connect two points, or create a face from three or more points in one object. Face points are ordered geometrically around their center and invalid boundaries are rejected.
+- Points: delete, extend a single point, connect two points, or create a face from three or more points in one object. Face points are ordered geometrically around their center; host policies control geometric restrictions.
 - Edges: insert midpoints, form a face from one connected chain/loop, or delete with/without endpoints. An open chain is closed automatically.
 - Faces: delete only faces, delete their boundary edges while keeping points, or delete their points and dependent topology.
 - Objects: duplicate or delete the entire selected group. Cross-object topology joins are disabled; deleting and subdividing work across objects.
@@ -83,3 +83,10 @@ Right-click opens the selection wheel at the cursor (clamped to the viewport). R
 Every command is validated against the host policy and commits once for undo/redo. Deleting edges or points also removes dependent faces; removing shared boundary edges can therefore remove neighboring faces. Disabled joins indicate an invalid/existing boundary or a selection spanning independent objects. Canvas text selection remains disabled; names and property fields stay editable.
 
 The framework-independent `@oskar-lab/2d-lab/actions` export exposes `applySelectionAction`, `canApplySelectionAction` and `validSceneSelections`. Commands return the next scene and selection, never mutate inputs, and reject invalid edits atomically. The existing Core & Design scene preview includes the context wheel; public model APIs and components are discovered by the source documentation generator.
+
+
+### Free editing and drag performance
+
+`defaultEnginePolicy` uses `freeDrawingConstraints` (unbounded counts/coordinates, zero minimum distance, intersections and degenerate faces allowed). `MeshConstraints.allowDegenerateFaces` controls geometric face checks independently of topology integrity. Use `defaultConstraints` or explicit domain limits when embedding a constrained editor. Policies are runtime configuration; Infinity values are not part of saved scene JSON.
+
+Free-scene validation skips pairwise proximity/intersection checks and uses indexed topology lookups. Pointer previews are coalesced to one update per animation frame, then committed exactly once on release. No geometry warning banner changes the canvas layout during a gesture. Unexpected rejected commands receive a small status message below the fixed canvas; constrained hosts keep the last valid preview until release.

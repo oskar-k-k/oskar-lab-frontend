@@ -119,6 +119,19 @@ export default function SceneEditor({
   const [frame, setFrame] = useState(() => bounds(value));
   const [zoom, setZoom] = useState(1);
   const svg = useRef<SVGSVGElement>(null);
+  const previewFrame = useRef<number | null>(null);
+  const pendingPointer = useRef<{
+    clientX: number;
+    clientY: number;
+    pointerId: number;
+  } | null>(null);
+  useEffect(
+    () => () => {
+      if (previewFrame.current !== null)
+        cancelAnimationFrame(previewFrame.current);
+    },
+    [],
+  );
   const gesture = useRef<{
     scene: Scene2D;
     id: string;
@@ -308,7 +321,11 @@ export default function SceneEditor({
     );
     return { x: result.x, y: result.y };
   }
-  function moved(event: PointerEvent) {
+  function moved(event: {
+    clientX: number;
+    clientY: number;
+    pointerId: number;
+  }) {
     const current = gesture.current;
     if (!current || current.pointerId !== event.pointerId) return null;
     const target = point(event);
@@ -429,7 +446,35 @@ export default function SceneEditor({
     }
   }
 
+  function stopPreview() {
+    if (previewFrame.current !== null)
+      cancelAnimationFrame(previewFrame.current);
+    previewFrame.current = null;
+    pendingPointer.current = null;
+  }
+  function queuePreview(event: PointerEvent) {
+    if (!gesture.current) return;
+    pendingPointer.current = {
+      clientX: event.clientX,
+      clientY: event.clientY,
+      pointerId: event.pointerId,
+    };
+    if (previewFrame.current !== null) return;
+    previewFrame.current = requestAnimationFrame(() => {
+      previewFrame.current = null;
+      const pointer = pendingPointer.current;
+      pendingPointer.current = null;
+      if (!pointer) return;
+      try {
+        const next = moved(pointer);
+        if (next) setDraft(next);
+      } catch {
+        // Constrained hosts keep the last valid preview; report rejection only on release.
+      }
+    });
+  }
   function cancel() {
+    stopPreview();
     setWheel(null);
     gesture.current = null;
     pan.current = null;
@@ -728,17 +773,15 @@ export default function SceneEditor({
           )}
         </div>
       </div>
-      {error && (
-        <p role="alert" className={styles.error}>
-          {t("scene2d.invalidEdit")}
-        </p>
-      )}
       <div className={styles.workspace}>
         <aside className={styles.outliner} aria-label={t("scene2d.objects")}>
           <h2>
             {t("scene2d.objects")}{" "}
             <small>
-              {value.objects.length}/{policy.maxObjects}
+              {value.objects.length}
+              {Number.isFinite(policy.maxObjects)
+                ? `/${policy.maxObjects}`
+                : ""}
             </small>
           </h2>
           {!value.objects.length && <p>{t("scene2d.emptyScene")}</p>}
@@ -926,17 +969,10 @@ export default function SceneEditor({
                   }));
                   return;
                 }
-                try {
-                  const next = moved(event);
-                  if (next) {
-                    setDraft(next);
-                    setError(false);
-                  }
-                } catch {
-                  setError(true);
-                }
+                queuePreview(event);
               }}
               onPointerUp={(event) => {
+                stopPreview();
                 if (pan.current) {
                   pan.current = null;
                   return;
@@ -953,6 +989,7 @@ export default function SceneEditor({
               }}
               onPointerCancel={cancel}
               onLostPointerCapture={() => {
+                stopPreview();
                 pan.current = null;
                 gesture.current = null;
                 setDraft(null);
@@ -1046,6 +1083,9 @@ export default function SceneEditor({
             <p className={styles.hint}>
               {t("scene2d.navigationHint")} ·{" "}
               {t("scene2d.selectionCount", { count: picks.length })}
+              <span role="status">
+                {error ? ` · ${t("scene2d.editFailed")}` : ""}
+              </span>
             </p>
           </>
         </div>

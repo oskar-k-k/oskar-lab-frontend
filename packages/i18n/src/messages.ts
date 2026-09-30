@@ -3,6 +3,8 @@ export type Locale = typeof locales[number];
 
 const en = {
     "scene2d.pan": "Pan view",
+    "scene2d.finiteNumber": "Enter a valid number.",
+    "scene2d.editFailed": "This action could not be applied.",
     "scene2d.wheelPoint": "Add point",
     "scene2d.wheelBack": "Back",
     "scene2d.wheelClose": "Close",
@@ -465,6 +467,8 @@ const en = {
 
 const de: Record<keyof typeof en, string> = {
     "scene2d.pan": "Ansicht verschieben",
+    "scene2d.finiteNumber": "Bitte eine gültige Zahl eingeben.",
+    "scene2d.editFailed": "Diese Aktion konnte nicht ausgeführt werden.",
     "scene2d.wheelPoint": "Punkt hinzufügen",
     "scene2d.wheelBack": "Zurück",
     "scene2d.wheelClose": "Schließen",

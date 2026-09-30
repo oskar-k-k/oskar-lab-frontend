@@ -24,9 +24,16 @@ Ctrl-click (Cmd-click on macOS) adds or removes objects, vertices, edges or face
 
 Right-click opens the selection wheel at the cursor (clamped to the viewport). Right-clicking an unselected element selects it; right-clicking a selected element or the background preserves the current group. With no selection, the wheel offers points, edge drawing, rectangles and triangles at the clicked scene position. The Actions button and Shift+F10 also open the wheel; Escape goes back or closes it. Arrow keys/Tab navigate commands. The middle mouse button and Space-drag still pan; the right button is reserved for the wheel.
 
-- Points: delete, extend a single point, connect two points, or create a face from three or more points in one object. Face points are ordered geometrically around their center and invalid boundaries are rejected.
+- Points: delete, extend a single point, connect two points, or create a face from three or more points in one object. Face points are ordered geometrically around their center.
 - Edges: insert midpoints, form a face from one connected chain/loop, or delete with/without endpoints. An open chain is closed automatically.
 - Faces: delete only faces, delete their boundary edges while keeping points, or delete their points and dependent topology.
 - Objects: duplicate or delete the entire selected group. Cross-object topology joins are disabled; deleting and subdividing work across objects.
 
 Every command is validated against the host policy and commits once for undo/redo. Deleting edges or points also removes dependent faces; removing shared boundary edges can therefore remove neighboring faces. Disabled joins indicate an invalid/existing boundary or a selection spanning independent objects. Canvas text selection remains disabled; names and property fields stay editable.
+
+
+### Unrestricted geometry
+
+The independent app uses the engine's free-drawing policy: points can coincide, edges may collapse, faces may overlap or self-cross, and there are no artificial coordinate or element-count caps. These states survive save/load and JSON/SVG export. Structural file checks and the existing file-size boundary remain. Restricted embedding hosts can still opt into domain-specific geometry rules.
+
+Dragging renders at most one preview per animation frame, without pairwise geometry rejection or a layout-shifting warning banner.

@@ -29,6 +29,8 @@ export default function SceneGeometry({
   ) => void;
 }) {
   const { t } = useI18n();
+  const vertices = new Map(object.mesh.vertices.map((v) => [v.id, v]));
+  const bounds = meshBounds(object.mesh);
   const hit = (
     kind: SelectionMode,
     selection: MeshSelection,
@@ -77,7 +79,7 @@ export default function SceneGeometry({
           className={styles.geometryHandle}
           points={face.vertices
             .map((id) => {
-              const v = object.mesh.vertices.find((v) => v.id === id)!;
+              const v = vertices.get(id)!;
               return `${v.x},${v.y}`;
             })
             .join(" ")}
@@ -95,8 +97,8 @@ export default function SceneGeometry({
         />
       ))}
       {object.mesh.edges.map((edge, index) => {
-        const a = object.mesh.vertices.find((v) => v.id === edge.start)!,
-          b = object.mesh.vertices.find((v) => v.id === edge.end)!;
+        const a = vertices.get(edge.start)!,
+          b = vertices.get(edge.end)!;
         return (
           <g
             key={edge.id}
@@ -174,8 +176,8 @@ export default function SceneGeometry({
       ))}
       {!!object.mesh.vertices.length && (
         <text
-          x={meshBounds(object.mesh).centerX}
-          y={meshBounds(object.mesh).minY - size / 35}
+          x={bounds.centerX}
+          y={bounds.minY - size / 35}
           textAnchor="middle"
           fontSize={size / 65}
           fill="#344e62"

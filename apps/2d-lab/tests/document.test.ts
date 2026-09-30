@@ -20,3 +20,14 @@ it("rejects corrupt data, unsupported versions and invalid preferences", () => {
     ),
   ).toThrow();
 });
+
+it("reloads freely edited collapsed geometry and far-away coordinates", () => {
+  const document = initialDocument();
+  document.scene.objects[0].mesh.vertices =
+    document.scene.objects[0].mesh.vertices.map((v) => ({
+      ...v,
+      x: 5000,
+      y: 5000,
+    }));
+  expect(parseDocument(JSON.stringify(document))).toEqual(document);
+});

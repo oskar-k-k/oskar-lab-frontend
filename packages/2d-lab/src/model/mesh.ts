@@ -25,6 +25,8 @@ export type MeshConstraints = {
   maxDegree: number;
   allowIntersections: boolean;
   maxFaces?: number;
+  /** Permit collapsed, overlapping and self-crossing faces while retaining valid references. */
+  allowDegenerateFaces?: boolean;
 };
 /** General drawing policy: supports open, disconnected and branching graphs. */
 export const defaultConstraints: MeshConstraints = {
@@ -35,6 +37,18 @@ export const defaultConstraints: MeshConstraints = {
   minDistance: 0.001,
   maxDegree: 256,
   allowIntersections: true,
+};
+
+/** Unrestricted editing geometry; hosts can supply stricter policies for domain-specific tools. */
+export const freeDrawingConstraints: MeshConstraints = {
+  maxFaces: Number.POSITIVE_INFINITY,
+  maxVertices: Number.POSITIVE_INFINITY,
+  maxEdges: Number.POSITIVE_INFINITY,
+  coordinateLimit: Number.POSITIVE_INFINITY,
+  minDistance: 0,
+  maxDegree: Number.POSITIVE_INFINITY,
+  allowIntersections: true,
+  allowDegenerateFaces: true,
 };
 
 const epsilon = 1e-7;
@@ -123,7 +137,7 @@ function intersects(a: Point, b: Point, c: Point, d: Point) {
   );
 }
 
-/** Validates graph integrity and the supplied topology policy; open graphs are allowed. */
+/** Validates graph references and the host policy. Use freeDrawingConstraints to allow overlapping points and degenerate faces without geometric limits. */
 export function validateMesh(
   plan: Mesh2D,
   constraints: MeshConstraints = defaultConstraints,
@@ -149,52 +163,66 @@ export function validateMesh(
     )
   )
     return "coordinates";
-  for (let i = 0; i < plan.vertices.length; i++) {
-    const vertex = plan.vertices[i];
-    if (connectedEdges(plan, vertex.id).length > constraints.maxDegree)
-      return "connections";
-    if (
-      plan.vertices
-        .slice(i + 1)
-        .some(
-          (other) =>
-            Math.hypot(vertex.x - other.x, vertex.y - other.y) <
-            constraints.minDistance - epsilon,
-        )
-    )
-      return "shortEdge";
-  }
+  const vertices = new Map(plan.vertices.map((vertex) => [vertex.id, vertex]));
+  const degrees = new Map<string, number>();
+  const pairs = new Set<string>();
   for (const edge of plan.edges) {
     if (!ids.has(edge.start) || !ids.has(edge.end) || edge.start === edge.end)
       return "connections";
-    if (edgeLength(plan, edge) < constraints.minDistance - epsilon)
-      return "shortEdge";
-  }
-  for (let i = 0; i < plan.edges.length; i++) {
-    const edge = plan.edges[i];
-    const a = plan.vertices.find((vertex) => vertex.id === edge.start)!;
-    const b = plan.vertices.find((vertex) => vertex.id === edge.end)!;
-    if (
-      !constraints.allowIntersections &&
-      plan.vertices.some(
-        (vertex) =>
-          vertex.id !== a.id && vertex.id !== b.id && onSegment(vertex, a, b),
-      )
-    )
-      return "intersection";
-    for (const other of plan.edges.slice(i + 1)) {
-      const shared = [edge.start, edge.end].filter(
-        (id) => id === other.start || id === other.end,
-      );
-      if (shared.length === 2) return "connections";
-      if (shared.length === 1) continue;
-      const c = plan.vertices.find((vertex) => vertex.id === other.start)!;
-      const d = plan.vertices.find((vertex) => vertex.id === other.end)!;
-      if (!constraints.allowIntersections && intersects(a, b, c, d))
-        return "intersection";
+    const pair = edgePair(edge.start, edge.end);
+    if (pairs.has(pair)) return "connections";
+    pairs.add(pair);
+    for (const id of [edge.start, edge.end]) {
+      const degree = (degrees.get(id) ?? 0) + 1;
+      if (degree > constraints.maxDegree) return "connections";
+      degrees.set(id, degree);
     }
   }
-  return validateFaces(plan, constraints.maxFaces ?? 256);
+  if (constraints.minDistance > 0) {
+    for (let i = 0; i < plan.vertices.length; i++) {
+      const vertex = plan.vertices[i];
+      for (let j = i + 1; j < plan.vertices.length; j++) {
+        const other = plan.vertices[j];
+        if (
+          Math.hypot(vertex.x - other.x, vertex.y - other.y) <
+          constraints.minDistance - epsilon
+        )
+          return "shortEdge";
+      }
+    }
+  }
+  if (!constraints.allowIntersections) {
+    for (let i = 0; i < plan.edges.length; i++) {
+      const edge = plan.edges[i];
+      const a = vertices.get(edge.start)!;
+      const b = vertices.get(edge.end)!;
+      if (
+        plan.vertices.some(
+          (vertex) =>
+            vertex.id !== a.id && vertex.id !== b.id && onSegment(vertex, a, b),
+        )
+      )
+        return "intersection";
+      for (let j = i + 1; j < plan.edges.length; j++) {
+        const other = plan.edges[j];
+        if (
+          [edge.start, edge.end].some(
+            (id) => id === other.start || id === other.end,
+          )
+        )
+          continue;
+        if (
+          intersects(a, b, vertices.get(other.start)!, vertices.get(other.end)!)
+        )
+          return "intersection";
+      }
+    }
+  }
+  return validateFaces(
+    plan,
+    constraints.maxFaces ?? 256,
+    constraints.allowDegenerateFaces ?? false,
+  );
 }
 
 /** Returns a single closed outline in positive winding order, or null for an open draft. */
@@ -395,14 +423,22 @@ export function parseMesh(
   const faces =
     input.faces === undefined
       ? undefined
-      : parseFaces(input.faces, constraints.maxFaces ?? 256);
+      : parseFaces(
+          input.faces,
+          constraints.maxFaces ?? 256,
+          constraints.maxVertices,
+        );
   const plan: Mesh2D = { vertices, edges, ...(faces ? { faces } : {}) };
   if (validateMesh(plan, constraints))
     throw new Error("Invalid blueprint geometry");
   return plan;
 }
 
-function parseFaces(value: unknown, limit: number): Face[] {
+function parseFaces(
+  value: unknown,
+  limit: number,
+  vertexLimit: number,
+): Face[] {
   if (!Array.isArray(value) || value.length > limit)
     throw new Error("Invalid faces");
   return value.map((raw: unknown) => {
@@ -413,7 +449,7 @@ function parseFaces(value: unknown, limit: number): Face[] {
       !f.id.length ||
       f.id.length > 100 ||
       !Array.isArray(f.vertices) ||
-      f.vertices.length > 512 ||
+      f.vertices.length > vertexLimit ||
       f.vertices.some(
         (id) => typeof id !== "string" || !id.length || id.length > 100,
       )
@@ -428,11 +464,20 @@ function faceHasEdge(face: Face, start: string, end: string): boolean {
     return (id === start && next === end) || (id === end && next === start);
   });
 }
-function validateFaces(mesh: Mesh2D, limit: number): MeshError | null {
+function edgePair(a: string, b: string): string {
+  return JSON.stringify(a < b ? [a, b] : [b, a]);
+}
+function validateFaces(
+  mesh: Mesh2D,
+  limit: number,
+  allowDegenerate: boolean,
+): MeshError | null {
   const faces = mesh.faces ?? [];
   if (faces.length > limit) return "limit";
   const ids = new Set<string>();
   const rings = new Set<string>();
+  const vertices = new Map(mesh.vertices.map((v) => [v.id, v]));
+  const edges = new Set(mesh.edges.map((e) => edgePair(e.start, e.end)));
   for (const face of faces) {
     const signature = [...face.vertices].sort().join("\0");
     if (
@@ -445,23 +490,16 @@ function validateFaces(mesh: Mesh2D, limit: number): MeshError | null {
       return "faces";
     ids.add(face.id);
     rings.add(signature);
-    const points = face.vertices.map((id) =>
-      mesh.vertices.find((v) => v.id === id),
-    );
+    const points = face.vertices.map((id) => vertices.get(id));
     if (points.some((p) => !p)) return "faces";
     const polygon = points as Vertex[];
-    if (Math.abs(signedArea(polygon)) < epsilon) return "faces";
+    if (!allowDegenerate && Math.abs(signedArea(polygon)) < epsilon)
+      return "faces";
     for (let i = 0; i < polygon.length; i++) {
       const a = polygon[i],
         b = polygon[(i + 1) % polygon.length];
-      if (
-        !mesh.edges.some(
-          (e) =>
-            (e.start === a.id && e.end === b.id) ||
-            (e.end === a.id && e.start === b.id),
-        )
-      )
-        return "faces";
+      if (!edges.has(edgePair(a.id, b.id))) return "faces";
+      if (allowDegenerate) continue;
       for (let j = 0; j < polygon.length; j++)
         if (
           j !== i &&

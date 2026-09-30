@@ -10,7 +10,7 @@ import {
   replaceObjectMesh,
   type Scene2D,
 } from "../src/model/scene";
-import { translateSelection } from "../src/model/mesh";
+import { defaultConstraints, translateSelection } from "../src/model/mesh";
 
 function example() {
   const scene = addObject(
@@ -48,7 +48,12 @@ describe("independent scene objects", () => {
     expect(next.objects[0].mesh.vertices[0].x).toBe(0.5);
     expect(next.objects[1].mesh.vertices[0].x).toBe(2);
     expect(() =>
-      moveSceneSelections(scene, picks, { x: 1000, y: 0 }),
+      moveSceneSelections(
+        scene,
+        picks,
+        { x: 1000, y: 0 },
+        { ...defaultEnginePolicy, mesh: defaultConstraints },
+      ),
     ).toThrow();
     expect(scene.objects[0].mesh.vertices[0].x).toBe(-1.5);
   });
@@ -99,7 +104,14 @@ describe("independent scene objects", () => {
     expect(() =>
       addObject({ version: 1, objects: [] }, "a", "A", "empty", policy),
     ).toThrow();
-    expect(() => moveObject(example(), "one", { x: 2000, y: 0 })).toThrow();
+    expect(() =>
+      moveObject(
+        example(),
+        "one",
+        { x: 2000, y: 0 },
+        { ...defaultEnginePolicy, mesh: defaultConstraints },
+      ),
+    ).toThrow();
     expect(() => moveObject(example(), "one", { x: NaN, y: 0 })).toThrow();
   });
   it("rejects malformed files and duplicate object identities", () => {
