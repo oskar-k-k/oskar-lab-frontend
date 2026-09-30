@@ -28,7 +28,7 @@
   background: #d2eaf5;
   color: #145575;
 }
-.editor :focus-visible {
+.editor :is(button, input, select, summary):focus-visible {
   outline: 3px solid #278db6;
   outline-offset: 2px;
 }
@@ -49,7 +49,7 @@
 }
 .workspace {
   display: grid;
-  grid-template-columns: 210px minmax(0, 1fr);
+  grid-template-columns: 200px minmax(0, 1fr) 240px;
 }
 .outliner {
   padding: 16px;
@@ -149,5 +149,48 @@
   .canvas {
     height: 55vh;
     min-height: 360px;
+  }
+}
+
+.details {
+  padding: 16px;
+  border-left: 1px solid var(--scene-border);
+  background: #f5f8fb;
+  font-size: 12px;
+  min-width: 0;
+}
+.details > button {
+  width: 100%;
+}
+.details label {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+.details aside {
+  padding: 12px 0;
+  border: 0;
+}
+.geometryHandle:focus,
+.object:focus {
+  outline: none;
+}
+.geometryHandle:focus-visible {
+  stroke: #e18b22;
+  stroke-width: 0.035;
+}
+.object:focus-visible polygon {
+  stroke: #e18b22;
+  stroke-width: 0.035;
+}
+@media (max-width: 1000px) and (min-width: 751px) {
+  .workspace {
+    grid-template-columns: 170px minmax(0, 1fr) 190px;
+  }
+}
+@media (max-width: 750px) {
+  .details {
+    border-left: 0;
+    border-top: 1px solid var(--scene-border);
   }
 }

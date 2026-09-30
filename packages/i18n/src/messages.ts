@@ -2,6 +2,7 @@ export const locales = ["en", "de"] as const;
 export type Locale = typeof locales[number];
 
 const en = {
+    "scene2d.facePicker": "Choose boundary points in order, then fill the selection.",
     "scene2d.chooseFile": "Choose JSON file",
     "scene2d.importHint": "Choose a project file or paste its JSON below. Import replaces the scene and can be undone.",
     "scene2d.projectJson": "Project JSON",
@@ -28,7 +29,7 @@ const en = {
     "scene2d.deleteObject": "Delete object",
     "scene2d.fit": "Frame scene",
     "scene2d.canvas": "2D scene with selectable objects",
-    "scene2d.objectHint": "Drag objects or use arrow keys. Switch to Vertex, Edge or Face to edit the active object's mesh. Escape cancels a drag.",
+    "scene2d.objectHint": "Select and drag objects, points, edges or faces across the whole scene. The selection mode changes the targets, not the view. Escape cancels a drag.",
     "scene2d.editing": "Editing {name} in isolation. Object mode shows the whole scene.",
     "scene2d.selectObject": "Select an object in the scene list to edit its mesh.",
     "scene2d.invalidEdit": "This edit exceeds the configured limits or would create invalid geometry. Your previous scene is preserved.",
@@ -447,6 +448,7 @@ const en = {
 } as const;
 
 const de: Record<keyof typeof en, string> = {
+    "scene2d.facePicker": "Wähle die Randpunkte der Reihe nach und fülle dann die Auswahl.",
     "scene2d.chooseFile": "JSON-Datei wählen",
     "scene2d.importHint": "Wähle eine Projektdatei oder füge ihren JSON-Inhalt unten ein. Der Import ersetzt die Szene und kann rückgängig gemacht werden.",
     "scene2d.projectJson": "Projekt-JSON",
@@ -473,7 +475,7 @@ const de: Record<keyof typeof en, string> = {
     "scene2d.deleteObject": "Objekt löschen",
     "scene2d.fit": "Szene einpassen",
     "scene2d.canvas": "2D-Szene mit auswählbaren Objekten",
-    "scene2d.objectHint": "Objekte ziehen oder mit Pfeiltasten bewegen. Punkt, Kante oder Fläche bearbeitet das aktive Objekt. Escape bricht das Ziehen ab.",
+    "scene2d.objectHint": "Objekte, Punkte, Kanten oder Flächen in der gesamten Szene auswählen und ziehen. Der Modus ändert die Auswahl, nicht die Ansicht. Escape bricht das Ziehen ab.",
     "scene2d.editing": "{name} einzeln bearbeiten. Der Objektmodus zeigt die gesamte Szene.",
     "scene2d.selectObject": "Wähle ein Objekt in der Szenenliste, um sein Mesh zu bearbeiten.",
     "scene2d.invalidEdit": "Diese Änderung überschreitet die eingestellten Grenzen oder erzeugt ungültige Geometrie. Die bisherige Szene bleibt erhalten.",

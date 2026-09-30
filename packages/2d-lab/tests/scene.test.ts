@@ -4,6 +4,7 @@ import {
   defaultEnginePolicy,
   exportSceneSvg,
   moveObject,
+  moveSceneSelection,
   parseScene,
   replaceObjectMesh,
   type Scene2D,
@@ -20,6 +21,20 @@ function example() {
   return addObject(scene, "two", "Second", "triangle");
 }
 describe("independent scene objects", () => {
+  it("selects topology in any object without moving another mesh with the same vertex IDs", () => {
+    const first = addObject({ version: 1, objects: [] }, "a", "A", "rectangle");
+    const scene = addObject(first, "b", "B", "rectangle");
+    for (const selection of [
+      { kind: "vertex", id: "vertex-1" },
+      { kind: "edge", id: "edge-1" },
+      { kind: "face", id: "face-1" },
+    ] as const) {
+      const next = moveSceneSelection(scene, "b", selection, { x: 0, y: -0.2 });
+      expect(next.objects[0]).toEqual(scene.objects[0]);
+      expect(next.objects[1].mesh.vertices[0].y).toBe(-1.2);
+      expect(scene.objects[1].mesh.vertices[0].y).toBe(-1);
+    }
+  });
   it("moves an entire object without changing a neighbour or shared topology", () => {
     const scene = example();
     const moved = moveObject(scene, "one", { x: 3, y: -2 });
@@ -79,7 +94,13 @@ describe("independent scene objects", () => {
     expect(parseScene(JSON.parse(JSON.stringify(scene)))).toEqual(scene);
   });
   it("creates outlines without faces when the host disables face creation", () => {
-    const scene = addObject({ version: 1, objects: [] }, "outline", "Outline", "triangle", { ...defaultEnginePolicy, createFaces: false });
+    const scene = addObject(
+      { version: 1, objects: [] },
+      "outline",
+      "Outline",
+      "triangle",
+      { ...defaultEnginePolicy, createFaces: false },
+    );
     expect(scene.objects[0].mesh.edges).toHaveLength(3);
     expect(scene.objects[0].mesh.faces).toEqual([]);
   });

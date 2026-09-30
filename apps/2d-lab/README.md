@@ -2,7 +2,7 @@
 
 An independent scene workspace at `/apps/2d-lab`, registered in Oskar Lab's launcher. Run `npm run dev -- 2d-lab` from the frontend workspace (port 10038), or `npm run dev` to launch the platform and all apps. `npm run dev -- 2d-lab --standalone` serves this app at `/`.
 
-Object mode displays the entire scene. Select and drag objects, nudge with arrow keys, edit their centers, rename, duplicate or delete them. Vertex, Edge and Face modes edit the selected object's mesh in isolation; return to Object to see the full scene. Empty objects provide a starting point for free drawing. Escape cancels an active gesture. Undo/redo retains up to 50 committed edits.
+Object mode displays the entire scene. Select and drag objects, nudge with arrow keys, edit their centers, rename, duplicate or delete them. Vertex, Edge and Face modes select elements across every object in the same scene. Switching modes preserves the canvas, framing and zoom. Empty objects provide a starting point for free drawing. Escape cancels an active gesture. Undo/redo retains up to 50 committed edits.
 
 The app imports `@oskar-lab/2d-lab/SceneEditor` and owns history and local persistence. The shared engine contains no routing, persistence or Room Studio imports. Room Studio remains a separate consumer of the lower-level mesh editor with its own constraints and X/Z adapter.
 

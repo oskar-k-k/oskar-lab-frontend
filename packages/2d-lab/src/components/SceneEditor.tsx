@@ -1,24 +1,38 @@
 "use client";
 
-import { useId, useRef, useState, type PointerEvent } from "react";
+import {
+  useId,
+  useRef,
+  useState,
+  type PointerEvent,
+  type KeyboardEvent,
+} from "react";
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import {
   addObject,
   defaultEnginePolicy,
   moveObject,
+  moveSceneSelection,
   parseScene,
   replaceObjectMesh,
   type EnginePolicy,
   type Scene2D,
   type SelectionMode,
 } from "../model/scene";
-import { meshBounds, type Point } from "../model/mesh";
+import {
+  meshBounds,
+  createFace,
+  type MeshSelection,
+  type Mesh2D,
+  type Point,
+} from "../model/mesh";
 import {
   defaultMeasurements,
   snapCoordinate,
   type Measurements,
 } from "../model/measurements";
-import Editor2D from "./Editor2D";
+import SceneGeometry from "./SceneGeometry";
+import Inspector2D from "./Inspector2D";
 import Measure from "./Measure";
 import styles from "./SceneEditor.module.css";
 
@@ -64,6 +78,11 @@ export default function SceneEditor({
     value.objects[0]?.id ?? null,
   );
   const [mode, setMode] = useState<SelectionMode>(policy.modes[0] ?? "object");
+  const [selection, setSelection] = useState<MeshSelection>(null);
+  const [drawing, setDrawing] = useState(false);
+  const [anchor, setAnchor] = useState<string | null>(null);
+  const [facePoints, setFacePoints] = useState<string[]>([]);
+  const [newPoint, setNewPoint] = useState<Point>({ x: 0, y: 0 });
   const [draft, setDraft] = useState<Scene2D | null>(null);
   const [error, setError] = useState(false);
   const [frame, setFrame] = useState(() => bounds(value));
@@ -74,6 +93,7 @@ export default function SceneEditor({
     id: string;
     start: Point;
     pointerId: number;
+    selection: MeshSelection;
   } | null>(null);
   const scene = draft ?? value;
   const selected = scene.objects.find((object) => object.id === selectedId);
@@ -88,6 +108,11 @@ export default function SceneEditor({
   };
 
   function select(id: string | null) {
+    if (id !== selectedId) {
+      setSelection(null);
+      setAnchor(null);
+      setFacePoints([]);
+    }
     setSelectedId(id);
     onEvent?.({ type: "selection", objectId: id });
   }
@@ -95,11 +120,13 @@ export default function SceneEditor({
     try {
       const validated = parseScene(next, policy);
       setError(false);
-      if (JSON.stringify(validated) === JSON.stringify(value)) return;
+      if (JSON.stringify(validated) === JSON.stringify(value)) return true;
       onChange(validated);
       onEvent?.({ type: "change", scene: validated });
+      return true;
     } catch {
       setError(true);
+      return false;
     }
   }
   function add(shape: "rectangle" | "triangle" | "empty") {
@@ -134,16 +161,115 @@ export default function SceneEditor({
     const target = point(event);
     const snap = (number: number) =>
       measurements.snap ? snapCoordinate(number, measurements) : number;
-    return moveObject(
-      current.scene,
-      current.id,
-      {
-        x: snap(target.x - current.start.x),
-        y: snap(target.y - current.start.y),
-      },
-      policy,
-    );
+    return translate(current.scene, current.id, current.selection, {
+      x: snap(target.x - current.start.x),
+      y: snap(target.y - current.start.y),
+    });
   }
+  function translate(
+    scene: Scene2D,
+    id: string,
+    target: MeshSelection,
+    delta: Point,
+  ) {
+    return moveSceneSelection(scene, id, target, delta, policy);
+  }
+  function editMesh(mesh: Mesh2D) {
+    if (!selected) return false;
+    try {
+      return commit(replaceObjectMesh(value, selected.id, mesh, policy));
+    } catch {
+      setError(true);
+      return false;
+    }
+  }
+  function fillFace() {
+    if (!selected || !policy.createFaces || facePoints.length < 3) return;
+    const id = crypto.randomUUID();
+    if (editMesh(createFace(selected.mesh, facePoints, id))) {
+      setFacePoints([]);
+      setSelection({ kind: "face", id });
+      setMode("face");
+    }
+  }
+  function appendPoint(position: Point, existingId?: string) {
+    if (!selected) return;
+    const id = existingId ?? crypto.randomUUID();
+    const mesh = selected.mesh;
+    const vertices = existingId
+      ? mesh.vertices
+      : [
+          ...mesh.vertices,
+          {
+            id,
+            x: snapCoordinate(position.x, measurements),
+            y: snapCoordinate(position.y, measurements),
+          },
+        ];
+    const edges =
+      anchor &&
+      anchor !== id &&
+      !mesh.edges.some(
+        (e) =>
+          (e.start === anchor && e.end === id) ||
+          (e.start === id && e.end === anchor),
+      )
+        ? [...mesh.edges, { id: crypto.randomUUID(), start: anchor, end: id }]
+        : mesh.edges;
+    if (editMesh({ ...mesh, vertices, edges })) {
+      setAnchor(id);
+      setSelection({ kind: "vertex", id });
+    }
+  }
+  function begin(
+    event: PointerEvent<SVGElement>,
+    objectId: string,
+    target: MeshSelection,
+  ) {
+    if (event.button !== 0 || !event.isPrimary) return;
+    event.stopPropagation();
+    if (drawing && target?.kind === "vertex" && objectId === selectedId) {
+      appendPoint(point(event), target.id);
+      return;
+    }
+    select(objectId);
+    setSelection(target);
+    gesture.current = {
+      scene: value,
+      id: objectId,
+      selection: target,
+      start: point(event),
+      pointerId: event.pointerId,
+    };
+    svg.current?.setPointerCapture(event.pointerId);
+  }
+  function keyboard(
+    event: KeyboardEvent<SVGElement>,
+    objectId: string,
+    target: MeshSelection,
+  ) {
+    const directions: Record<string, Point> = {
+      ArrowLeft: { x: -measurements.step, y: 0 },
+      ArrowRight: { x: measurements.step, y: 0 },
+      ArrowUp: { x: 0, y: -measurements.step },
+      ArrowDown: { x: 0, y: measurements.step },
+    };
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      select(objectId);
+      setSelection(target);
+    }
+    if (!directions[event.key]) return;
+    event.preventDefault();
+    select(objectId);
+    setSelection(target);
+    try {
+      commit(translate(value, objectId, target, directions[event.key]));
+    } catch {
+      setError(true);
+    }
+  }
+
   function cancel() {
     gesture.current = null;
     setDraft(null);
@@ -200,6 +326,9 @@ export default function SceneEditor({
               onClick={() => {
                 cancel();
                 setMode(item);
+                setSelection(null);
+                setDrawing(false);
+                setAnchor(null);
               }}
             >
               {t(`scene2d.${item}`)}
@@ -338,250 +467,222 @@ export default function SceneEditor({
           )}
         </aside>
         <div className={styles.surface}>
-          {activeMode === "object" ? (
-            <>
-              <div className={styles.viewTools}>
-                <button
-                  onClick={() => {
-                    setFrame(bounds(value));
-                    setZoom(1);
-                  }}
-                >
-                  {t("scene2d.fit")}
-                </button>
-                <button
-                  aria-label={t("lab2d.zoomOut")}
-                  onClick={() => setZoom((z) => Math.max(0.1, z / 1.4))}
-                >
-                  −
-                </button>
-                <button
-                  aria-label={t("lab2d.zoomIn")}
-                  onClick={() => setZoom((z) => Math.min(20, z * 1.4))}
-                >
-                  ＋
-                </button>
-              </div>
-              <svg
-                ref={svg}
-                className={styles.canvas}
-                viewBox={`${view.x} ${view.y} ${size} ${size}`}
-                role="img"
-                aria-label={t("scene2d.canvas")}
-                onPointerDown={(event) => {
-                  if (event.target === event.currentTarget) select(null);
-                }}
-                onPointerMove={(event) => {
-                  try {
-                    const next = moved(event);
-                    if (next) {
-                      setDraft(next);
-                      setError(false);
-                    }
-                  } catch {
-                    setError(true);
-                  }
-                }}
-                onPointerUp={(event) => {
-                  if (!gesture.current) return;
-                  try {
-                    const next = moved(event);
-                    if (next) commit(next);
-                  } catch {
-                    setError(true);
-                  }
-                  gesture.current = null;
-                  setDraft(null);
-                }}
-                onPointerCancel={cancel}
-                onLostPointerCapture={() => {
-                  gesture.current = null;
-                  setDraft(null);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") cancel();
+          <>
+            <div className={styles.viewTools}>
+              <button
+                onClick={() => {
+                  setFrame(bounds(value));
+                  setZoom(1);
                 }}
               >
-                <defs>
-                  <pattern
-                    id={gridId}
-                    width="0.5"
-                    height="0.5"
-                    patternUnits="userSpaceOnUse"
-                  >
-                    <path
-                      d="M .5 0 H 0 V .5"
-                      fill="none"
-                      stroke="#cbd6df"
-                      strokeWidth="0.01"
-                    />
-                  </pattern>
-                </defs>
-                <rect
-                  x={view.x}
-                  y={view.y}
-                  width={size}
-                  height={size}
-                  fill={`url(#${gridId})`}
-                  pointerEvents="none"
+                {t("scene2d.fit")}
+              </button>
+              <button
+                aria-label={t("lab2d.zoomOut")}
+                onClick={() => setZoom((z) => Math.max(0.1, z / 1.4))}
+              >
+                −
+              </button>
+              <button
+                aria-label={t("lab2d.zoomIn")}
+                onClick={() => setZoom((z) => Math.min(20, z * 1.4))}
+              >
+                ＋
+              </button>
+            </div>
+            <svg
+              ref={svg}
+              className={styles.canvas}
+              viewBox={`${view.x} ${view.y} ${size} ${size}`}
+              role="img"
+              aria-label={t("scene2d.canvas")}
+              onPointerDown={(event) => {
+                if (event.target === event.currentTarget) {
+                  if (drawing) appendPoint(point(event));
+                  else {
+                    select(null);
+                    setSelection(null);
+                  }
+                }
+              }}
+              onPointerMove={(event) => {
+                try {
+                  const next = moved(event);
+                  if (next) {
+                    setDraft(next);
+                    setError(false);
+                  }
+                } catch {
+                  setError(true);
+                }
+              }}
+              onPointerUp={(event) => {
+                if (!gesture.current) return;
+                try {
+                  const next = moved(event);
+                  if (next) commit(next);
+                } catch {
+                  setError(true);
+                }
+                gesture.current = null;
+                setDraft(null);
+              }}
+              onPointerCancel={cancel}
+              onLostPointerCapture={() => {
+                gesture.current = null;
+                setDraft(null);
+              }}
+              onKeyDown={(event) => {
+                if (event.key.toLowerCase() === "f") {
+                  event.preventDefault();
+                  fillFace();
+                }
+                if (event.key === "Escape") {
+                  cancel();
+                  setDrawing(false);
+                  setAnchor(null);
+                }
+              }}
+            >
+              <defs>
+                <pattern
+                  id={gridId}
+                  width="0.5"
+                  height="0.5"
+                  patternUnits="userSpaceOnUse"
+                >
+                  <path
+                    d="M .5 0 H 0 V .5"
+                    fill="none"
+                    stroke="#cbd6df"
+                    strokeWidth="0.01"
+                  />
+                </pattern>
+              </defs>
+              <rect
+                x={view.x}
+                y={view.y}
+                width={size}
+                height={size}
+                fill={`url(#${gridId})`}
+                pointerEvents="none"
+              />
+              <path
+                d={`M ${view.x} 0 h ${size} M 0 ${view.y} v ${size}`}
+                stroke="#9aaebe"
+                strokeWidth="0.015"
+                strokeDasharray=".1 .1"
+                pointerEvents="none"
+              />
+              {scene.objects.map((object) => (
+                <SceneGeometry
+                  key={object.id}
+                  object={object}
+                  mode={drawing ? "vertex" : activeMode}
+                  active={selectedId === object.id}
+                  selection={selectedId === object.id ? selection : null}
+                  size={size}
+                  begin={(event, target) => begin(event, object.id, target)}
+                  keyboard={(event, target) =>
+                    keyboard(event, object.id, target)
+                  }
                 />
-                <path
-                  d={`M ${view.x} 0 h ${size} M 0 ${view.y} v ${size}`}
-                  stroke="#9aaebe"
-                  strokeWidth="0.015"
-                  strokeDasharray=".1 .1"
-                  pointerEvents="none"
-                />
-                {scene.objects.map((object) => (
-                  <g
-                    key={object.id}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={object.name}
-                    aria-pressed={selected?.id === object.id}
-                    className={styles.object}
-                    onPointerDown={(event) => {
-                      if (event.button !== 0 || !event.isPrimary) return;
-                      event.stopPropagation();
-                      select(object.id);
-                      gesture.current = {
-                        scene: value,
-                        id: object.id,
-                        start: point(event),
-                        pointerId: event.pointerId,
-                      };
-                      svg.current?.setPointerCapture(event.pointerId);
-                    }}
-                    onKeyDown={(event) => {
-                      const directions: Record<string, Point> = {
-                        ArrowLeft: { x: -measurements.step, y: 0 },
-                        ArrowRight: { x: measurements.step, y: 0 },
-                        ArrowUp: { x: 0, y: -measurements.step },
-                        ArrowDown: { x: 0, y: measurements.step },
-                      };
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        select(object.id);
-                      }
-                      if (directions[event.key]) {
-                        event.preventDefault();
-                        select(object.id);
-                        try {
-                          commit(
-                            moveObject(
-                              value,
-                              object.id,
-                              directions[event.key],
-                              policy,
-                            ),
-                          );
-                        } catch {
-                          setError(true);
-                        }
-                      }
-                    }}
-                  >
-                    {(object.mesh.faces ?? []).map((face) => (
-                      <polygon
-                        key={face.id}
-                        points={face.vertices
-                          .map((id) => {
-                            const v = object.mesh.vertices.find(
-                              (v) => v.id === id,
-                            )!;
-                            return `${v.x},${v.y}`;
-                          })
-                          .join(" ")}
-                        fill={
-                          selected?.id === object.id ? "#73bddc" : "#a8bacb"
-                        }
-                        fillOpacity="0.55"
-                      />
-                    ))}
-                    {object.mesh.edges.map((edge) => {
-                      const a = object.mesh.vertices.find(
-                          (v) => v.id === edge.start,
-                        )!,
-                        b = object.mesh.vertices.find(
-                          (v) => v.id === edge.end,
-                        )!;
-                      return (
-                        <g key={edge.id}>
-                          <line
-                            x1={a.x}
-                            y1={a.y}
-                            x2={b.x}
-                            y2={b.y}
-                            stroke="transparent"
-                            strokeWidth={size / 40}
-                          />
-                          <line
-                            x1={a.x}
-                            y1={a.y}
-                            x2={b.x}
-                            y2={b.y}
-                            stroke={
-                              selected?.id === object.id ? "#147da6" : "#526b80"
-                            }
-                            strokeWidth={size / 300}
-                          />
-                        </g>
-                      );
-                    })}
-                    {object.mesh.vertices.map((vertex) => (
-                      <circle
-                        key={vertex.id}
-                        cx={vertex.x}
-                        cy={vertex.y}
-                        r={size / 180}
-                        fill={
-                          selected?.id === object.id ? "#147da6" : "#526b80"
-                        }
-                      />
-                    ))}
-                    {!!object.mesh.vertices.length && (
-                      <text
-                        x={meshBounds(object.mesh).centerX}
-                        y={meshBounds(object.mesh).minY - size / 45}
-                        textAnchor="middle"
-                        fontSize={size / 65}
-                        fill="#344e62"
-                      >
-                        {object.name}
-                      </text>
-                    )}
-                  </g>
-                ))}
-              </svg>
-              <p className={styles.hint}>{t("scene2d.objectHint")}</p>
-            </>
-          ) : selected ? (
+              ))}
+            </svg>
+            <p className={styles.hint}>{t("scene2d.objectHint")}</p>
+          </>
+        </div>
+        <div className={styles.details}>
+          {selected && activeMode !== "object" ? (
             <>
-              <p className={styles.hint}>
-                {t("scene2d.editing", { name: selected.name })}
-              </p>
-              <Editor2D
-                key={`${selected.id}-${activeMode}`}
-                value={selected.mesh}
-                selectionMode={activeMode}
+              <button
+                aria-pressed={drawing}
+                onClick={() => {
+                  cancel();
+                  setDrawing(!drawing);
+                  setMode("vertex");
+                  setAnchor(selection?.kind === "vertex" ? selection.id : null);
+                }}
+              >
+                {t("lab2d.drawEdges")}
+              </button>
+              {drawing && (
+                <>
+                  <p>{t("lab2d.drawHint")}</p>
+                  <details>
+                    <summary>{t("lab2d.addByCoordinates")}</summary>
+                    <Measure
+                      label={t("lab2d.positionX")}
+                      value={newPoint.x}
+                      unit={measurements.unit}
+                      step={measurements.step}
+                      min={-policy.mesh.coordinateLimit}
+                      max={policy.mesh.coordinateLimit}
+                      onChange={(x) => setNewPoint((p) => ({ ...p, x }))}
+                    />
+                    <Measure
+                      label={t("lab2d.positionY")}
+                      value={newPoint.y}
+                      unit={measurements.unit}
+                      step={measurements.step}
+                      min={-policy.mesh.coordinateLimit}
+                      max={policy.mesh.coordinateLimit}
+                      onChange={(y) => setNewPoint((p) => ({ ...p, y }))}
+                    />
+                    <button onClick={() => appendPoint(newPoint)}>
+                      {t("lab2d.addVertex")}
+                    </button>
+                  </details>
+                </>
+              )}
+              <Inspector2D
+                plan={selected.mesh}
+                selection={selection}
                 measurements={measurements}
                 constraints={policy.mesh}
-                allowFaceCreation={policy.createFaces}
-                onChange={(mesh) => {
-                  try {
-                    commit(replaceObjectMesh(value, selected.id, mesh, policy));
-                  } catch {
-                    setError(true);
-                  }
+                commit={editMesh}
+                setSelection={(target) => {
+                  setSelection(target);
+                  if (target) setMode(target.kind);
                 }}
-                undo={undo}
-                redo={redo}
-                canUndo={canUndo}
-                canRedo={canRedo}
+                extend={(id) => {
+                  setAnchor(id);
+                  setDrawing(true);
+                  setMode("vertex");
+                }}
+                onDeleteVertex={() => setAnchor(null)}
               />
+              {policy.createFaces && (
+                <details>
+                  <summary>{t("lab2d.createFace")}</summary>
+                  <p>{t("scene2d.facePicker")}</p>
+                  {selected.mesh.vertices.map((v, index) => (
+                    <label key={v.id}>
+                      <input
+                        type="checkbox"
+                        checked={facePoints.includes(v.id)}
+                        onChange={() =>
+                          setFacePoints((ids) =>
+                            ids.includes(v.id)
+                              ? ids.filter((id) => id !== v.id)
+                              : [...ids, v.id],
+                          )
+                        }
+                      />
+                      {t("lab2d.vertexNumber", { number: index + 1 })}
+                      {facePoints.includes(v.id)
+                        ? ` · ${facePoints.indexOf(v.id) + 1}`
+                        : ""}
+                    </label>
+                  ))}
+                  <button disabled={facePoints.length < 3} onClick={fillFace}>
+                    {t("lab2d.fillFace")}
+                  </button>
+                </details>
+              )}
             </>
           ) : (
-            <p className={styles.empty}>{t("scene2d.selectObject")}</p>
+            <p>{t("scene2d.objectHint")}</p>
           )}
         </div>
       </div>

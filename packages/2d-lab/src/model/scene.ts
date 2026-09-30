@@ -6,7 +6,28 @@ import {
   type Mesh2D,
   type MeshConstraints,
   type Point,
+  type MeshSelection,
+  translateSelection,
 } from "./mesh";
+
+/** Moves an object or one of its topology elements, resolving IDs inside the owning object only. */
+export function moveSceneSelection(
+  scene: Scene2D,
+  objectId: string,
+  selection: MeshSelection,
+  delta: Point,
+  policy = defaultEnginePolicy,
+): Scene2D {
+  if (!selection) return moveObject(scene, objectId, delta, policy);
+  const object = scene.objects.find((object) => object.id === objectId);
+  if (!object) throw new Error("Unknown object");
+  return replaceObjectMesh(
+    scene,
+    objectId,
+    translateSelection(object.mesh, selection, delta),
+    policy,
+  );
+}
 
 /** Independent mesh with a stable identity and display name. Coordinates are in scene metres. */
 export type SceneObject = { id: string; name: string; mesh: Mesh2D };

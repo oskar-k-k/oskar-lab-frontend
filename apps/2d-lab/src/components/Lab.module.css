@@ -96,7 +96,7 @@
   color: #113827;
   border-color: #a9e3c1;
 }
-.app :focus-visible {
+.app :is(button, input, textarea, select, summary, a):focus-visible {
   outline: 3px solid #8acaf1;
   outline-offset: 3px;
 }
