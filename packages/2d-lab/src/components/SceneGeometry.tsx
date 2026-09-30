@@ -64,7 +64,7 @@ export default function SceneGeometry({
         ? selection === null
         : selection?.kind === kind && selection.id === id,
     )
-      ? "#147da6"
+      ? "var(--scene-selected)"
       : "#607f92";
   return (
     <g className={styles.object} {...hit("object", null, object.name)}>
@@ -90,7 +90,7 @@ export default function SceneGeometry({
                 ? selection === null
                 : selection?.kind === "face" && selection.id === face.id,
             )
-              ? "#73bddc"
+              ? "var(--scene-selected-fill)"
               : "#a8bacb"
           }
           fillOpacity=".55"

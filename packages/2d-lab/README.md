@@ -90,3 +90,6 @@ The framework-independent `@oskar-lab/2d-lab/actions` export exposes `applySelec
 `defaultEnginePolicy` uses `freeDrawingConstraints` (unbounded counts/coordinates, zero minimum distance, intersections and degenerate faces allowed). `MeshConstraints.allowDegenerateFaces` controls geometric face checks independently of topology integrity. Use `defaultConstraints` or explicit domain limits when embedding a constrained editor. Policies are runtime configuration; Infinity values are not part of saved scene JSON.
 
 Free-scene validation skips pairwise proximity/intersection checks and uses indexed topology lookups. Pointer previews are coalesced to one update per animation frame, then committed exactly once on release. No geometry warning banner changes the canvas layout during a gesture. Unexpected rejected commands receive a small status message below the fixed canvas; constrained hosts keep the last valid preview until release.
+
+
+Selection is highlighted in orange across geometry and the outliner. Selection modes use accessible SVG icon buttons with translated hover/focus tooltips. The context wheel uses clickable annular segments with icons and labels, including nested command rings. Mouse focus does not draw a canvas border; keyboard focus retains an orange indicator.

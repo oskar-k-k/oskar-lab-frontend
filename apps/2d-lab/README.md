@@ -37,3 +37,6 @@ Every command is validated against the host policy and commits once for undo/red
 The independent app uses the engine's free-drawing policy: points can coincide, edges may collapse, faces may overlap or self-cross, and there are no artificial coordinate or element-count caps. These states survive save/load and JSON/SVG export. Structural file checks and the existing file-size boundary remain. Restricted embedding hosts can still opt into domain-specific geometry rules.
 
 Dragging renders at most one preview per animation frame, without pairwise geometry rejection or a layout-shifting warning banner.
+
+
+Selection is highlighted in orange across geometry and the outliner. Selection modes use accessible SVG icon buttons with translated hover/focus tooltips. The context wheel uses clickable annular segments with icons and labels, including nested command rings. Mouse focus does not draw a canvas border; keyboard focus retains an orange indicator.

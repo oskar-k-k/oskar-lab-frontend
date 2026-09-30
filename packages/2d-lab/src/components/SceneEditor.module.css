@@ -1,4 +1,6 @@
 .editor {
+  --scene-selected: #d66a13;
+  --scene-selected-fill: #ffa34d;
   --scene-border: #cbd6df;
   background: #eaf0f5;
   color: #253e50;
@@ -24,9 +26,9 @@
   cursor: default;
 }
 .editor button[aria-pressed="true"] {
-  border-color: #278db6;
-  background: #d2eaf5;
-  color: #145575;
+  border-color: var(--scene-selected);
+  background: #ffe3c4;
+  color: #8e430a;
 }
 .editor :is(button, input, select, summary):focus-visible {
   outline: 3px solid #278db6;
@@ -198,4 +200,39 @@
     border-left: 0;
     border-top: 1px solid var(--scene-border);
   }
+}
+
+.canvas:focus {
+  outline: none;
+}
+.canvas:focus-visible {
+  outline: 2px solid var(--scene-selected);
+  outline-offset: -2px;
+}
+.modes > button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  min-width: 44px;
+  min-height: 44px;
+}
+.modeTooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #272b31;
+  color: white;
+  border-radius: 5px;
+  padding: 5px 9px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 5;
+}
+.modes > button:hover .modeTooltip,
+.modes > button:focus-visible .modeTooltip {
+  opacity: 1;
 }

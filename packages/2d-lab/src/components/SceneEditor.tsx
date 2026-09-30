@@ -41,6 +41,7 @@ import {
   type SelectionAction,
 } from "../model/selectionActions";
 import SelectionWheel, { type WheelItem } from "./SelectionWheel";
+import LabIcon, { type LabIconName } from "./LabIcon";
 import SceneGeometry from "./SceneGeometry";
 import Inspector2D from "./Inspector2D";
 import Measure from "./Measure";
@@ -603,7 +604,7 @@ export default function SceneEditor({
     const command = (
       action: SelectionAction,
       label: Parameters<typeof t>[0],
-      icon: string,
+      icon: LabIconName,
     ): WheelItem => ({
       id: action,
       label: t(label),
@@ -622,14 +623,14 @@ export default function SceneEditor({
         {
           id: "point",
           label: t("scene2d.wheelPoint"),
-          icon: "•",
+          icon: "point",
           disabled,
           run: () => createAtCursor(false),
         },
         {
           id: "edge",
           label: t("lab2d.drawEdges"),
-          icon: "╱",
+          icon: "draw",
           disabled,
           run: () => createAtCursor(true),
         },
@@ -640,19 +641,19 @@ export default function SceneEditor({
         creation.push({
           id: shape,
           label: t(`scene2d.${shape}`),
-          icon: shape === "rectangle" ? "□" : "△",
+          icon: shape === "rectangle" ? "rectangle" : "triangle",
           disabled: value.objects.length >= policy.maxObjects,
           run: () => add(shape, wheel.point),
         });
     if (!targets.length) return creation;
     const items: WheelItem[] = [];
     if (kind === "edge" && sameKind)
-      items.push(command("split", "lab2d.splitEdge", "⊙"));
+      items.push(command("split", "lab2d.splitEdge", "split"));
     if (kind === "vertex" && sameKind && targets.length === 1)
       items.push({
         id: "extend",
         label: t("lab2d.extendVertex"),
-        icon: "↗",
+        icon: "draw",
         run: () => {
           select(targets[0].objectId);
           setAnchor(targets[0].target!.id);
@@ -661,16 +662,16 @@ export default function SceneEditor({
         },
       });
     if (kind === "vertex" && sameKind && targets.length === 2)
-      items.push(command("connect", "scene2d.wheelConnect", "↔"));
+      items.push(command("connect", "scene2d.wheelConnect", "connect"));
     if (
       sameKind &&
       policy.createFaces &&
       ((kind === "vertex" && targets.length >= 3) ||
         (kind === "edge" && targets.length >= 2))
     )
-      items.push(command("face", "lab2d.createFace", "▰"));
+      items.push(command("face", "lab2d.createFace", "face"));
     if (kind === "object" && sameKind && policy.createObjects)
-      items.push(command("duplicate", "scene2d.duplicate", "⧉"));
+      items.push(command("duplicate", "scene2d.duplicate", "duplicate"));
     const remove = command(
       "delete",
       kind === "edge"
@@ -678,19 +679,21 @@ export default function SceneEditor({
         : kind === "face"
           ? "scene2d.wheelOnlyFaces"
           : "scene2d.wheelDelete",
-      "×",
+      "delete",
     );
     if (kind === "edge" || kind === "face") {
       const children = [remove];
       if (kind === "face")
-        children.push(command("deleteBoundary", "scene2d.wheelWithEdges", "⌁"));
+        children.push(
+          command("deleteBoundary", "scene2d.wheelWithEdges", "boundary"),
+        );
       children.push(
-        command("deleteVertices", "scene2d.wheelWithVertices", "×"),
+        command("deleteVertices", "scene2d.wheelWithVertices", "delete"),
       );
       items.push({
         id: "deleteMenu",
         label: t("scene2d.wheelDelete"),
-        icon: "×",
+        icon: "delete",
         children,
       });
     } else items.push(remove);
@@ -698,7 +701,7 @@ export default function SceneEditor({
       items.push({
         id: "addMenu",
         label: t("scene2d.wheelAdd"),
-        icon: "＋",
+        icon: "add",
         children: creation,
       });
     return items;
@@ -729,6 +732,8 @@ export default function SceneEditor({
             <button
               key={item}
               aria-pressed={activeMode === item}
+              aria-label={t(`scene2d.${item}`)}
+              title={t(`scene2d.${item}`)}
               onClick={() => {
                 cancel();
                 setMode(item);
@@ -738,7 +743,8 @@ export default function SceneEditor({
                 setAnchor(null);
               }}
             >
-              {t(`scene2d.${item}`)}
+              <LabIcon name={item} />
+              <span className={styles.modeTooltip}>{t(`scene2d.${item}`)}</span>
             </button>
           ))}
         </div>
