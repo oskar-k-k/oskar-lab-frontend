@@ -19,6 +19,6 @@
     "@oskar-lab/auth": "*",
     "@oskar-lab/platform-shell": "*",
     "@oskar-lab/config": "*",
-    "@oskar-lab/blueprint": "*"
+    "@oskar-lab/2d-lab": "*"
   }
 }

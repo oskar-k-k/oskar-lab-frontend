@@ -1,16 +1,17 @@
 "use client";
-import BlueprintEditor from "@oskar-lab/blueprint/BlueprintEditor";
+import { closedOutline } from "@oskar-lab/2d-lab/model";
+import Editor2D from "@oskar-lab/2d-lab/Editor2D";
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import {
-  fromBlueprint,
-  toBlueprint,
+  fromMesh,
+  toMesh,
   roomConstraints,
   type FloorPlan,
 } from "../model/floorPlan";
 import type { Room } from "../model/room";
 import Measure from "./Measure";
 
-/** Adapts Room Studio's persisted X/Z room graph to the independent Blueprint editor. */
+/** Adapts Room Studio's persisted X/Z room graph to the independent Mesh2D editor. */
 export default function FloorPlanEditor({
   room,
   onChange,
@@ -29,10 +30,15 @@ export default function FloorPlanEditor({
   canRedo: boolean;
 }) {
   const { t } = useI18n();
+  const mesh = toMesh(room.plan);
+  const outline = closedOutline(mesh);
+  if (outline)
+    mesh.faces = [{ id: "room-floor", vertices: outline.map((v) => v.id) }];
   return (
-    <BlueprintEditor
-      value={toBlueprint(room.plan)}
-      onChange={(value) => onChange(fromBlueprint(value))}
+    <Editor2D
+      value={mesh}
+      allowFaceCreation={false}
+      onChange={(value) => onChange(fromMesh(value))}
       measurements={room.measurements}
       constraints={roomConstraints}
       undo={undo}

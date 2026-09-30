@@ -381,7 +381,7 @@
   min-width: 0;
 }
 .editor {
-  --ink: var(--blueprint-ink, #243d50);
+  --ink: var(--lab2d-ink, #243d50);
   --muted: #596d7b;
   --line: #cbd9e2;
   --accent: #2876a2;
@@ -517,4 +517,32 @@
     border: 0;
     border-top: 1px solid var(--line, #cbd9e2);
   }
+}
+
+.faceHandle {
+  cursor: grab;
+  stroke: #6a98b0;
+  stroke-width: 0.025;
+}
+.faceHandle:focus-visible {
+  outline: none;
+  stroke: #d99b36;
+  stroke-width: 0.06;
+}
+.faceHandle:active,
+.edgeHandle:active {
+  cursor: grabbing;
+}
+.faceCreator {
+  margin-top: 14px;
+  font-size: 12px;
+}
+.faceCreator summary {
+  cursor: pointer;
+}
+.faceCreator label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
 }

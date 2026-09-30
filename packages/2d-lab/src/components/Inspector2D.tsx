@@ -1,20 +1,28 @@
 "use client";
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import {
+  deleteSelection,
+  faceArea,
+  selectionCenter,
+  translateSelection,
   connectedEdges,
   edgeLength,
   moveVertex,
   splitEdge,
-  type Blueprint,
-  type BlueprintSelection,
-  type BlueprintConstraints,
-} from "../model/blueprint";
-import { formatLength, type Measurements } from "../model/measurements";
+  type Mesh2D,
+  type MeshSelection,
+  type MeshConstraints,
+} from "../model/mesh";
+import {
+  formatArea,
+  formatLength,
+  type Measurements,
+} from "../model/measurements";
 import Measure from "./Measure";
-import styles from "./Blueprint.module.css";
+import styles from "./Lab2D.module.css";
 
 /** Shows exact coordinates and topology actions for the current selection. */
-export default function BlueprintInspector({
+export default function Inspector2D({
   plan,
   selection,
   measurements,
@@ -24,12 +32,12 @@ export default function BlueprintInspector({
   extend,
   onDeleteVertex,
 }: {
-  plan: Blueprint;
-  selection: BlueprintSelection;
+  plan: Mesh2D;
+  selection: MeshSelection;
   measurements: Measurements;
-  constraints: BlueprintConstraints;
-  commit: (plan: Blueprint) => boolean;
-  setSelection: (selection: BlueprintSelection) => void;
+  constraints: MeshConstraints;
+  commit: (plan: Mesh2D) => boolean;
+  setSelection: (selection: MeshSelection) => void;
   extend: (id: string) => void;
   onDeleteVertex: () => void;
 }) {
@@ -42,22 +50,27 @@ export default function BlueprintInspector({
     selection?.kind === "edge"
       ? plan.edges.find((e) => e.id === selection.id)
       : undefined;
+  const selectedFace =
+    selection?.kind === "face"
+      ? plan.faces?.find((face) => face.id === selection.id)
+      : undefined;
+  const center = selectionCenter(plan, selection);
   const length = (value: number) =>
     formatLength(value, measurements.unit, locale);
   const vertexName = (id: string) =>
-    t("blueprint.vertexNumber", {
+    t("lab2d.vertexNumber", {
       number: plan.vertices.findIndex((v) => v.id === id) + 1,
     });
   return (
     <aside className={`${styles.inspector} ${styles.planInspector}`}>
-      <p className={styles.eyebrow}>{t("blueprint.inspector")}</p>
+      <p className={styles.eyebrow}>{t("lab2d.inspector")}</p>
       {selectedVertex ? (
         <>
           <h2>{vertexName(selectedVertex.id)}</h2>
-          <p>{t("blueprint.vertexHint")}</p>
+          <p>{t("lab2d.vertexHint")}</p>
           <div className={styles.measureGrid} key={selectedVertex.id}>
             <Measure
-              label={t("blueprint.positionX")}
+              label={t("lab2d.positionX")}
               value={selectedVertex.x}
               min={-constraints.coordinateLimit}
               max={constraints.coordinateLimit}
@@ -73,7 +86,7 @@ export default function BlueprintInspector({
               }
             />
             <Measure
-              label={t("blueprint.positionY")}
+              label={t("lab2d.positionY")}
               value={selectedVertex.y}
               min={-constraints.coordinateLimit}
               max={constraints.coordinateLimit}
@@ -89,7 +102,7 @@ export default function BlueprintInspector({
               }
             />
           </div>
-          <h2>{t("blueprint.connectedEdges")}</h2>
+          <h2>{t("lab2d.connectedEdges")}</h2>
           <div className={styles.connectedList}>
             {connectedEdges(plan, selectedVertex.id).map((edge) => (
               <button
@@ -113,35 +126,24 @@ export default function BlueprintInspector({
             }
             onClick={() => extend(selectedVertex.id)}
           >
-            {t("blueprint.extendVertex")}
+            {t("lab2d.extendVertex")}
           </button>
           <button
             className={styles.removePlan}
             onClick={() => {
-              if (
-                commit({
-                  vertices: plan.vertices.filter(
-                    (vertex) => vertex.id !== selectedVertex.id,
-                  ),
-                  edges: plan.edges.filter(
-                    (edge) =>
-                      edge.start !== selectedVertex.id &&
-                      edge.end !== selectedVertex.id,
-                  ),
-                })
-              ) {
+              if (commit(deleteSelection(plan, selection))) {
                 setSelection(null);
                 onDeleteVertex();
               }
             }}
           >
-            {t("blueprint.deleteVertex")}
+            {t("lab2d.deleteVertex")}
           </button>
         </>
       ) : selectedEdge ? (
         <>
           <h2>
-            {t("blueprint.edgeNumber", {
+            {t("lab2d.edgeNumber", {
               number:
                 plan.edges.findIndex((edge) => edge.id === selectedEdge.id) + 1,
             })}
@@ -170,31 +172,79 @@ export default function BlueprintInspector({
                 setSelection({ kind: "vertex", id });
             }}
           >
-            {t("blueprint.splitEdge")}
+            {t("lab2d.splitEdge")}
           </button>
           <button
             className={styles.removePlan}
             onClick={() => {
-              if (
-                commit({
-                  ...plan,
-                  edges: plan.edges.filter(
-                    (edge) => edge.id !== selectedEdge.id,
-                  ),
-                })
-              )
+              if (commit(deleteSelection(plan, selection)))
                 extend(selectedEdge.start);
             }}
           >
-            {t("blueprint.deleteEdge")}
+            {t("lab2d.deleteEdge")}
           </button>
-          <p>{t("blueprint.deleteEdgeHint")}</p>
+          <p>{t("lab2d.deleteEdgeHint")}</p>
+        </>
+      ) : selectedFace ? (
+        <>
+          <h2>
+            {t("lab2d.faceNumber", {
+              number:
+                (plan.faces ?? []).findIndex((f) => f.id === selectedFace.id) +
+                1,
+            })}
+          </h2>
+          <p>
+            {formatArea(
+              faceArea(plan, selectedFace),
+              measurements.unit,
+              locale,
+            )}
+          </p>
+          <p>{t("lab2d.faceMoveHint")}</p>
+          <button
+            onClick={() => {
+              if (commit(deleteSelection(plan, selection))) setSelection(null);
+            }}
+          >
+            {t("lab2d.deleteFace")}
+          </button>
         </>
       ) : (
         <div className={styles.emptySelection}>
           <span>◇</span>
-          <h2>{t("blueprint.selectVertex")}</h2>
-          <p>{t("blueprint.vertexSelectionHint")}</p>
+          <h2>{t("lab2d.selectVertex")}</h2>
+          <p>{t("lab2d.vertexSelectionHint")}</p>
+        </div>
+      )}
+      {(selectedEdge || selectedFace) && (
+        <div className={styles.measureGrid} key={selection?.id}>
+          <Measure
+            label={t("lab2d.centerX")}
+            value={center.x}
+            min={-constraints.coordinateLimit}
+            max={constraints.coordinateLimit}
+            unit={measurements.unit}
+            step={measurements.step}
+            onChange={(x) =>
+              commit(
+                translateSelection(plan, selection, { x: x - center.x, y: 0 }),
+              )
+            }
+          />
+          <Measure
+            label={t("lab2d.centerY")}
+            value={center.y}
+            min={-constraints.coordinateLimit}
+            max={constraints.coordinateLimit}
+            unit={measurements.unit}
+            step={measurements.step}
+            onChange={(y) =>
+              commit(
+                translateSelection(plan, selection, { x: 0, y: y - center.y }),
+              )
+            }
+          />
         </div>
       )}
     </aside>

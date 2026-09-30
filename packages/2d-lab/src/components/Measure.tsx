@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import { fromDisplay, toDisplay, type Unit } from "../model/measurements";
-import styles from "./Blueprint.module.css";
+import styles from "./Lab2D.module.css";
 
 /** Commits a bounded measurement on blur or Enter, preserving the previous value for invalid input. */
 export default function Measure({
@@ -58,7 +58,7 @@ export default function Measure({
       />
       {invalid && (
         <span role="alert">
-          {t("blueprint.numberRange", { min: display(min), max: display(max) })}
+          {t("lab2d.numberRange", { min: display(min), max: display(max) })}
         </span>
       )}
     </label>

@@ -6,12 +6,12 @@ import {
   edgeLength,
   moveVertex,
   outlineArea,
-  parseBlueprint,
-  rectangleBlueprint,
+  parseMesh,
+  rectangleMesh,
   splitEdge,
-  validateBlueprint,
-  type Blueprint,
-} from "../src/model/blueprint";
+  validateMesh,
+  type Mesh2D,
+} from "../src/model/mesh";
 import {
   defaultMeasurements,
   fromDisplay,
@@ -19,7 +19,7 @@ import {
   toDisplay,
 } from "../src/model/measurements";
 
-const branch: Blueprint = {
+const branch: Mesh2D = {
   vertices: [
     { id: "a", x: 0, y: 0 },
     { id: "b", x: 2, y: 0 },
@@ -32,17 +32,17 @@ const branch: Blueprint = {
     { id: "ad", start: "a", end: "d" },
   ],
 };
-describe("independent Blueprint graph", () => {
+describe("independent Mesh2D graph", () => {
   it("accepts branching graphs by default and applies a consumer degree restriction", () => {
-    expect(validateBlueprint(branch)).toBeNull();
+    expect(validateMesh(branch)).toBeNull();
     expect(connectedEdges(branch, "a")).toHaveLength(3);
-    expect(
-      validateBlueprint(branch, { ...defaultConstraints, maxDegree: 2 }),
-    ).toBe("connections");
+    expect(validateMesh(branch, { ...defaultConstraints, maxDegree: 2 })).toBe(
+      "connections",
+    );
     expect(closedOutline(branch)).toBeNull();
   });
   it("lets the consuming product decide whether edges may cross", () => {
-    const graph: Blueprint = {
+    const graph: Mesh2D = {
       vertices: [
         { id: "a", x: -1, y: -1 },
         { id: "b", x: 1, y: 1 },
@@ -54,9 +54,9 @@ describe("independent Blueprint graph", () => {
         { id: "cd", start: "c", end: "d" },
       ],
     };
-    expect(validateBlueprint(graph)).toBeNull();
+    expect(validateMesh(graph)).toBeNull();
     expect(
-      validateBlueprint(graph, {
+      validateMesh(graph, {
         ...defaultConstraints,
         allowIntersections: false,
       }),
@@ -64,7 +64,7 @@ describe("independent Blueprint graph", () => {
   });
   it("round-trips plain JSON without retaining unknown fields or shared references", () => {
     const input = { ...branch, room: "not part of this model" };
-    const restored = parseBlueprint(JSON.parse(JSON.stringify(input)));
+    const restored = parseMesh(JSON.parse(JSON.stringify(input)));
     expect(restored).toEqual(branch);
     expect(restored).not.toBe(branch);
     expect(restored).not.toHaveProperty("room");
@@ -80,20 +80,20 @@ describe("independent Blueprint graph", () => {
         edges: [...branch.edges, { id: "duplicate", start: "b", end: "a" }],
       },
     ])
-      expect(() => parseBlueprint(value)).toThrow();
+      expect(() => parseMesh(value)).toThrow();
   });
   it("enforces configurable coordinates, spacing and element limits", () => {
     expect(
-      validateBlueprint(branch, { ...defaultConstraints, coordinateLimit: 1 }),
+      validateMesh(branch, { ...defaultConstraints, coordinateLimit: 1 }),
     ).toBe("coordinates");
     expect(
-      validateBlueprint(branch, { ...defaultConstraints, minDistance: 3 }),
+      validateMesh(branch, { ...defaultConstraints, minDistance: 3 }),
     ).toBe("shortEdge");
     expect(
-      validateBlueprint(branch, { ...defaultConstraints, maxVertices: 3 }),
+      validateMesh(branch, { ...defaultConstraints, maxVertices: 3 }),
     ).toBe("limit");
     expect(() =>
-      parseBlueprint(branch, { ...defaultConstraints, maxEdges: 2 }),
+      parseMesh(branch, { ...defaultConstraints, maxEdges: 2 }),
     ).toThrow();
   });
   it("moves a branch junction immutably, retaining edge identities", () => {
@@ -113,7 +113,7 @@ describe("independent Blueprint graph", () => {
     });
   });
   it("measures closed outlines independently of array order and edge direction", () => {
-    const graph = rectangleBlueprint(5, 4);
+    const graph = rectangleMesh(5, 4);
     graph.edges = graph.edges
       .reverse()
       .map((e) => ({ ...e, start: e.end, end: e.start }));

@@ -1,11 +1,11 @@
 {
-  "name": "@oskar-lab/blueprint",
+  "name": "@oskar-lab/2d-lab",
   "version": "0.1.0",
   "private": true,
   "exports": {
-    "./model": "./src/model/blueprint.ts",
+    "./model": "./src/model/mesh.ts",
     "./measurements": "./src/model/measurements.ts",
-    "./BlueprintEditor": "./src/components/BlueprintEditor.tsx",
+    "./Editor2D": "./src/components/Editor2D.tsx",
     "./Measure": "./src/components/Measure.tsx",
     "./MeasurementSettings": "./src/components/MeasurementSettings.tsx"
   },

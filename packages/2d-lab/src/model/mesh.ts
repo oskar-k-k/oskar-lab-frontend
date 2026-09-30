@@ -1,21 +1,34 @@
 export type Point = { x: number; y: number };
 export type Vertex = Point & { id: string };
 export type Edge = { id: string; start: string; end: string };
-export type Blueprint = { vertices: Vertex[]; edges: Edge[] };
-export type BlueprintSelection = { kind: "vertex" | "edge"; id: string } | null;
-export type BlueprintError =
-  "limit" | "coordinates" | "shortEdge" | "intersection" | "connections";
+/** Ordered boundary vertices; adjacent pairs must be connected by mesh edges. */
+export type Face = { id: string; vertices: string[] };
+/** Serializable 2D topology. Omitted faces support older graph-only documents. */
+export type Mesh2D = { vertices: Vertex[]; edges: Edge[]; faces?: Face[] };
+export type MeshSelection = {
+  kind: "vertex" | "edge" | "face";
+  id: string;
+} | null;
+export type MeshError =
+  | "limit"
+  | "coordinates"
+  | "shortEdge"
+  | "intersection"
+  | "connections"
+  | "faces";
 /** Validation policy supplied by the consuming product; values use stored metres. */
-export type BlueprintConstraints = {
+export type MeshConstraints = {
   maxVertices: number;
   maxEdges: number;
   coordinateLimit: number;
   minDistance: number;
   maxDegree: number;
   allowIntersections: boolean;
+  maxFaces?: number;
 };
 /** General drawing policy: supports open, disconnected and branching graphs. */
-export const defaultConstraints: BlueprintConstraints = {
+export const defaultConstraints: MeshConstraints = {
+  maxFaces: 256,
   maxVertices: 256,
   maxEdges: 512,
   coordinateLimit: 1000,
@@ -27,7 +40,7 @@ export const defaultConstraints: BlueprintConstraints = {
 const epsilon = 1e-7;
 
 /** Creates the four connected vertices of a centred rectangle. */
-export function rectangleBlueprint(width: number, height: number): Blueprint {
+export function rectangleMesh(width: number, height: number): Mesh2D {
   const vertices = [
     { id: "vertex-1", x: -width / 2, y: -height / 2 },
     { id: "vertex-2", x: width / 2, y: -height / 2 },
@@ -45,7 +58,7 @@ export function rectangleBlueprint(width: number, height: number): Blueprint {
 }
 
 /** Returns the drawing envelope, including off-centre and unfinished plans. */
-export function blueprintBounds(plan: Blueprint) {
+export function meshBounds(plan: Mesh2D) {
   if (!plan.vertices.length)
     return {
       minX: -2.5,
@@ -74,14 +87,14 @@ export function blueprintBounds(plan: Blueprint) {
 }
 
 /** Measures an edge in metres. */
-export function edgeLength(plan: Blueprint, edge: Edge): number {
+export function edgeLength(plan: Mesh2D, edge: Edge): number {
   const start = plan.vertices.find((vertex) => vertex.id === edge.start);
   const end = plan.vertices.find((vertex) => vertex.id === edge.end);
   return start && end ? Math.hypot(end.x - start.x, end.y - start.y) : 0;
 }
 
 /** Lists the edges incident to a vertex without assuming array order. */
-export function connectedEdges(plan: Blueprint, id: string): Edge[] {
+export function connectedEdges(plan: Mesh2D, id: string): Edge[] {
   return plan.edges.filter((edge) => edge.start === id || edge.end === id);
 }
 
@@ -111,10 +124,10 @@ function intersects(a: Point, b: Point, c: Point, d: Point) {
 }
 
 /** Validates graph integrity and the supplied topology policy; open graphs are allowed. */
-export function validateBlueprint(
-  plan: Blueprint,
-  constraints: BlueprintConstraints = defaultConstraints,
-): BlueprintError | null {
+export function validateMesh(
+  plan: Mesh2D,
+  constraints: MeshConstraints = defaultConstraints,
+): MeshError | null {
   if (
     plan.vertices.length > constraints.maxVertices ||
     plan.edges.length > constraints.maxEdges
@@ -181,23 +194,26 @@ export function validateBlueprint(
         return "intersection";
     }
   }
-  return null;
+  return validateFaces(plan, constraints.maxFaces ?? 256);
 }
 
 /** Returns a single closed outline in positive winding order, or null for an open draft. */
-export function closedOutline(plan: Blueprint): Vertex[] | null {
+export function closedOutline(plan: Mesh2D): Vertex[] | null {
   if (
     plan.vertices.length < 3 ||
     plan.edges.length !== plan.vertices.length ||
-    validateBlueprint(plan, {
-      ...defaultConstraints,
-      maxVertices: plan.vertices.length,
-      maxEdges: plan.edges.length,
-      coordinateLimit: Number.MAX_VALUE,
-      minDistance: epsilon,
-      maxDegree: 2,
-      allowIntersections: false,
-    })
+    validateMesh(
+      { ...plan, faces: [] },
+      {
+        ...defaultConstraints,
+        maxVertices: plan.vertices.length,
+        maxEdges: plan.edges.length,
+        coordinateLimit: Number.MAX_VALUE,
+        minDistance: epsilon,
+        maxDegree: 2,
+        allowIntersections: false,
+      },
+    )
   )
     return null;
   const ordered: Vertex[] = [];
@@ -236,17 +252,13 @@ function signedArea(points: Point[]) {
 }
 
 /** Returns enclosed area in square metres only for a closed outline. */
-export function outlineArea(plan: Blueprint): number | null {
+export function outlineArea(plan: Mesh2D): number | null {
   const outline = closedOutline(plan);
   return outline ? Math.abs(signedArea(outline)) : null;
 }
 
 /** Moves one vertex without mutating its neighbours or edge identities. */
-export function moveVertex(
-  plan: Blueprint,
-  id: string,
-  point: Point,
-): Blueprint {
+export function moveVertex(plan: Mesh2D, id: string, point: Point): Mesh2D {
   return {
     ...plan,
     vertices: plan.vertices.map((vertex) =>
@@ -257,16 +269,31 @@ export function moveVertex(
 
 /** Adds an intermediate vertex to an edge, preserving its two connected neighbours. */
 export function splitEdge(
-  plan: Blueprint,
+  plan: Mesh2D,
   edgeId: string,
   vertexId: string,
   newEdgeId: string,
-): Blueprint {
+): Mesh2D {
   const edge = plan.edges.find((edge) => edge.id === edgeId);
   if (!edge) return plan;
   const a = plan.vertices.find((vertex) => vertex.id === edge.start)!;
   const b = plan.vertices.find((vertex) => vertex.id === edge.end)!;
   return {
+    ...plan,
+    ...(plan.faces
+      ? {
+          faces: plan.faces.map((face) => ({
+            ...face,
+            vertices: face.vertices.flatMap((id, index) => {
+              const next = face.vertices[(index + 1) % face.vertices.length];
+              return (id === edge.start && next === edge.end) ||
+                (id === edge.end && next === edge.start)
+                ? [id, vertexId]
+                : [id];
+            }),
+          })),
+        }
+      : {}),
     vertices: [
       ...plan.vertices,
       { id: vertexId, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
@@ -330,10 +357,10 @@ export function footprintInside(footprint: Point[], outline: Point[]): boolean {
 }
 
 /** Validates a versioned document's vertex/edge graph before using its geometry. */
-export function parseBlueprint(
+export function parseMesh(
   value: unknown,
-  constraints: BlueprintConstraints = defaultConstraints,
-): Blueprint {
+  constraints: MeshConstraints = defaultConstraints,
+): Mesh2D {
   if (!value || typeof value !== "object") throw new Error("Invalid blueprint");
   const input = value as Record<string, unknown>;
   if (
@@ -365,8 +392,205 @@ export function parseBlueprint(
       throw new Error("Invalid edge");
     return { id: edge.id, start: edge.start, end: edge.end };
   });
-  const plan = { vertices, edges };
-  if (validateBlueprint(plan, constraints))
+  const faces =
+    input.faces === undefined
+      ? undefined
+      : parseFaces(input.faces, constraints.maxFaces ?? 256);
+  const plan: Mesh2D = { vertices, edges, ...(faces ? { faces } : {}) };
+  if (validateMesh(plan, constraints))
     throw new Error("Invalid blueprint geometry");
   return plan;
+}
+
+function parseFaces(value: unknown, limit: number): Face[] {
+  if (!Array.isArray(value) || value.length > limit)
+    throw new Error("Invalid faces");
+  return value.map((raw: unknown) => {
+    if (!raw || typeof raw !== "object") throw new Error("Invalid face");
+    const f = raw as Record<string, unknown>;
+    if (
+      typeof f.id !== "string" ||
+      !f.id.length ||
+      f.id.length > 100 ||
+      !Array.isArray(f.vertices) ||
+      f.vertices.length > 512 ||
+      f.vertices.some(
+        (id) => typeof id !== "string" || !id.length || id.length > 100,
+      )
+    )
+      throw new Error("Invalid face");
+    return { id: f.id, vertices: [...f.vertices] as string[] };
+  });
+}
+function faceHasEdge(face: Face, start: string, end: string): boolean {
+  return face.vertices.some((id, index) => {
+    const next = face.vertices[(index + 1) % face.vertices.length];
+    return (id === start && next === end) || (id === end && next === start);
+  });
+}
+function validateFaces(mesh: Mesh2D, limit: number): MeshError | null {
+  const faces = mesh.faces ?? [];
+  if (faces.length > limit) return "limit";
+  const ids = new Set<string>();
+  const rings = new Set<string>();
+  for (const face of faces) {
+    const signature = [...face.vertices].sort().join("\0");
+    if (
+      !face.id ||
+      ids.has(face.id) ||
+      rings.has(signature) ||
+      face.vertices.length < 3 ||
+      new Set(face.vertices).size !== face.vertices.length
+    )
+      return "faces";
+    ids.add(face.id);
+    rings.add(signature);
+    const points = face.vertices.map((id) =>
+      mesh.vertices.find((v) => v.id === id),
+    );
+    if (points.some((p) => !p)) return "faces";
+    const polygon = points as Vertex[];
+    if (Math.abs(signedArea(polygon)) < epsilon) return "faces";
+    for (let i = 0; i < polygon.length; i++) {
+      const a = polygon[i],
+        b = polygon[(i + 1) % polygon.length];
+      if (
+        !mesh.edges.some(
+          (e) =>
+            (e.start === a.id && e.end === b.id) ||
+            (e.end === a.id && e.start === b.id),
+        )
+      )
+        return "faces";
+      for (let j = 0; j < polygon.length; j++)
+        if (
+          j !== i &&
+          j !== (i + 1) % polygon.length &&
+          onSegment(polygon[j], a, b)
+        )
+          return "faces";
+      for (let j = i + 1; j < polygon.length; j++) {
+        if (j === (i + 1) % polygon.length || (j + 1) % polygon.length === i)
+          continue;
+        if (intersects(a, b, polygon[j], polygon[(j + 1) % polygon.length]))
+          return "faces";
+      }
+    }
+  }
+  return null;
+}
+/** Returns referenced vertices exactly once for a point, edge or face selection. */
+export function selectionVertices(
+  mesh: Mesh2D,
+  selection: MeshSelection,
+): string[] {
+  if (!selection) return [];
+  if (selection.kind === "vertex")
+    return mesh.vertices.some((v) => v.id === selection.id)
+      ? [selection.id]
+      : [];
+  if (selection.kind === "edge") {
+    const edge = mesh.edges.find((e) => e.id === selection.id);
+    return edge ? [edge.start, edge.end] : [];
+  }
+  return [
+    ...new Set(mesh.faces?.find((f) => f.id === selection.id)?.vertices ?? []),
+  ];
+}
+/** Translates selected topology once per shared vertex; adjacent edges and faces follow automatically. */
+export function translateSelection(
+  mesh: Mesh2D,
+  selection: MeshSelection,
+  delta: Point,
+): Mesh2D {
+  const ids = new Set(selectionVertices(mesh, selection));
+  return {
+    ...mesh,
+    vertices: mesh.vertices.map((v) =>
+      ids.has(v.id)
+        ? {
+            ...v,
+            x: Number((v.x + delta.x).toFixed(6)),
+            y: Number((v.y + delta.y).toFixed(6)),
+          }
+        : v,
+    ),
+  };
+}
+/** Returns the mean vertex position for exact movement of the current selection. */
+export function selectionCenter(mesh: Mesh2D, selection: MeshSelection): Point {
+  const ids = new Set(selectionVertices(mesh, selection));
+  const vertices = mesh.vertices.filter((v) => ids.has(v.id));
+  return vertices.length
+    ? {
+        x: vertices.reduce((sum, v) => sum + v.x, 0) / vertices.length,
+        y: vertices.reduce((sum, v) => sum + v.y, 0) / vertices.length,
+      }
+    : { x: 0, y: 0 };
+}
+/** Measures a face in square metres; the caller supplies validated topology. */
+export function faceArea(mesh: Mesh2D, face: Face): number {
+  return Math.abs(
+    signedArea(
+      face.vertices.map((id) => mesh.vertices.find((v) => v.id === id)!),
+    ),
+  );
+}
+/** Adds a face from an ordered vertex ring, reusing shared edges and creating missing boundary edges. Validate before committing. */
+export function createFace(
+  mesh: Mesh2D,
+  vertices: string[],
+  id: string,
+): Mesh2D {
+  const edges = [...mesh.edges];
+  vertices.forEach((start, index) => {
+    const end = vertices[(index + 1) % vertices.length];
+    if (
+      !edges.some(
+        (e) =>
+          (e.start === start && e.end === end) ||
+          (e.start === end && e.end === start),
+      )
+    )
+      edges.push({ id: `${id}-edge-${index}`, start, end });
+  });
+  return {
+    ...mesh,
+    edges,
+    faces: [...(mesh.faces ?? []), { id, vertices: [...vertices] }],
+  };
+}
+/** Removes selected topology; deleting an edge/vertex removes dependent faces, while deleting a face keeps its boundary. */
+export function deleteSelection(
+  mesh: Mesh2D,
+  selection: MeshSelection,
+): Mesh2D {
+  if (!selection) return mesh;
+  if (selection.kind === "face")
+    return {
+      ...mesh,
+      faces: (mesh.faces ?? []).filter((f) => f.id !== selection.id),
+    };
+  const edge = mesh.edges.find((e) => e.id === selection.id);
+  return {
+    ...mesh,
+    vertices:
+      selection.kind === "vertex"
+        ? mesh.vertices.filter((v) => v.id !== selection.id)
+        : mesh.vertices,
+    edges: mesh.edges.filter((e) =>
+      selection.kind === "vertex"
+        ? e.start !== selection.id && e.end !== selection.id
+        : e.id !== selection.id,
+    ),
+    ...(mesh.faces
+      ? {
+          faces: mesh.faces.filter((f) =>
+            selection.kind === "vertex"
+              ? !f.vertices.includes(selection.id)
+              : !edge || !faceHasEdge(f, edge.start, edge.end),
+          ),
+        }
+      : {}),
+  };
 }

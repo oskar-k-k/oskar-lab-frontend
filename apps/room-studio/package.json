@@ -20,7 +20,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "three": "^0.186.1",
-    "@oskar-lab/blueprint": "*"
+    "@oskar-lab/2d-lab": "*"
   },
   "devDependencies": {
     "@types/three": "^0.186.0"

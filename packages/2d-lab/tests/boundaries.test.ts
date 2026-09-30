@@ -10,7 +10,7 @@ function sources(directory: string): string[] {
       : [path.join(directory, entry.name)],
   );
 }
-it("keeps Blueprint independent of apps, Three.js, Next.js and browser persistence", () => {
+it("keeps Mesh2D independent of apps, Three.js, Next.js and browser persistence", () => {
   const root = fileURLToPath(new URL("../src", import.meta.url));
   for (const file of sources(root)) {
     const source = readFileSync(file, "utf8");

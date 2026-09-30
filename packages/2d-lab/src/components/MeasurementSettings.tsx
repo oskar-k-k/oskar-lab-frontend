@@ -6,7 +6,7 @@ import {
   moveSteps,
   type Measurements,
 } from "../model/measurements";
-import styles from "./Blueprint.module.css";
+import styles from "./Lab2D.module.css";
 
 /** Shares metric display units and physical movement increments across both workspaces. */
 export default function MeasurementSettings({
@@ -20,7 +20,7 @@ export default function MeasurementSettings({
   return (
     <div className={styles.measurementSettings}>
       <label>
-        {t("blueprint.unit")}
+        {t("lab2d.unit")}
         <select
           value={value.unit}
           onChange={(event) =>
@@ -30,12 +30,12 @@ export default function MeasurementSettings({
             })
           }
         >
-          <option value="m">{t("blueprint.metres")}</option>
-          <option value="cm">{t("blueprint.centimetres")}</option>
+          <option value="m">{t("lab2d.metres")}</option>
+          <option value="cm">{t("lab2d.centimetres")}</option>
         </select>
       </label>
       <label>
-        {t("blueprint.step")}
+        {t("lab2d.step")}
         <select
           value={value.step}
           onChange={(event) =>
@@ -57,7 +57,7 @@ export default function MeasurementSettings({
             onChange({ ...value, snap: event.target.checked })
           }
         />
-        {t("blueprint.snapEnabled")}
+        {t("lab2d.snapEnabled")}
       </label>
     </div>
   );

@@ -18,4 +18,4 @@ Three.js is imported only by this app's dynamically loaded viewport. Geometry, m
 
 Run workspace `npm run check` for TypeScript, ESLint, unit tests and production builds.
 
-The 2D editor and geometry utilities now come from `@oskar-lab/blueprint`. Room Studio owns its room constraints, X/Z persistence adapter, height and all furniture/3D behavior. Blueprint itself uses X/Y vertices and edges and has no furniture overlay. See `../../packages/blueprint/README.md` for the public package contract.
+The 2D editor and geometry utilities now come from `@oskar-lab/2d-lab`. Room Studio owns its room constraints, X/Z persistence adapter, height and all furniture/3D behavior. 2D Lab uses shared X/Y vertices, edges and faces and has no furniture overlay. See `../../packages/2d-lab/README.md` for the public package contract.

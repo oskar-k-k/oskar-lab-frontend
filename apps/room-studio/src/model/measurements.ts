@@ -1,1 +1,1 @@
-export * from "@oskar-lab/blueprint/measurements";
+export * from "@oskar-lab/2d-lab/measurements";

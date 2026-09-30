@@ -1,1 +1,1 @@
-export { default } from "@oskar-lab/blueprint/MeasurementSettings";
+export { default } from "@oskar-lab/2d-lab/MeasurementSettings";

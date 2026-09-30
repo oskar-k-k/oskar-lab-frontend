@@ -10,44 +10,45 @@ import {
 } from "react";
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import {
+  createFace,
+  translateSelection,
   closedOutline,
   connectedEdges,
   outlineArea,
   moveVertex,
-  blueprintBounds,
-  validateBlueprint,
+  meshBounds,
+  validateMesh,
   edgeLength,
-  type Blueprint,
-  type BlueprintError,
-  type BlueprintSelection,
+  type Mesh2D,
+  type MeshError,
+  type MeshSelection,
   type Point,
-} from "../model/blueprint";
+} from "../model/mesh";
 import {
   formatArea,
   formatLength,
   snapCoordinate,
 } from "../model/measurements";
-import {
-  defaultConstraints,
-  type BlueprintConstraints,
-} from "../model/blueprint";
+import { defaultConstraints, type MeshConstraints } from "../model/mesh";
 import { defaultMeasurements, type Measurements } from "../model/measurements";
 import Measure from "./Measure";
-import BlueprintInspector from "./BlueprintInspector";
-import styles from "./Blueprint.module.css";
+import Inspector2D from "./Inspector2D";
+import styles from "./Lab2D.module.css";
 
 /** Controlled editor: the host owns persistence, history and product-specific rules. */
-export type BlueprintEditorProps = {
+export type Editor2DProps = {
   /** Validated graph; changing the component key resets document-local view state. */
-  value: Blueprint;
+  value: Mesh2D;
   /** Display unit and physical movement increment, independent of topology. */
   measurements?: Measurements;
   /** Product-specific geometry limits; defaults permit branches and crossings. */
-  constraints?: BlueprintConstraints;
+  constraints?: MeshConstraints;
   /** Optional host fields; the editor never interprets their domain data. */
   sidebarContent?: ReactNode;
+  /** Consumers may restrict face creation while retaining movement of existing faces. */
+  allowFaceCreation?: boolean;
   /** Commits a valid edit once per gesture; persistence and history belong to the host. */
-  onChange: (plan: Blueprint) => void;
+  onChange: (plan: Mesh2D) => void;
   undo?: () => void;
   redo?: () => void;
   canUndo?: boolean;
@@ -56,35 +57,38 @@ export type BlueprintEditorProps = {
 type Gesture = {
   kind: "move" | "draw";
   id: string;
+  selection: NonNullable<MeshSelection>;
   start: Point;
-  plan: Blueprint;
+  plan: Mesh2D;
   pointerId: number;
 };
 
 /** Edits a bounded vertex/edge graph with pointer gestures and equivalent form/list controls. */
-export default function BlueprintEditor({
+export default function Editor2D({
   value,
   measurements = defaultMeasurements,
   constraints = defaultConstraints,
   sidebarContent,
+  allowFaceCreation = true,
   onChange,
   undo,
   redo,
   canUndo,
   canRedo,
-}: BlueprintEditorProps) {
+}: Editor2DProps) {
   const { t, locale } = useI18n();
   const gridId = useId();
-  const [selection, setSelection] = useState<BlueprintSelection>(null);
+  const [faceVertices, setFaceVertices] = useState<string[]>([]);
+  const [selection, setSelection] = useState<MeshSelection>(null);
   const [tool, setTool] = useState<"select" | "draw">("select");
   const [anchor, setAnchor] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Blueprint | null>(null);
+  const [draft, setDraft] = useState<Mesh2D | null>(null);
   const [cursor, setCursor] = useState<Point | null>(null);
   const [drawingFrom, setDrawingFrom] = useState<string | null>(null);
   const [newPoint, setNewPoint] = useState<Point>({ x: 0, y: 0 });
-  const [error, setError] = useState<BlueprintError | null>(null);
+  const [error, setError] = useState<MeshError | null>(null);
   const [zoom, setZoom] = useState(1);
-  const [frame, setFrame] = useState(() => blueprintBounds(value));
+  const [frame, setFrame] = useState(() => meshBounds(value));
   const gesture = useRef<Gesture | null>(null);
   const svg = useRef<SVGSVGElement>(null);
   const [canvasSize, setCanvasSize] = useState(650);
@@ -123,12 +127,12 @@ export default function BlueprintEditor({
   const length = (value: number) =>
     formatLength(value, measurements.unit, locale);
   const vertexName = (id: string) =>
-    t("blueprint.vertexNumber", {
+    t("lab2d.vertexNumber", {
       number: plan.vertices.findIndex((vertex) => vertex.id === id) + 1,
     });
 
-  function commit(next: Blueprint): boolean {
-    const problem = validateBlueprint(next, constraints);
+  function commit(next: Mesh2D): boolean {
+    const problem = validateMesh(next, constraints);
     setError(problem);
     if (problem) return false;
     if (JSON.stringify(next) === JSON.stringify(value)) return true;
@@ -193,6 +197,7 @@ export default function BlueprintEditor({
     }
     const id = crypto.randomUUID();
     const next = {
+      ...value,
       vertices: [...value.vertices, { ...point, id }],
       edges:
         from && plan.vertices.some((vertex) => vertex.id === from)
@@ -215,11 +220,18 @@ export default function BlueprintEditor({
       setError("connections");
       return;
     }
+    if (event.shiftKey && allowFaceCreation) {
+      setTool("select");
+      toggleFaceVertex(id);
+      setSelection({ kind: "vertex", id });
+      return;
+    }
     setSelection({ kind: "vertex", id });
     setError(null);
     gesture.current = {
       kind: tool === "draw" ? "draw" : "move",
       id,
+      selection: { kind: "vertex", id },
       start: pointerPoint(event),
       plan: value,
       pointerId: event.pointerId,
@@ -228,21 +240,86 @@ export default function BlueprintEditor({
     svg.current?.setPointerCapture(event.pointerId);
   }
 
+  function beginSelection(
+    event: ReactPointerEvent<SVGElement>,
+    selected: NonNullable<MeshSelection>,
+  ) {
+    if (
+      event.button !== 0 ||
+      !event.isPrimary ||
+      (tool === "draw" && selected.kind === "face")
+    )
+      return;
+    event.stopPropagation();
+    setTool("select");
+    setSelection(selected);
+    setError(null);
+    gesture.current = {
+      kind: "move",
+      id: selected.id,
+      selection: selected,
+      start: pointerPoint(event),
+      plan: value,
+      pointerId: event.pointerId,
+    };
+    svg.current?.setPointerCapture(event.pointerId);
+  }
+  function moveByKey(
+    event: React.KeyboardEvent<SVGElement>,
+    selected: NonNullable<MeshSelection>,
+  ) {
+    const directions: Record<string, Point> = {
+      ArrowLeft: { x: -1, y: 0 },
+      ArrowRight: { x: 1, y: 0 },
+      ArrowUp: { x: 0, y: -1 },
+      ArrowDown: { x: 0, y: 1 },
+    };
+    const direction = directions[event.key];
+    if (direction) {
+      event.preventDefault();
+      setSelection(selected);
+      commit(
+        translateSelection(value, selected, {
+          x: direction.x * measurements.step,
+          y: direction.y * measurements.step,
+        }),
+      );
+    }
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setSelection(selected);
+    }
+  }
+  function toggleFaceVertex(id: string) {
+    setFaceVertices((ids) =>
+      ids.includes(id) ? ids.filter((value) => value !== id) : [...ids, id],
+    );
+  }
+  function fillFace() {
+    const ids = faceVertices.filter((id) =>
+      value.vertices.some((v) => v.id === id),
+    );
+    if (!allowFaceCreation || ids.length < 3) return;
+    const id = crypto.randomUUID();
+    if (commit(createFace(value, ids, id))) {
+      setSelection({ kind: "face", id });
+      setFaceVertices([]);
+      setTool("select");
+    }
+  }
+
   function move(event: ReactPointerEvent<SVGSVGElement>) {
     const point = pointerPoint(event);
     setCursor(point);
     const active = gesture.current;
     if (!active || active.pointerId !== event.pointerId) return;
     if (active.kind === "move") {
-      const original = active.plan.vertices.find(
-        (vertex) => vertex.id === active.id,
-      )!;
-      const next = moveVertex(active.plan, active.id, {
-        x: original.x + point.x - active.start.x,
-        y: original.y + point.y - active.start.y,
+      const next = translateSelection(active.plan, active.selection, {
+        x: point.x - active.start.x,
+        y: point.y - active.start.y,
       });
       setDraft(next);
-      setError(validateBlueprint(next, constraints));
+      setError(validateMesh(next, constraints));
     }
   }
 
@@ -254,7 +331,13 @@ export default function BlueprintEditor({
     if (svg.current?.hasPointerCapture(event.pointerId))
       svg.current.releasePointerCapture(event.pointerId);
     if (active?.kind === "move") {
-      if (draft) commit(draft);
+      const point = pointerPoint(event);
+      commit(
+        translateSelection(active.plan, active.selection, {
+          x: point.x - active.start.x,
+          y: point.y - active.start.y,
+        }),
+      );
       setDraft(null);
       return;
     }
@@ -297,11 +380,11 @@ export default function BlueprintEditor({
       <div className={styles.editor}>
         <aside className={styles.sidebar}>
           <div className={styles.planTools}>
-            <p className={styles.eyebrow}>{t("blueprint.planMode")}</p>
-            <h2>{t("blueprint.drawYourBlueprint")}</h2>
-            <p>{t("blueprint.planInstructions")}</p>
+            <p className={styles.eyebrow}>{t("lab2d.planMode")}</p>
+            <h2>{t("lab2d.drawTitle")}</h2>
+            <p>{t("lab2d.planInstructions")}</p>
             <button aria-pressed={tool === "select"} onClick={cancel}>
-              ↖ {t("blueprint.selectMove")}
+              ↖ {t("lab2d.selectMove")}
             </button>
             <button
               aria-pressed={tool === "draw"}
@@ -317,16 +400,16 @@ export default function BlueprintEditor({
                 setError(null);
               }}
             >
-              ＋ {t("blueprint.drawEdges")}
+              ＋ {t("lab2d.drawEdges")}
             </button>
             <p className={styles.planHint}>
-              {t(tool === "draw" ? "blueprint.drawHint" : "blueprint.moveHint")}
+              {t(tool === "draw" ? "lab2d.drawHint" : "lab2d.moveHint")}
             </p>
             {tool === "draw" && (
               <details className={styles.coordinateEntry}>
-                <summary>{t("blueprint.addByCoordinates")}</summary>
+                <summary>{t("lab2d.addByCoordinates")}</summary>
                 <Measure
-                  label={t("blueprint.positionX")}
+                  label={t("lab2d.positionX")}
                   value={newPoint.x}
                   min={-constraints.coordinateLimit}
                   max={constraints.coordinateLimit}
@@ -335,7 +418,7 @@ export default function BlueprintEditor({
                   onChange={(x) => setNewPoint({ ...newPoint, x })}
                 />
                 <Measure
-                  label={t("blueprint.positionY")}
+                  label={t("lab2d.positionY")}
                   value={newPoint.y}
                   min={-constraints.coordinateLimit}
                   max={constraints.coordinateLimit}
@@ -344,16 +427,21 @@ export default function BlueprintEditor({
                   onChange={(y) => setNewPoint({ ...newPoint, y })}
                 />
                 <button onClick={() => addAt(newPoint)}>
-                  {t("blueprint.addVertex")}
+                  {t("lab2d.addVertex")}
                 </button>
               </details>
             )}
             {sidebarContent}
-            <div className={styles.planState} data-closed={!!outline}>
-              {t(outline ? "blueprint.planClosed" : "blueprint.planOpen")}
+            <div
+              className={styles.planState}
+              data-closed={!!outline || !!plan.faces?.length}
+            >
+              {plan.faces?.length
+                ? t("lab2d.faceCount", { count: plan.faces.length })
+                : t(outline ? "lab2d.planClosed" : "lab2d.planOpen")}
             </div>
             <p>
-              {t("blueprint.planBounds", {
+              {t("lab2d.planBounds", {
                 count: constraints.maxVertices,
                 limit: length(constraints.coordinateLimit),
                 distance: length(constraints.minDistance),
@@ -362,8 +450,9 @@ export default function BlueprintEditor({
             </p>
             <button
               onClick={() => {
-                if (window.confirm(t("blueprint.newPlanConfirm"))) {
-                  onChange({ vertices: [], edges: [] });
+                if (window.confirm(t("lab2d.newPlanConfirm"))) {
+                  onChange({ vertices: [], edges: [], faces: [] });
+                  setFaceVertices([]);
                   setSelection(null);
                   setAnchor(null);
                   setTool("draw");
@@ -372,12 +461,12 @@ export default function BlueprintEditor({
                 }
               }}
             >
-              {t("blueprint.newPlan")}
+              {t("lab2d.newPlan")}
             </button>
           </div>
           <div className={styles.vertexList}>
             <h2>
-              {t("blueprint.vertices")}{" "}
+              {t("lab2d.vertices")}{" "}
               <small>
                 {plan.vertices.length}/{constraints.maxVertices}
               </small>
@@ -398,29 +487,80 @@ export default function BlueprintEditor({
               </button>
             ))}
           </div>
+          <div className={styles.vertexList}>
+            <h2>
+              {t("lab2d.faces")} <small>{(plan.faces ?? []).length}</small>
+            </h2>
+            {(plan.faces ?? []).map((face, index) => (
+              <button
+                key={face.id}
+                aria-pressed={
+                  selection?.kind === "face" && selection.id === face.id
+                }
+                onClick={() => setSelection({ kind: "face", id: face.id })}
+              >
+                {t("lab2d.faceNumber", { number: index + 1 })}
+              </button>
+            ))}
+            {allowFaceCreation && (
+              <details className={styles.faceCreator}>
+                <summary>{t("lab2d.createFace")}</summary>
+                <p>{t("lab2d.faceHint")}</p>
+                {plan.vertices.map((vertex) => (
+                  <label key={vertex.id}>
+                    <input
+                      type="checkbox"
+                      checked={faceVertices.includes(vertex.id)}
+                      onChange={() => toggleFaceVertex(vertex.id)}
+                    />
+                    {vertexName(vertex.id)}
+                    {faceVertices.includes(vertex.id)
+                      ? ` · ${faceVertices.indexOf(vertex.id) + 1}`
+                      : ""}
+                  </label>
+                ))}
+                <button
+                  disabled={
+                    faceVertices.filter((id) =>
+                      plan.vertices.some((v) => v.id === id),
+                    ).length < 3
+                  }
+                  onClick={fillFace}
+                >
+                  {t("lab2d.fillFace")}
+                </button>
+                <button
+                  disabled={!faceVertices.length}
+                  onClick={() => setFaceVertices([])}
+                >
+                  {t("lab2d.clearSelection")}
+                </button>
+              </details>
+            )}
+          </div>
         </aside>
         <section
           className={`${styles.viewport} ${styles.planViewport}`}
-          aria-label={t("blueprint.planCanvas")}
+          aria-label={t("lab2d.planCanvas")}
         >
           <div className={styles.toolbar}>
             <div>
               <button
-                aria-label={t("blueprint.zoomOut")}
+                aria-label={t("lab2d.zoomOut")}
                 onClick={() => setZoom((value) => Math.max(0.35, value / 1.25))}
               >
                 −
               </button>
               <button
-                aria-label={t("blueprint.zoomIn")}
+                aria-label={t("lab2d.zoomIn")}
                 onClick={() => setZoom((value) => Math.min(3, value * 1.25))}
               >
                 ＋
               </button>
               <button
-                aria-label={t("blueprint.resetView")}
+                aria-label={t("lab2d.resetView")}
                 onClick={() => {
-                  setFrame(blueprintBounds(value));
+                  setFrame(meshBounds(value));
                   setZoom(1);
                 }}
               >
@@ -429,7 +569,7 @@ export default function BlueprintEditor({
             </div>
             <div>
               <button
-                aria-label={t("blueprint.undo")}
+                aria-label={t("lab2d.undo")}
                 disabled={!canUndo || !!draft}
                 onClick={() => {
                   cancel();
@@ -439,7 +579,7 @@ export default function BlueprintEditor({
                 ↶
               </button>
               <button
-                aria-label={t("blueprint.redo")}
+                aria-label={t("lab2d.redo")}
                 disabled={!canRedo || !!draft}
                 onClick={() => {
                   cancel();
@@ -454,12 +594,16 @@ export default function BlueprintEditor({
             ref={svg}
             className={styles.planSvg}
             viewBox={`${view.x} ${view.y} ${view.size} ${view.size}`}
-            aria-label={t("blueprint.planCanvas")}
+            aria-label={t("lab2d.planCanvas")}
             onPointerMove={move}
             onPointerUp={finish}
             onPointerCancel={cancel}
             onKeyDown={(event) => {
               if (event.key === "Escape") cancel();
+              if (event.key.toLowerCase() === "f") {
+                event.preventDefault();
+                fillFace();
+              }
             }}
           >
             <defs>
@@ -491,17 +635,47 @@ export default function BlueprintEditor({
               strokeDasharray=".08 .08"
               pointerEvents="none"
             />
-            {outline && (
+            {outline && !plan.faces?.length && (
               <polygon
                 points={outline
                   .map((vertex) => `${vertex.x},${vertex.y}`)
                   .join(" ")}
-                fill="var(--blueprint-fill, #dce8ef)"
+                fill="var(--lab2d-fill, #dce8ef)"
                 fillOpacity={0.25}
                 pointerEvents="none"
               />
             )}
 
+            {(plan.faces ?? []).map((face, index) => (
+              <polygon
+                key={face.id}
+                points={face.vertices
+                  .map((id) => {
+                    const v = plan.vertices.find((v) => v.id === id)!;
+                    return `${v.x},${v.y}`;
+                  })
+                  .join(" ")}
+                fill={
+                  selection?.kind === "face" && selection.id === face.id
+                    ? "#71b9df"
+                    : "#b3d4e7"
+                }
+                fillOpacity={0.55}
+                className={styles.faceHandle}
+                role="button"
+                tabIndex={0}
+                aria-label={t("lab2d.faceNumber", { number: index + 1 })}
+                aria-pressed={
+                  selection?.kind === "face" && selection.id === face.id
+                }
+                onPointerDown={(event) =>
+                  beginSelection(event, { kind: "face", id: face.id })
+                }
+                onKeyDown={(event) =>
+                  moveByKey(event, { kind: "face", id: face.id })
+                }
+              />
+            ))}
             {plan.edges.map((edge, index) => {
               const a = plan.vertices.find(
                   (vertex) => vertex.id === edge.start,
@@ -511,7 +685,7 @@ export default function BlueprintEditor({
                 selectedEdge?.id === edge.id ||
                 selectedVertex?.id === edge.start ||
                 selectedVertex?.id === edge.end;
-              const edgeLabel = t("blueprint.edgeNumber", {
+              const edgeLabel = t("lab2d.edgeNumber", {
                 number: index + 1,
               });
               return (
@@ -522,17 +696,12 @@ export default function BlueprintEditor({
                   aria-label={`${edgeLabel}: ${vertexName(a.id)} – ${vertexName(b.id)}, ${length(edgeLength(plan, edge))}`}
                   aria-pressed={selectedEdge?.id === edge.id}
                   className={styles.edgeHandle}
-                  onPointerDown={(event) => {
-                    event.stopPropagation();
-                    setSelection({ kind: "edge", id: edge.id });
-                  }}
-                  onPointerUp={(event) => event.stopPropagation()}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      setSelection({ kind: "edge", id: edge.id });
-                    }
-                  }}
+                  onPointerDown={(event) =>
+                    beginSelection(event, { kind: "edge", id: edge.id })
+                  }
+                  onKeyDown={(event) =>
+                    moveByKey(event, { kind: "edge", id: edge.id })
+                  }
                 >
                   <line
                     x1={a.x}
@@ -639,7 +808,10 @@ export default function BlueprintEditor({
                   cy={vertex.y}
                   r={radius}
                   fill={
-                    selectedVertex?.id === vertex.id ? "#2876a2" : "#fffdf6"
+                    selectedVertex?.id === vertex.id ||
+                    faceVertices.includes(vertex.id)
+                      ? "#2876a2"
+                      : "#fffdf6"
                   }
                   stroke="#2876a2"
                   strokeWidth={0.025}
@@ -660,29 +832,31 @@ export default function BlueprintEditor({
           </svg>
           {error && (
             <p role="alert" className={styles.planError}>
-              {t(`blueprint.planError.${error}`)}
+              {t(`lab2d.planError.${error}`)}
             </p>
           )}
           <div className={styles.drawingBadge}>
-            <span>{t("blueprint.planMode")}</span>
+            <span>{t("lab2d.planMode")}</span>
             <strong>
-              {outlineArea(plan) === null
-                ? t("blueprint.planOpenShort")
-                : formatArea(outlineArea(plan)!, measurements.unit, locale)}
+              {plan.faces?.length
+                ? t("lab2d.faceCount", { count: plan.faces.length })
+                : outlineArea(plan) === null
+                  ? t("lab2d.planOpenShort")
+                  : formatArea(outlineArea(plan)!, measurements.unit, locale)}
             </strong>
           </div>
           <div className={styles.viewportFooter}>
             <span>
-              {t(tool === "draw" ? "blueprint.drawHint" : "blueprint.moveHint")}
+              {t(tool === "draw" ? "lab2d.drawHint" : "lab2d.moveHint")}
             </span>
             <span>
-              {t("blueprint.gridSpacing", {
+              {t("lab2d.gridSpacing", {
                 value: length(Math.max(0.1, measurements.step)),
               })}
             </span>
           </div>
         </section>
-        <BlueprintInspector
+        <Inspector2D
           plan={plan}
           selection={selection}
           measurements={measurements}

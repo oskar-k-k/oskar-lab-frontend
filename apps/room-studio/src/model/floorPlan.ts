@@ -1,15 +1,15 @@
-import * as blueprint from "@oskar-lab/blueprint/model";
+import * as lab2d from "@oskar-lab/2d-lab/model";
 
 export type Point = { x: number; z: number };
 export type Corner = Point & { id: string };
-export type Wall = blueprint.Edge;
+export type Wall = lab2d.Edge;
 export type FloorPlan = { corners: Corner[]; walls: Wall[] };
 export type PlanSelection = { kind: "corner" | "wall"; id: string } | null;
 export type PlanError =
   "limit" | "coordinates" | "shortWall" | "intersection" | "connections";
 
-/** Room-specific restrictions; the shared Blueprint graph itself permits branches and crossings. */
-export const roomConstraints: blueprint.BlueprintConstraints = {
+/** Room-specific restrictions; the shared Mesh2D graph itself permits branches and crossings. */
+export const roomConstraints: lab2d.MeshConstraints = {
   maxVertices: 64,
   maxEdges: 64,
   coordinateLimit: 10,
@@ -17,15 +17,15 @@ export const roomConstraints: blueprint.BlueprintConstraints = {
   maxDegree: 2,
   allowIntersections: false,
 };
-/** Maps persisted X/Z room coordinates to Blueprint's independent X/Y plane. */
-export function toBlueprint(plan: FloorPlan): blueprint.Blueprint {
+/** Maps persisted X/Z room coordinates to Mesh2D's independent X/Y plane. */
+export function toMesh(plan: FloorPlan): lab2d.Mesh2D {
   return {
     vertices: plan.corners.map(({ id, x, z }) => ({ id, x, y: z })),
     edges: plan.walls.map((edge) => ({ ...edge })),
   };
 }
 /** Preserves room JSON compatibility and graph identities when accepting an editor change. */
-export function fromBlueprint(value: blueprint.Blueprint): FloorPlan {
+export function fromMesh(value: lab2d.Mesh2D): FloorPlan {
   return {
     corners: value.vertices.map(({ id, x, y }) => ({ id, x, z: y })),
     walls: value.edges.map((edge) => ({ ...edge })),
@@ -33,7 +33,7 @@ export function fromBlueprint(value: blueprint.Blueprint): FloorPlan {
 }
 /** Creates a rectangular room outline in metres. */
 export function rectanglePlan(width: number, depth: number): FloorPlan {
-  const graph = blueprint.rectangleBlueprint(width, depth);
+  const graph = lab2d.rectangleMesh(width, depth);
   const id = (value: string) => value.replace("vertex-", "corner-");
   return {
     corners: graph.vertices.map((v) => ({ id: id(v.id), x: v.x, z: v.y })),
@@ -46,7 +46,7 @@ export function rectanglePlan(width: number, depth: number): FloorPlan {
 }
 /** Returns the room envelope, retaining the legacy X/Z naming contract. */
 export function planBounds(plan: FloorPlan) {
-  const b = blueprint.blueprintBounds(toBlueprint(plan));
+  const b = lab2d.meshBounds(toMesh(plan));
   return {
     minX: b.minX,
     maxX: b.maxX,
@@ -60,31 +60,31 @@ export function planBounds(plan: FloorPlan) {
 }
 /** Measures a room wall in metres. */
 export function wallLength(plan: FloorPlan, wall: Wall): number {
-  return blueprint.edgeLength(toBlueprint(plan), wall);
+  return lab2d.edgeLength(toMesh(plan), wall);
 }
 /** Lists walls connected to a room corner. */
 export function connectedWalls(plan: FloorPlan, id: string): Wall[] {
-  return blueprint.connectedEdges(toBlueprint(plan), id);
+  return lab2d.connectedEdges(toMesh(plan), id);
 }
 /** Applies the room policy to open or closed drafts. */
 export function validatePlan(plan: FloorPlan): PlanError | null {
-  const error = blueprint.validateBlueprint(toBlueprint(plan), roomConstraints);
-  return error === "shortEdge" ? "shortWall" : error;
+  const error = lab2d.validateMesh(toMesh(plan), roomConstraints);
+  return error === "shortEdge" ? "shortWall" : error === "faces" ? "connections" : error;
 }
 /** Returns one valid closed room boundary, with positive winding. */
 export function closedOutline(plan: FloorPlan): Corner[] | null {
   if (validatePlan(plan)) return null;
-  const graph = toBlueprint(plan);
-  const area = blueprint.outlineArea(graph);
+  const graph = toMesh(plan);
+  const area = lab2d.outlineArea(graph);
   if (area === null || area < 0.01) return null;
   return (
-    blueprint.closedOutline(graph)?.map(({ id, x, y }) => ({ id, x, z: y })) ??
+    lab2d.closedOutline(graph)?.map(({ id, x, y }) => ({ id, x, z: y })) ??
     null
   );
 }
 /** Returns enclosed room area only for a valid closed outline. */
 export function floorArea(plan: FloorPlan): number | null {
-  return closedOutline(plan) ? blueprint.outlineArea(toBlueprint(plan)) : null;
+  return closedOutline(plan) ? lab2d.outlineArea(toMesh(plan)) : null;
 }
 /** Moves a corner without mutating the persisted room graph. */
 export function moveCorner(
@@ -92,8 +92,8 @@ export function moveCorner(
   id: string,
   point: Point,
 ): FloorPlan {
-  return fromBlueprint(
-    blueprint.moveVertex(toBlueprint(plan), id, { x: point.x, y: point.z }),
+  return fromMesh(
+    lab2d.moveVertex(toMesh(plan), id, { x: point.x, y: point.z }),
   );
 }
 /** Inserts a corner in a room wall while retaining its original identity. */
@@ -103,20 +103,20 @@ export function splitWall(
   cornerId: string,
   newWallId: string,
 ): FloorPlan {
-  return fromBlueprint(
-    blueprint.splitEdge(toBlueprint(plan), wallId, cornerId, newWallId),
+  return fromMesh(
+    lab2d.splitEdge(toMesh(plan), wallId, cornerId, newWallId),
   );
 }
 /** Includes points on the room boundary. */
 export function pointInside(point: Point, outline: Point[]): boolean {
-  return blueprint.pointInside(
+  return lab2d.pointInside(
     { x: point.x, y: point.z },
     outline.map((p) => ({ x: p.x, y: p.z })),
   );
 }
 /** Checks the entire footprint against concave room boundaries. */
 export function footprintInside(footprint: Point[], outline: Point[]): boolean {
-  return blueprint.footprintInside(
+  return lab2d.footprintInside(
     footprint.map((p) => ({ x: p.x, y: p.z })),
     outline.map((p) => ({ x: p.x, y: p.z })),
   );
@@ -133,7 +133,7 @@ export function parseFloorPlan(value: unknown): FloorPlan {
     const corner = value as Record<string, unknown>;
     return { id: corner.id, x: corner.x, y: corner.z };
   });
-  return fromBlueprint(
-    blueprint.parseBlueprint({ vertices, edges: input.walls }, roomConstraints),
+  return fromMesh(
+    lab2d.parseMesh({ vertices, edges: input.walls }, roomConstraints),
   );
 }
