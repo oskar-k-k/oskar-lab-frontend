@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { closedOutline, planBounds, type Point } from "../model/floorPlan";
 import type { Furniture, Room } from "../model/room";
 
 function box(
@@ -115,54 +116,48 @@ export function populateScene(
   walls: boolean,
 ) {
   disposeGroup(root);
-  box(root, [room.width, 0.12, room.depth], [0, -0.06, 0], room.floor);
-  if (walls) {
-    box(
-      root,
-      [room.width + 0.12, room.height, 0.1],
-      [0, room.height / 2, -room.depth / 2 - 0.05],
-      room.wall,
+  const outline = closedOutline(room.plan);
+  if (outline) {
+    const shape = new THREE.Shape(
+      outline.map((point) => new THREE.Vector2(point.x, -point.z)),
     );
-    box(
-      root,
-      [0.1, room.height, room.depth],
-      [-room.width / 2 - 0.05, room.height / 2, 0],
-      room.wall,
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+      depth: 0.12,
+      bevelEnabled: false,
+    });
+    const floor = new THREE.Mesh(
+      geometry,
+      new THREE.MeshStandardMaterial({ color: room.floor, roughness: 0.85 }),
     );
-    box(
-      root,
-      [room.width, 0.1, 0.035],
-      [0, 0.05, -room.depth / 2 + 0.02],
-      "#faf7f0",
-    );
-    box(
-      root,
-      [0.035, 0.1, room.depth],
-      [-room.width / 2 + 0.02, 0.05, 0],
-      "#faf7f0",
-    );
-  }
-  if (grid) {
-    const lines: number[] = [];
-    for (let x = -room.width / 2; x <= room.width / 2; x += 0.5)
-      lines.push(x, 0.003, -room.depth / 2, x, 0.003, room.depth / 2);
-    for (let z = -room.depth / 2; z <= room.depth / 2; z += 0.5)
-      lines.push(-room.width / 2, 0.003, z, room.width / 2, 0.003, z);
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(lines, 3),
-    );
-    root.add(
-      new THREE.LineSegments(
-        geometry,
-        new THREE.LineBasicMaterial({
-          color: "#8b775f",
-          transparent: true,
-          opacity: 0.22,
-        }),
-      ),
-    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.12;
+    floor.receiveShadow = true;
+    root.add(floor);
+    if (walls) {
+      outline.forEach((a, index) => {
+        const b = outline[(index + 1) % outline.length];
+        const length = Math.hypot(b.x - a.x, b.z - a.z);
+        const wall = box(
+          root,
+          [length, room.height, 0.08],
+          [(a.x + b.x) / 2, room.height / 2, (a.z + b.z) / 2],
+          room.wall,
+        );
+        wall.rotation.y = -Math.atan2(b.z - a.z, b.x - a.x);
+        wall.userData.wallNormal = {
+          x: (b.z - a.z) / length,
+          z: -(b.x - a.x) / length,
+        };
+        const trim = box(
+          root,
+          [length, 0.09, 0.095],
+          [(a.x + b.x) / 2, 0.045, (a.z + b.z) / 2],
+          "#faf7f0",
+        );
+        trim.rotation.y = wall.rotation.y;
+      });
+    }
+    if (grid) addFloorGrid(root, room, outline);
   }
   for (const item of room.items) {
     const mesh = furnitureMesh(item);
@@ -171,6 +166,62 @@ export function populateScene(
       const outline = new THREE.BoxHelper(mesh, "#476d5a");
       root.add(outline);
     }
+  }
+}
+
+function addFloorGrid(root: THREE.Group, room: Room, outline: Point[]) {
+  const bounds = planBounds(room.plan);
+  const step = Math.max(0.1, room.measurements.step);
+  const lines: number[] = [];
+  for (const axis of ["x", "z"] as const) {
+    const other = axis === "x" ? "z" : "x";
+    const min = axis === "x" ? bounds.minX : bounds.minZ;
+    const max = axis === "x" ? bounds.maxX : bounds.maxZ;
+    for (let fixed = Math.ceil(min / step) * step; fixed < max; fixed += step) {
+      const cuts: number[] = [];
+      outline.forEach((a, index) => {
+        const b = outline[(index + 1) % outline.length];
+        if (
+          (a[axis] <= fixed && b[axis] > fixed) ||
+          (b[axis] <= fixed && a[axis] > fixed)
+        ) {
+          cuts.push(
+            a[other] +
+              ((b[other] - a[other]) * (fixed - a[axis])) / (b[axis] - a[axis]),
+          );
+        }
+      });
+      cuts.sort((a, b) => a - b);
+      for (let i = 0; i + 1 < cuts.length; i += 2) {
+        if (axis === "x")
+          lines.push(fixed, 0.003, cuts[i], fixed, 0.003, cuts[i + 1]);
+        else lines.push(cuts[i], 0.003, fixed, cuts[i + 1], 0.003, fixed);
+      }
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(lines, 3));
+  root.add(
+    new THREE.LineSegments(
+      geometry,
+      new THREE.LineBasicMaterial({
+        color: "#8b775f",
+        transparent: true,
+        opacity: 0.2,
+      }),
+    ),
+  );
+}
+
+/** Hides camera-facing walls so the interior remains editable from every orbit angle. */
+export function updateCutaway(root: THREE.Group, camera: THREE.Camera) {
+  for (const object of root.children) {
+    const normal = object.userData.wallNormal;
+    if (normal)
+      object.visible =
+        (camera.position.x - object.position.x) * normal.x +
+          (camera.position.z - object.position.z) * normal.z <=
+        0;
   }
 }
 

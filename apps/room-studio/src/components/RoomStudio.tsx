@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import {
   fitFurniture,
@@ -9,7 +9,13 @@ import {
   starterRoom,
   type Furniture,
   type Room,
+  withFloorPlan,
+  furnitureInside,
 } from "../model/room";
+import { closedOutline, floorArea } from "../model/floorPlan";
+import { formatArea, formatLength } from "../model/measurements";
+import FloorPlanEditor from "./FloorPlanEditor";
+import MeasurementSettings from "./MeasurementSettings";
 import RoomInspector from "./RoomInspector";
 import RoomLibrary from "./RoomLibrary";
 import styles from "./RoomStudio.module.css";
@@ -20,6 +26,7 @@ type History = { past: Room[]; present: Room; future: Room[] };
 
 /** Offers a bilingual, local-first planner with equivalent form controls for all 3D edits. */
 export default function RoomStudio() {
+  const planImport = useRef<HTMLInputElement>(null);
   const { t, locale, setLocale } = useI18n();
   const [history, setHistory] = useState<History>({
     past: [],
@@ -33,12 +40,17 @@ export default function RoomStudio() {
   >("saving");
   const [selected, setSelected] = useState<string | null>(null);
   const [backup, setBackup] = useState<string | null>(null);
+  const [mode, setMode] = useState<"plan" | "design">("design");
   const [grid, setGrid] = useState(true),
-    [snap, setSnap] = useState(true),
     [walls, setWalls] = useState(true);
   const [top, setTop] = useState(false),
     [reset, setReset] = useState(0);
   const room = history.present;
+  const outline = closedOutline(room.plan);
+  const editingPlan = mode === "plan" || !outline;
+  const outsideCount = room.items.filter(
+    (item) => !furnitureInside(item, room),
+  ).length;
   useEffect(() => {
     const timer = window.setTimeout(() => {
       try {
@@ -166,6 +178,26 @@ export default function RoomStudio() {
           <button disabled={!ready} onClick={exportRoom}>
             {t("room.export")} ↗
           </button>
+          {editingPlan && (
+            <>
+              <button
+                disabled={!ready}
+                onClick={() => planImport.current?.click()}
+              >
+                {t("room.import")}
+              </button>
+              <input
+                ref={planImport}
+                type="file"
+                accept=".json,application/json"
+                hidden
+                onChange={(event) => {
+                  void importRoom(event.target.files?.[0]);
+                  event.target.value = "";
+                }}
+              />
+            </>
+          )}
         </div>
       </header>
       <section className={styles.intro}>
@@ -193,102 +225,168 @@ export default function RoomStudio() {
           </span>
         </div>
       </section>
-      {backup && <section className={styles.backup} aria-label={t('room.backup')}>
-        <details><summary>{t('room.backup')}</summary><p>{t('room.backupHint')}</p>
-          <textarea aria-label={t('room.backup')} readOnly value={backup} onFocus={event => event.currentTarget.select()} />
-        </details>
-        <button onClick={() => setBackup(null)}>{t('room.close')}</button>
-      </section>}
-      <div className={styles.workspace}>
-        <RoomLibrary
-          room={room}
-          ready={ready}
-          commit={commit}
-          setSelected={setSelected}
-          importRoom={importRoom}
+      {backup && (
+        <section className={styles.backup} aria-label={t("room.backup")}>
+          <details>
+            <summary>{t("room.backup")}</summary>
+            <p>{t("room.backupHint")}</p>
+            <textarea
+              aria-label={t("room.backup")}
+              readOnly
+              value={backup}
+              onFocus={(event) => event.currentTarget.select()}
+            />
+          </details>
+          <button onClick={() => setBackup(null)}>{t("room.close")}</button>
+        </section>
+      )}
+      <div className={styles.workspaceSettings}>
+        <div className={styles.modeSwitch} aria-label={t("room.workMode")}>
+          <button
+            disabled={!ready}
+            aria-pressed={editingPlan}
+            onClick={() => setMode("plan")}
+          >
+            ◇ {t("room.planMode")}
+          </button>
+          <button
+            disabled={!ready || !outline}
+            aria-pressed={!editingPlan}
+            onClick={() => setMode("design")}
+          >
+            ⌑ {t("room.designMode")}
+          </button>
+        </div>
+        <MeasurementSettings
+          value={room.measurements}
+          onChange={(measurements) => commit({ ...room, measurements })}
         />
-        <section className={styles.viewport} aria-label={t("room.viewport")}>
-          <div className={styles.toolbar}>
-            <div className={styles.viewButtons}>
-              <button aria-pressed={!top} onClick={() => setTop(false)}>
-                {t("room.view3d")}
-              </button>
-              <button aria-pressed={top} onClick={() => setTop(true)}>
-                {t("room.top")}
-              </button>
-            </div>
-            <div>
-              <button
-                aria-label={t("room.undo")}
-                title={t("room.undo")}
-                disabled={!history.past.length}
-                onClick={undo}
-              >
-                ↶
-              </button>
-              <button
-                aria-label={t("room.redo")}
-                title={t("room.redo")}
-                disabled={!history.future.length}
-                onClick={redo}
-              >
-                ↷
-              </button>
-              <button
-                aria-label={t("room.resetView")}
-                title={t("room.resetView")}
-                onClick={() => setReset((value) => value + 1)}
-              >
-                ⌖
-              </button>
-            </div>
-          </div>
-          {ready ? (
-            <Canvas
+      </div>
+      {!outline && (
+        <p className={styles.planNotice} role="status">
+          {t("room.closePlanHint")}
+        </p>
+      )}
+      {!editingPlan && outsideCount > 0 && (
+        <p className={styles.planNotice} role="status">
+          {t("room.outsideCount", { count: outsideCount })}
+        </p>
+      )}
+      <div className={styles.workspace}>
+        {editingPlan ? (
+          <FloorPlanEditor
+            room={room}
+            onChange={(plan) => commit(withFloorPlan(room, plan))}
+            onHeight={(height) => commit({ ...room, height })}
+            undo={undo}
+            redo={redo}
+            canUndo={!!history.past.length}
+            canRedo={!!history.future.length}
+          />
+        ) : (
+          <>
+            <RoomLibrary
+              room={room}
+              ready={ready}
+              commit={commit}
+              setSelected={setSelected}
+              importRoom={importRoom}
+            />
+            <section
+              className={styles.viewport}
+              aria-label={t("room.viewport")}
+            >
+              <div className={styles.toolbar}>
+                <div className={styles.viewButtons}>
+                  <button aria-pressed={!top} onClick={() => setTop(false)}>
+                    {t("room.view3d")}
+                  </button>
+                  <button aria-pressed={top} onClick={() => setTop(true)}>
+                    {t("room.topView")}
+                  </button>
+                </div>
+                <div>
+                  <button
+                    aria-label={t("room.undo")}
+                    title={t("room.undo")}
+                    disabled={!history.past.length}
+                    onClick={undo}
+                  >
+                    ↶
+                  </button>
+                  <button
+                    aria-label={t("room.redo")}
+                    title={t("room.redo")}
+                    disabled={!history.future.length}
+                    onClick={redo}
+                  >
+                    ↷
+                  </button>
+                  <button
+                    aria-label={t("room.resetView")}
+                    title={t("room.resetView")}
+                    onClick={() => setReset((value) => value + 1)}
+                  >
+                    ⌖
+                  </button>
+                </div>
+              </div>
+              {ready ? (
+                <Canvas
+                  room={room}
+                  selected={selected}
+                  grid={grid}
+                  walls={walls && !top}
+                  top={top}
+                  reset={reset}
+                  onSelect={setSelected}
+                  onMove={(id, x, z) => updateItem({ x, z }, id)}
+                  onTransform={(id, patch) => updateItem(patch, id)}
+                />
+              ) : (
+                <p className={styles.loading}>{t("room.loading")}</p>
+              )}
+              <div className={styles.roomBadge}>
+                <span>
+                  {formatLength(room.width, room.measurements.unit, locale)} ×{" "}
+                  {formatLength(room.depth, room.measurements.unit, locale)}
+                </span>
+                <strong>
+                  {formatArea(
+                    floorArea(room.plan) ?? 0,
+                    room.measurements.unit,
+                    locale,
+                  )}
+                </strong>
+              </div>
+              <div className={styles.viewportFooter}>
+                <span>{t("room.controls")}</span>
+                <div>
+                  {(["grid", "walls"] as const).map((key, index) => (
+                    <label key={key}>
+                      <input
+                        type="checkbox"
+                        checked={[grid, walls][index]}
+                        onChange={(event) =>
+                          [setGrid, setWalls][index](event.target.checked)
+                        }
+                      />
+                      {t(`room.${key}`)}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </section>
+            <RoomInspector
+              key={selected}
               room={room}
               selected={selected}
-              grid={grid}
-              walls={walls && !top}
-              snap={snap}
-              top={top}
-              reset={reset}
-              onSelect={setSelected}
-              onMove={(id, x, z) => updateItem({ x, z }, id)}
+              setSelected={setSelected}
+              commit={commit}
+              updateItem={updateItem}
             />
-          ) : (
-            <p className={styles.loading}>{t("room.loading")}</p>
-          )}
-          <div className={styles.roomBadge}>
-            <span>
-              {room.width} × {room.depth} m
-            </span>
-            <strong>{Number((room.width * room.depth).toFixed(2))} m²</strong>
-          </div>
-          <div className={styles.viewportFooter}>
-            <span>{t("room.controls")}</span>
-            <div>
-              {(["grid", "snap", "walls"] as const).map((key, index) => (
-                <label key={key}>
-                  <input
-                    type="checkbox"
-                    checked={[grid, snap, walls][index]}
-                    onChange={(event) =>
-                      [setGrid, setSnap, setWalls][index](event.target.checked)
-                    }
-                  />
-                  {t(`room.${key}`)}
-                </label>
-              ))}
-            </div>
-          </div>
-        </section>
-        <RoomInspector
-          room={room}
-          selected={selected}
-          setSelected={setSelected}
-          commit={commit}
-          updateItem={updateItem}
-        />
+          </>
+        )}
       </div>
       {(!saveAllowed || status === "storageError" || status === "invalid") && (
         <div className={styles.error} role="alert">

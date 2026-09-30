@@ -4,8 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
-import { fitFurniture, type Room } from "../model/room";
-import { disposeGroup, populateScene } from "./scene";
+import { fitFurniture, type Furniture, type Room } from "../model/room";
+import { planBounds } from "../model/floorPlan";
+import { snapCoordinate } from "../model/measurements";
+import { createFurnitureTools, type FurnitureTool } from "./furnitureTools";
+import { disposeGroup, populateScene, updateCutaway } from "./scene";
 import styles from "./RoomStudio.module.css";
 
 type Props = {
@@ -13,26 +16,33 @@ type Props = {
   selected: string | null;
   grid: boolean;
   walls: boolean;
-  snap: boolean;
   top: boolean;
   reset: number;
   onSelect: (id: string | null) => void;
   onMove: (id: string, x: number, z: number) => void;
+  onTransform: (id: string, patch: Partial<Furniture>) => void;
 };
 
 /** Renders a disposable Three.js viewport with orbit navigation and floor-plane dragging. */
 export default function RoomCanvas(props: Props) {
   const { t } = useI18n();
   const host = useRef<HTMLDivElement>(null);
-  const latest = useRef(props);
+  const overlay = useRef<HTMLDivElement>(null);
+  const [toolState, setTool] = useState<{
+    id: string | null;
+    mode: FurnitureTool;
+  }>({ id: null, mode: "move" });
+  const tool = toolState.id === props.selected ? toolState.mode : "move";
+  const latest = useRef({ ...props, tool });
   const sceneApi = useRef<{
     root: THREE.Group;
     render: () => void;
     fitView: () => void;
+    tools: ReturnType<typeof createFurnitureTools>;
   } | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
-    latest.current = props;
+    latest.current = { ...props, tool };
   });
   useEffect(() => {
     const element = host.current;
@@ -74,17 +84,50 @@ export default function RoomCanvas(props: Props) {
     controls.maxPolarAngle = Math.PI / 2 - 0.03;
     controls.minDistance = 2;
     controls.maxDistance = 110;
-    const render = () => renderer.render(scene, camera);
+    const render = () => {
+      updateCutaway(root, camera);
+      renderer.render(scene, camera);
+      const toolbar = overlay.current;
+      if (!toolbar) return;
+      const mesh = root.children.find(
+        (object) => object.userData.itemId === latest.current.selected,
+      );
+      if (!mesh) {
+        toolbar.style.visibility = "hidden";
+        return;
+      }
+      const bounds = new THREE.Box3().setFromObject(mesh);
+      const point = bounds.getCenter(new THREE.Vector3());
+      point.y = bounds.max.y + 0.3;
+      point.project(camera);
+      toolbar.style.visibility = point.z > 1 ? "hidden" : "visible";
+      toolbar.style.left = `${Math.max(125, Math.min(element.clientWidth - 125, ((point.x + 1) / 2) * element.clientWidth))}px`;
+      toolbar.style.top = `${Math.max(90, Math.min(element.clientHeight - 100, ((1 - point.y) / 2) * element.clientHeight))}px`;
+    };
+    const tools = createFurnitureTools({
+      scene,
+      root,
+      camera,
+      canvas,
+      orbit: controls,
+      render,
+      onCommit: (id, patch) => latest.current.onTransform(id, patch),
+    });
     function fitView() {
       const { room, top } = latest.current;
+      const bounds = planBounds(room.plan);
       const tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-      controls.target.set(0, top ? 0 : room.height * 0.3, 0);
+      controls.target.set(
+        bounds.centerX,
+        top ? 0 : room.height * 0.3,
+        bounds.centerZ,
+      );
       if (top) {
         const distance =
           (Math.max(room.width / camera.aspect, room.depth) / (2 * tangent)) *
             1.2 +
           room.height;
-        camera.position.set(0, distance, 0.001);
+        camera.position.set(bounds.centerX, distance, bounds.centerZ + 0.001);
       } else {
         const radius = Math.hypot(room.width, room.depth, room.height) / 2;
         const angle = Math.atan(tangent * Math.min(1, camera.aspect));
@@ -132,6 +175,7 @@ export default function RoomCanvas(props: Props) {
     function down(event: PointerEvent) {
       if (event.button !== 0 || !event.isPrimary) return;
       const point = floorPoint(event);
+      if (latest.current.tool !== "move" && tools.control.axis !== null) return;
       const hit = ray.intersectObjects(root.children, true).find((hit) => {
         let object: THREE.Object3D | null = hit.object;
         while (object && !object.userData.itemId) object = object.parent;
@@ -144,6 +188,10 @@ export default function RoomCanvas(props: Props) {
         (item) => item.id === mesh.userData.itemId,
       );
       if (!item) return;
+      if (latest.current.tool !== "move") {
+        latest.current.onSelect(item.id);
+        return;
+      }
       drag = {
         id: item.id,
         offsetX: item.x - point.x,
@@ -163,12 +211,11 @@ export default function RoomCanvas(props: Props) {
       const current = latest.current;
       const item = current.room.items.find((item) => item.id === drag?.id);
       if (!item) return;
-      const step = current.snap ? 0.1 : 0.01;
       const fitted = fitFurniture(
         {
           ...item,
-          x: Math.round((point.x + drag.offsetX) / step) * step,
-          z: Math.round((point.z + drag.offsetZ) / step) * step,
+          x: snapCoordinate(point.x + drag.offsetX, current.room.measurements),
+          z: snapCoordinate(point.z + drag.offsetZ, current.room.measurements),
         },
         current.room,
       );
@@ -207,7 +254,7 @@ export default function RoomCanvas(props: Props) {
     canvas.addEventListener("pointerup", up);
     canvas.addEventListener("pointercancel", up);
     canvas.addEventListener("webglcontextlost", lost);
-    sceneApi.current = { root, render, fitView };
+    sceneApi.current = { root, render, fitView, tools };
     populateScene(
       root,
       latest.current.room,
@@ -220,6 +267,7 @@ export default function RoomCanvas(props: Props) {
     return () => {
       sceneApi.current = null;
       resize.disconnect();
+      tools.dispose();
       controls.dispose();
       disposeGroup(root);
       light.shadow.dispose();
@@ -242,8 +290,13 @@ export default function RoomCanvas(props: Props) {
       props.grid,
       props.walls,
     );
+    api.tools.sync(
+      props.room.items.find((item) => item.id === props.selected),
+      tool,
+      props.room.measurements,
+    );
     api.render();
-  }, [props.room, props.selected, props.grid, props.walls]);
+  }, [props.room, props.selected, props.grid, props.walls, tool]);
   useEffect(() => {
     const api = sceneApi.current;
     if (!api) return;
@@ -254,14 +307,43 @@ export default function RoomCanvas(props: Props) {
     props.room.width,
     props.room.depth,
     props.room.height,
+    props.room.plan,
   ]);
   return (
     <div
       className={styles.canvas}
       ref={host}
-      role="img"
+      role="group"
       aria-label={t("room.viewport")}
     >
+      {props.selected &&
+        props.room.items.some((item) => item.id === props.selected) && (
+          <div
+            ref={overlay}
+            className={styles.itemToolbar}
+            role="toolbar"
+            aria-label={t("room.objectTools")}
+          >
+            {(["move", "rotate", "scale"] as const).map((mode) => (
+              <button
+                key={mode}
+                aria-pressed={tool === mode}
+                onClick={() => setTool({ id: props.selected, mode })}
+              >
+                {t(`room.tool.${mode}`)}
+              </button>
+            ))}
+            <span>
+              {t(
+                tool === "scale"
+                  ? "room.scaleHint"
+                  : tool === "rotate"
+                    ? "room.rotateHint"
+                    : "room.dragHint",
+              )}
+            </span>
+          </div>
+        )}
       {failed && (
         <div className={styles.fallback} role="alert">
           <strong>{t("room.no3d")}</strong>

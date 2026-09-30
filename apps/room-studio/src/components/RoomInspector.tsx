@@ -2,6 +2,7 @@ import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import {
   catalog,
   fitFurniture,
+  furnitureInside,
   type Furniture,
   type Room,
 } from "../model/room";
@@ -32,8 +33,15 @@ export default function RoomInspector({
         <>
           <h2>{t(`room.${item.kind}`)}</h2>
           <p>{t("room.editHint")}</p>
+          {!furnitureInside(item, room) && (
+            <p role="status" className={styles.planNotice}>
+              {t("room.outsideItem")}
+            </p>
+          )}
           <div className={styles.measureGrid}>
             <Measure
+              unit={room.measurements.unit}
+              step={room.measurements.step}
               label={t("room.width")}
               value={item.width}
               min={0.05}
@@ -41,6 +49,8 @@ export default function RoomInspector({
               onChange={(width) => updateItem({ width })}
             />
             <Measure
+              unit={room.measurements.unit}
+              step={room.measurements.step}
               label={t("room.depth")}
               value={item.depth}
               min={0.05}
@@ -48,6 +58,8 @@ export default function RoomInspector({
               onChange={(depth) => updateItem({ depth })}
             />
             <Measure
+              unit={room.measurements.unit}
+              step={room.measurements.step}
               label={t("room.height")}
               value={item.height}
               min={0.01}
@@ -63,6 +75,8 @@ export default function RoomInspector({
               onChange={(rotation) => updateItem({ rotation })}
             />
             <Measure
+              unit={room.measurements.unit}
+              step={room.measurements.step}
               label={t("room.positionX")}
               value={item.x}
               min={-10}
@@ -70,6 +84,8 @@ export default function RoomInspector({
               onChange={(x) => updateItem({ x })}
             />
             <Measure
+              unit={room.measurements.unit}
+              step={room.measurements.step}
               label={t("room.positionZ")}
               value={item.z}
               min={-10}

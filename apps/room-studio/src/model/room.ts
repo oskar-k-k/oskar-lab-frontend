@@ -1,3 +1,17 @@
+import {
+  closedOutline,
+  footprintInside,
+  parseFloorPlan,
+  planBounds,
+  rectanglePlan,
+  type FloorPlan,
+} from "./floorPlan";
+import {
+  defaultMeasurements,
+  parseMeasurements,
+  type Measurements,
+} from "./measurements";
+
 export const furnitureKinds = [
   "bed",
   "sofa",
@@ -21,7 +35,9 @@ export type Furniture = {
   color: string;
 };
 export type Room = {
-  version: 1;
+  version: 2;
+  plan: FloorPlan;
+  measurements: Measurements;
   name: string;
   width: number;
   depth: number;
@@ -59,7 +75,7 @@ export function createFurniture(kind: FurnitureKind, id: string): Furniture {
 /** Keeps the entire rotated footprint inside the room, reducing oversize items if necessary. */
 export function fitFurniture(
   item: Furniture,
-  room: Pick<Room, "width" | "depth" | "height">,
+  room: Pick<Room, "width" | "depth" | "height"> & Partial<Pick<Room, "plan">>,
 ): Furniture {
   const angle = (item.rotation * Math.PI) / 180;
   const c = Math.abs(Math.cos(angle)),
@@ -69,18 +85,19 @@ export function fitFurniture(
   const scale = Math.min(1, room.width / extentX, room.depth / extentZ);
   const halfX = (extentX * scale) / 2,
     halfZ = (extentZ * scale) / 2;
+  const bounds = room.plan ? planBounds(room.plan) : { centerX: 0, centerZ: 0 };
   return {
     ...item,
     width: item.width * scale,
     depth: item.depth * scale,
     height: Math.min(item.height, room.height),
     x: Math.max(
-      -room.width / 2 + halfX,
-      Math.min(room.width / 2 - halfX, item.x),
+      bounds.centerX - room.width / 2 + halfX,
+      Math.min(bounds.centerX + room.width / 2 - halfX, item.x),
     ),
     z: Math.max(
-      -room.depth / 2 + halfZ,
-      Math.min(room.depth / 2 - halfZ, item.z),
+      bounds.centerZ - room.depth / 2 + halfZ,
+      Math.min(bounds.centerZ + room.depth / 2 - halfZ, item.z),
     ),
   };
 }
@@ -88,7 +105,9 @@ export function fitFurniture(
 /** Creates a furnished starter room without accessing browser APIs. */
 export function starterRoom(): Room {
   return {
-    version: 1,
+    version: 2,
+    plan: rectanglePlan(5, 4),
+    measurements: { ...defaultMeasurements },
     name: "",
     width: 5,
     depth: 4,
@@ -123,11 +142,11 @@ function record(value: unknown): value is Record<string, unknown> {
 export function parseRoom(value: unknown): Room {
   if (
     !record(value) ||
-    value.version !== 1 ||
+    (value.version !== 1 && value.version !== 2) ||
     typeof value.name !== "string" ||
     value.name.length > 80 ||
-    !numberIn(value.width, 2, 20) ||
-    !numberIn(value.depth, 2, 20) ||
+    !numberIn(value.width, value.version === 1 ? 2 : 0.05, 20) ||
+    !numberIn(value.depth, value.version === 1 ? 2 : 0.05, 20) ||
     !numberIn(value.height, 2, 6) ||
     typeof value.wall !== "string" ||
     !colorPattern.test(value.wall) ||
@@ -138,7 +157,15 @@ export function parseRoom(value: unknown): Room {
   )
     throw new Error("Invalid room");
   const room: Room = {
-    version: 1,
+    version: 2,
+    plan:
+      value.version === 1
+        ? rectanglePlan(value.width, value.depth)
+        : parseFloorPlan(value.plan),
+    measurements:
+      value.version === 1
+        ? { ...defaultMeasurements }
+        : parseMeasurements(value.measurements),
     name: value.name,
     width: value.width,
     depth: value.depth,
@@ -147,6 +174,9 @@ export function parseRoom(value: unknown): Room {
     floor: value.floor,
     items: [],
   };
+  const bounds = planBounds(room.plan);
+  room.width = bounds.width;
+  room.depth = bounds.depth;
   const ids = new Set<string>();
   room.items = value.items.map((item) => {
     if (
@@ -167,20 +197,18 @@ export function parseRoom(value: unknown): Room {
     )
       throw new Error("Invalid furniture");
     ids.add(item.id);
-    return fitFurniture(
-      {
-        id: item.id,
-        kind: item.kind as FurnitureKind,
-        width: item.width,
-        depth: item.depth,
-        height: item.height,
-        x: item.x,
-        z: item.z,
-        rotation: item.rotation,
-        color: item.color,
-      },
-      room,
-    );
+    const parsed: Furniture = {
+      id: item.id,
+      kind: item.kind as FurnitureKind,
+      width: item.width,
+      depth: item.depth,
+      height: item.height,
+      x: item.x,
+      z: item.z,
+      rotation: item.rotation,
+      color: item.color,
+    };
+    return value.version === 1 ? fitFurniture(parsed, room) : parsed;
   });
   return room;
 }
@@ -191,5 +219,54 @@ export function resizeRoom(
   patch: Partial<Pick<Room, "width" | "depth" | "height">>,
 ): Room {
   const next = { ...room, ...patch };
+  const bounds = planBounds(room.plan);
+  next.plan = {
+    ...room.plan,
+    corners: room.plan.corners.map((corner) => ({
+      ...corner,
+      x:
+        bounds.centerX +
+        ((corner.x - bounds.centerX) * next.width) / room.width,
+      z:
+        bounds.centerZ +
+        ((corner.z - bounds.centerZ) * next.depth) / room.depth,
+    })),
+  };
   return { ...next, items: next.items.map((item) => fitFurniture(item, next)) };
+}
+
+/** Applies a new floor plan while preserving furniture for explicit repositioning. */
+export function withFloorPlan(room: Room, plan: FloorPlan): Room {
+  const bounds = planBounds(plan);
+  return { ...room, plan, width: bounds.width, depth: bounds.depth };
+}
+
+/** Returns the four corners of the item's rotated footprint in floor coordinates. */
+export function furnitureFootprint(item: Furniture) {
+  const angle = (item.rotation * Math.PI) / 180;
+  return [
+    [-1, -1],
+    [1, -1],
+    [1, 1],
+    [-1, 1],
+  ].map(([x, z]) => ({
+    x:
+      item.x +
+      ((x * item.width) / 2) * Math.cos(angle) -
+      ((z * item.depth) / 2) * Math.sin(angle),
+    z:
+      item.z +
+      ((x * item.width) / 2) * Math.sin(angle) +
+      ((z * item.depth) / 2) * Math.cos(angle),
+  }));
+}
+
+/** Flags furniture outside the actual polygon without silently changing its real dimensions. */
+export function furnitureInside(item: Furniture, room: Room): boolean {
+  const outline = closedOutline(room.plan);
+  return (
+    outline !== null &&
+    footprintInside(furnitureFootprint(item), outline) &&
+    item.height <= room.height
+  );
 }

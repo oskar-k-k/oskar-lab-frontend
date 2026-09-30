@@ -5,9 +5,9 @@ import {
   createFurniture,
   fitFurniture,
   furnitureKinds,
-  resizeRoom,
   type Room,
 } from "../model/room";
+import { formatLength } from "../model/measurements";
 import Measure from "./Measure";
 import styles from "./RoomStudio.module.css";
 type Props = {
@@ -25,7 +25,7 @@ export default function RoomLibrary({
   setSelected,
   importRoom,
 }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [panel, setPanel] = useState<"furniture" | "room">("furniture");
   const fileInput = useRef<HTMLInputElement>(null);
   return (
@@ -69,7 +69,17 @@ export default function RoomLibrary({
                 </span>
                 <strong>{t(`room.${kind}`)}</strong>
                 <small>
-                  {catalog[kind].width} × {catalog[kind].depth} m
+                  {formatLength(
+                    catalog[kind].width,
+                    room.measurements.unit,
+                    locale,
+                  )}{" "}
+                  ×{" "}
+                  {formatLength(
+                    catalog[kind].depth,
+                    room.measurements.unit,
+                    locale,
+                  )}
                 </small>
                 <span className={styles.plus}>+</span>
               </button>
@@ -80,27 +90,16 @@ export default function RoomLibrary({
       ) : (
         <div className={styles.settings}>
           <h2>{t("room.dimensions")}</h2>
-          <p>{t("room.dimensionHint")}</p>
+          <p>{t("room.designDimensionsHint")}</p>
+
           <Measure
-            label={t("room.width")}
-            value={room.width}
-            min={2}
-            max={20}
-            onChange={(width) => commit(resizeRoom(room, { width }))}
-          />
-          <Measure
-            label={t("room.depth")}
-            value={room.depth}
-            min={2}
-            max={20}
-            onChange={(depth) => commit(resizeRoom(room, { depth }))}
-          />
-          <Measure
+            unit={room.measurements.unit}
+            step={room.measurements.step}
             label={t("room.height")}
             value={room.height}
             min={2}
             max={6}
-            onChange={(height) => commit(resizeRoom(room, { height }))}
+            onChange={(height) => commit({ ...room, height })}
           />
           <h2>{t("room.finishes")}</h2>
           <label className={styles.color}>
@@ -123,7 +122,6 @@ export default function RoomLibrary({
               }
             />
           </label>
-          <p className={styles.note}>{t("room.resizeHint")}</p>
         </div>
       )}
       <div className={styles.sidebarFooter}>
