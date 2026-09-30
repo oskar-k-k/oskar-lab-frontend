@@ -1,8 +1,8 @@
-import {cameraAt, layerCenter, LAYER_COUNT, PARTICLE_COUNT, particlePosition, type Vector3} from "./choreography";
-import {clampTime, noise} from "./timeline";
+import {makeProjection, type ScreenPoint} from "./projection";
+import {paintDataAnnotations, type SceneLabels} from "./dataAnnotations";
+import {cameraAt, layerCenter, LAYER_COUNT, PARTICLE_COUNT, particlePosition} from "./choreography";
+import {clampTime} from "./timeline";
 
-type ScreenPoint = {x: number; y: number; scale: number; visible: boolean};
-type Camera = ReturnType<typeof cameraAt>;
 const COLORS = ["#58f7ff", "#a47bff", "#ff529c", "#ffb95a", "#82ffcb"];
 let glowSprites: HTMLCanvasElement[] | undefined;
 
@@ -24,22 +24,6 @@ function createGlowSprites(): HTMLCanvasElement[] {
     });
 }
 
-function makeProjection(camera: Camera) {
-    const cy = Math.cos(camera.yaw), sy = Math.sin(camera.yaw);
-    const cp = Math.cos(camera.pitch), sp = Math.sin(camera.pitch);
-    const cr = Math.cos(camera.roll), sr = Math.sin(camera.roll);
-    return ({x, y, z}: Vector3): ScreenPoint => {
-        const rx = (x - camera.x) * cy + z * sy;
-        const rz = z * cy - (x - camera.x) * sy;
-        const ry = y * cp - rz * sp;
-        const depth = y * sp + rz * cp + camera.distance;
-        const scale = 1050 / Math.max(110, depth);
-        const px = 800 + (rx * cr - ry * sr) * scale;
-        const py = 450 + (rx * sr + ry * cr) * scale;
-        return {x: px, y: py, scale, visible: depth > 110 && px > -100 && px < 1700 && py > -100 && py < 1000};
-    };
-}
-
 function paintBackground(ctx: CanvasRenderingContext2D, time: number) {
     ctx.fillStyle = "#04030c";
     ctx.fillRect(0, 0, 1600, 900);
@@ -53,11 +37,13 @@ function paintBackground(ctx: CanvasRenderingContext2D, time: number) {
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, 1600, 900);
     }
-    ctx.fillStyle = "#a39ec3";
-    for (let i = 0; i < 120; i++) {
-        const x = (noise(i + 9000) * 1600 + Math.sin(time * Math.PI / 30) * (12 + i % 4)) % 1600;
-        ctx.globalAlpha = 0.12 + noise(i) * 0.35;
-        ctx.fillRect(x, noise(i + 9500) * 900, 1.2, 1.2);
+    ctx.strokeStyle = "#a39ec30a";
+    ctx.lineWidth = 1;
+    for (let x = 0; x < 1600; x += 80) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 900); ctx.stroke();
+    }
+    for (let y = 0; y < 900; y += 80) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1600, y); ctx.stroke();
     }
     ctx.globalAlpha = 1;
 }
@@ -76,13 +62,26 @@ function strokeLink(ctx: CanvasRenderingContext2D, a: ScreenPoint, b: ScreenPoin
 }
 
 function paintConnections(ctx: CanvasRenderingContext2D, points: ScreenPoint[], time: number) {
-    for (let i = 720; i < 1800; i++) {
-        const layer = Math.floor((i - 720) / 120);
-        const color = COLORS[layer % COLORS.length];
-        const energy = 0.3 + 0.25 * Math.sin(time * Math.PI / 0.75 - layer * 0.9);
-        if ((i - 720) % 30 < 29) strokeLink(ctx, points[i], points[i + 1], color, 0.8);
-        if ((i - 720) % 120 < 90) strokeLink(ctx, points[i], points[i + 30], color, 0.4);
-        if (i < 1680 && i % 4 === 0) strokeLink(ctx, points[i], points[i + 120], color, energy);
+    for (let layer = 0; layer < LAYER_COUNT; layer++) {
+        const base = 720 + layer * 120;
+        for (let node = 0; node < 60; node++) {
+            const head = Math.floor(node / 20);
+            if (node % 20 < 19) strokeLink(ctx, points[base + node], points[base + node + 1], COLORS[head], 0.65);
+            if (node % 4 === 0) strokeLink(ctx, points[base + node], points[base + head * 20 + (node + 7) % 20], COLORS[head], 0.32);
+        }
+        for (let column = 0; column < 2; column++) {
+            for (let node = 0; node < 20; node++) {
+                const source = base + 60 + column * 20 + node;
+                for (let offset = 0; offset < 3; offset++) {
+                    const target = base + 60 + (column + 1) * 20 + (node * 3 + offset * 7) % 20;
+                    const strength = 0.22 + 0.18 * Math.sin(time * Math.PI / 0.75 - node * 0.4);
+                    strokeLink(ctx, points[source], points[target], offset % 2 === 0 ? COLORS[0] : COLORS[2], strength);
+                }
+            }
+        }
+        if (layer < LAYER_COUNT - 1) {
+            for (let node = 0; node < 20; node += 3) strokeLink(ctx, points[base + 100 + node], points[base + 120 + node], COLORS[layer % 5], 0.24);
+        }
     }
 }
 
@@ -101,6 +100,13 @@ function paintParticles(ctx: CanvasRenderingContext2D, points: ScreenPoint[], ti
         }
         ctx.globalAlpha = Math.min(0.95, 0.3 + point.scale * 0.26 + bright * 0.25);
         ctx.drawImage(glowSprites[colorIndex], point.x - size / 2, point.y - size / 2, size, size);
+        if (i >= 720 && i < 1800) {
+            ctx.fillStyle = "#eaf7ff";
+            ctx.globalAlpha = 0.9;
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, Math.min(5, 2.5 * point.scale), 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
     ctx.globalAlpha = 1;
 }
@@ -147,22 +153,8 @@ function paintSignalRibbons(ctx: CanvasRenderingContext2D, time: number) {
     }
 }
 
-function paintEndpoints(ctx: CanvasRenderingContext2D, time: number, labels: readonly string[]) {
-    const project = makeProjection(cameraAt(time));
-    for (const [index, x] of [-980, 960].entries()) {
-        const point = project({x, y: -255, z: 0});
-        if (!point.visible) continue;
-        ctx.globalAlpha = 0.78;
-        ctx.textAlign = "center";
-        ctx.font = `${Math.min(23, Math.max(14, point.scale * 19))}px sans-serif`;
-        ctx.fillStyle = index === 0 ? COLORS[0] : COLORS[3];
-        ctx.fillText(labels[index], point.x, point.y);
-    }
-    ctx.globalAlpha = 1;
-}
-
 /** Draws one continuous model from input to output with a sixty-second camera path. */
-export function renderFrame(ctx: CanvasRenderingContext2D, width: number, height: number, value: number, labels: readonly string[]) {
+export function renderFrame(ctx: CanvasRenderingContext2D, width: number, height: number, value: number, labels: SceneLabels) {
     const time = clampTime(value);
     ctx.save();
     ctx.scale(width / 1600, height / 900);
@@ -181,6 +173,6 @@ export function renderFrame(ctx: CanvasRenderingContext2D, width: number, height
     vignette.addColorStop(1, "#04030caa");
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, 1600, 900);
-    paintEndpoints(ctx, time, labels);
+    paintDataAnnotations(ctx, time, project, labels);
     ctx.restore();
 }

@@ -1,4 +1,14 @@
 export const llmEn = {
+    "llm.dataPrompt": "PROMPT",
+    "llm.dataTokens": "The|sky|is",
+    "llm.dataCandidates": "blue|clear|dark|bright",
+    "llm.dataAttention": "Attention",
+    "llm.dataFeedForward": "Feed-forward",
+    "llm.dataTransformer": "TRANSFORMER",
+    "llm.dataEmbeddings": "TOKEN → EMBEDDING",
+    "llm.dataNextToken": "NEXT TOKEN",
+    "llm.dataExample": "Illustrative values · No real inference",
+
     "llm.loop": "Loop camera",
     "llm.scenePrompt": "Imagine a star.",
     "llm.sceneOutput": "A new possibility.",
@@ -15,7 +25,7 @@ export const llmEn = {
     "llm.hint": "Space to play / pause · Esc to leave recording mode", "llm.speed": "Playback speed",
     "llm.prompt": "Why do stars shine?", "llm.answer": "Stars shine because nuclear fusion in their cores releases energy as light and heat.",
     "llm.input": "THE QUESTION", "llm.output": "THE ANSWER", "llm.candidate": "NEXT TOKEN / ILLUSTRATIVE PROBABILITIES",
-    "llm.canvas": "Colored signals flow from an input core through nine transformer layers into a luminous output, while the camera travels through the model.", "llm.canvasError": "The animation could not be displayed. Try a browser with Canvas support.",
+    "llm.canvas": "Example prompt: The sky is. Colored signals travel through labeled Attention and Feed-forward networks with signed activation vectors. Next-token examples: blue 67%, clear 19%, dark 9%, bright 5%. No real inference.", "llm.canvasError": "The animation could not be displayed. Try a browser with Canvas support.",
     "llm.end": "One token. Then the journey begins again.",
     "llm.chapter1": "Overview", "llm.chapter2": "Input", "llm.chapter3": "Transformers", "llm.chapter4": "Signal flow", "llm.chapter5": "Deep inside", "llm.chapter6": "Output",
     "llm.detail1": "A question enters. The model receives a sequence of tokens, not a thought.",
@@ -31,6 +41,16 @@ export const llmEn = {
 } as const;
 
 export const llmDe: Record<keyof typeof llmEn, string> = {
+    "llm.dataPrompt": "PROMPT",
+    "llm.dataTokens": "Der|Himmel|ist",
+    "llm.dataCandidates": "blau|klar|dunkel|hell",
+    "llm.dataAttention": "Attention",
+    "llm.dataFeedForward": "Feed-forward",
+    "llm.dataTransformer": "TRANSFORMER",
+    "llm.dataEmbeddings": "TOKEN → EMBEDDING",
+    "llm.dataNextToken": "NÄCHSTES TOKEN",
+    "llm.dataExample": "Beispielwerte · Keine echte Berechnung",
+
     "llm.loop": "Kamerafahrt wiederholen",
     "llm.scenePrompt": "Stell dir einen Stern vor.",
     "llm.sceneOutput": "Eine neue Möglichkeit.",
@@ -46,7 +66,7 @@ export const llmDe: Record<keyof typeof llmEn, string> = {
     "llm.hint": "Leertaste für Start / Pause · Esc verlässt den Aufnahmemodus", "llm.speed": "Abspielgeschwindigkeit",
     "llm.prompt": "Warum leuchten Sterne?", "llm.answer": "Sterne leuchten, weil Kernfusion in ihrem Inneren Energie als Licht und Wärme freisetzt.",
     "llm.input": "DIE FRAGE", "llm.output": "DIE ANTWORT", "llm.candidate": "NÄCHSTES TOKEN / BEISPIELWAHRSCHEINLICHKEITEN",
-    "llm.canvas": "Farbige Signale fließen von einem Eingabekern durch neun Transformer-Schichten zu einer leuchtenden Ausgabe. Die Kamera bewegt sich durch das Modell.", "llm.canvasError": "Die Animation konnte nicht dargestellt werden. Versuche einen Browser mit Canvas-Unterstützung.",
+    "llm.canvas": "Beispielprompt: Der Himmel ist. Farbige Signale durchlaufen beschriftete Attention- und Feed-forward-Netze mit Zahlenvektoren. Beispiele für das nächste Token: blau 67%, klar 19%, dunkel 9%, hell 5%. Keine echte Berechnung.", "llm.canvasError": "Die Animation konnte nicht dargestellt werden. Versuche einen Browser mit Canvas-Unterstützung.",
     "llm.end": "Ein Token. Dann beginnt die Reise erneut.",
     "llm.chapter1": "Überblick", "llm.chapter2": "Input", "llm.chapter3": "Transformer", "llm.chapter4": "Signalfluss", "llm.chapter5": "Mittendrin", "llm.chapter6": "Output",
     "llm.detail1": "Eine Frage kommt an. Das Modell erhält eine Folge von Tokens, keinen Gedanken.",

@@ -1,6 +1,6 @@
 # Inside a Language Model
 
-A continuous, abstract input-to-output scene in Oskar Lab at `/apps/inside-llm` (port 10039). It uses 2,400 seeded particles, nine transformer-inspired structures, five colors, flowing signal ribbons and an output star. The camera follows a 60-second route from the whole model through its layers and back. Camera looping is on by default and can be disabled with the infinity button.
+A continuous, abstract input-to-output scene in Oskar Lab at `/apps/inside-llm` (port 10039). It uses 2,400 seeded particles, nine transformer-inspired structures, five colors, flowing signal ribbons and a next-token distribution. Each structure contains three attention-inspired groups and connected feed-forward nodes. Signed activation vectors and compact block labels remain readable during camera travel. The camera follows a 60-second route from the whole model through its layers and back. Camera looping is on by default and can be disabled with the infinity button.
 
 ## Run and record
 
@@ -12,7 +12,7 @@ Enable recording mode, optionally fullscreen, and start the scene. Controls and 
 
 `model/choreography.ts` defines the stable model geometry, moving particles and smooth camera keyframes. `model/renderer.ts` projects the scene into Canvas 2D with additive glow sprites and signal trails. Every frame is derived from absolute time, so seeking is reproducible. Canvas resolution is capped at twice the display size.
 
-This is an artistic interpretation of computation, not an architectural diagram or inference trace. The prompt and output captions are scripted; there is no AI backend. The star is a visual metaphor for an output, not an assertion that a language model directly produces a particle image. Technical explanations stay outside the recording surface.
+This is an artistic interpretation of computation, not an architectural diagram or inference trace. The prompt and output captions are scripted; there is no AI backend. The example prompt is “The sky is” (German: “Der Himmel ist”). Four illustrative next-token probabilities sum to 100 percent; “blue” / “blau” is highlighted as the selected completion near the output. Signed activation values update twice per second and repeat deterministically. Connections and the reduced node counts are visual abstractions, not the architecture or weights of a named model. The recording surface explicitly identifies the values as illustrative.
 
 ## Validation
 

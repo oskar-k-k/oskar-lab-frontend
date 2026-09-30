@@ -20,7 +20,13 @@ export default function Scene({time}: Readonly<{time: number}>) {
             const width = Math.round(element.clientWidth * scale);
             const height = Math.round(element.clientHeight * scale);
             if (element.width !== width || element.height !== height) { element.width = width; element.height = height; }
-            renderFrame(ctx, width, height, time, [t("llm.scenePrompt"), t("llm.sceneOutput")]);
+            renderFrame(ctx, width, height, time, {
+                prompt: t("llm.dataPrompt"), tokens: t("llm.dataTokens").split("|"),
+                candidates: t("llm.dataCandidates").split("|"),
+                attention: t("llm.dataAttention"), feedForward: t("llm.dataFeedForward"),
+                transformer: t("llm.dataTransformer"), embeddings: t("llm.dataEmbeddings"),
+                nextToken: t("llm.dataNextToken"), example: t("llm.dataExample"),
+            });
         }
         draw();
         const observer = new ResizeObserver(draw); observer.observe(element);

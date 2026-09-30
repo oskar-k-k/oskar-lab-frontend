@@ -26,21 +26,26 @@ function travelingSignal(index: number, time: number): Vector3 {
     return {x, y: Math.cos(angle) * spread * c, z: Math.sin(angle) * spread * c};
 }
 
-function transformerParticle(index: number, time: number): Vector3 {
+function transformerParticle(index: number): Vector3 {
     const local = index - 720;
     const layer = Math.floor(local / 120);
     const node = local % 120;
-    const ring = Math.floor(node / 30);
-    const angle = node % 30 / 30 * TAU + time * TAU / 60 * (ring % 2 === 0 ? 4 : -3) + layer * 0.18;
-    const radius = 70 + ring * 41 + Math.sin(time * TAU / 60 * 33 - layer * 0.8) * 7;
-    return {x: layerCenter(layer) + Math.sin(angle * 3 + time * TAU / 6) * 15, y: Math.cos(angle) * radius, z: Math.sin(angle) * radius};
+    if (node < 60) {
+        const head = Math.floor(node / 20);
+        const angle = (node % 20) / 20 * TAU;
+        return {x: layerCenter(layer) - 42, y: (head - 1) * 115 + Math.cos(angle) * 43, z: Math.sin(angle) * 90};
+    }
+    const neuron = node - 60;
+    const column = Math.floor(neuron / 20);
+    const row = neuron % 10;
+    const depth = Math.floor(neuron / 10) % 2;
+    return {x: layerCenter(layer) + column * 34 - 6, y: (row - 4.5) * 35, z: (depth - 0.5) * 115};
 }
 
 function outputParticle(index: number, time: number): Vector3 {
     const [a, b, c] = seeds[index];
-    const angle = a * TAU + time * TAU / 30;
-    const radius = (110 + 55 * Math.cos(angle * 5)) * (0.7 + b * 0.3);
-    return {x: 960 + Math.cos(angle) * radius, y: Math.sin(angle) * radius, z: (c - 0.5) * 70};
+    const row = (index - 1800) % 4;
+    return {x: 910 + a * [170, 105, 65, 35][row], y: (row - 1.5) * 55, z: (b - 0.5) * 70 + Math.sin(time * TAU / 10 + c * TAU) * 8};
 }
 
 function inputParticle(index: number, time: number): Vector3 {
@@ -53,7 +58,7 @@ function inputParticle(index: number, time: number): Vector3 {
 export function particlePosition(index: number, value: number): Vector3 {
     const time = clampTime(value);
     if (index < 720) return travelingSignal(index, time);
-    if (index < 1800) return transformerParticle(index, time);
+    if (index < 1800) return transformerParticle(index);
     if (index < 2160) return outputParticle(index, time);
     return inputParticle(index, time);
 }
