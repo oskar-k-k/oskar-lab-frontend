@@ -21,7 +21,9 @@ export default function Scene({time}: Readonly<{time: number}>) {
             const height = Math.round(element.clientHeight * scale);
             if (element.width !== width || element.height !== height) { element.width = width; element.height = height; }
             renderFrame(ctx, width, height, time, {
-                prompt: t("llm.dataPrompt"), tokens: t("llm.dataTokens").split("|"),
+                architecture: t("llm.architecture"), outputPipeline: t("llm.outputPipeline"), chat: t("llm.chatEntry"), enter: t("llm.enterHint"), tokenNote: t("llm.tokenNote"),
+                causal: t("llm.causalNote"), shared: t("llm.sharedNote"), residual: t("llm.residualNote"),
+                output: t("llm.output"), repeat: t("llm.repeatNote"), prompt: t("llm.dataPrompt"), tokens: t("llm.dataTokens").split("|"),
                 candidates: t("llm.dataCandidates").split("|"),
                 attention: t("llm.dataAttention"), feedForward: t("llm.dataFeedForward"),
                 transformer: t("llm.dataTransformer"), embeddings: t("llm.dataEmbeddings"),
