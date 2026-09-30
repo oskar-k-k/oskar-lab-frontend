@@ -19,3 +19,14 @@ The output probabilities and sentence are scripted and are not computed by this 
 ## Validation
 
 Run `npm run check` in the workspace. Transformer tests verify causal masking, normalized attention, independence from future tokens and finite, continuous representations between blocks. Legacy choreography tests remain for the earlier reusable scene model; the current renderer does not use that particle layout. Browser checks cover chat entry, vectors, feed-forward networks, output, playback, music and mobile controls.
+
+## Resource overlay
+
+The white recording overlay shows simulated counters from submission (3.4 s) to reference completion (59 s). The visible-text token estimates are 5 input / 6 output in English and 7 / 7 in German; they are assumptions, not tokenizer results. System context, history, tools and reasoning are omitted. The Qwen3-8B-scale operation estimate is 2 × 8.2B × (prefill tokens + max(output tokens − 1, 0)), with attention overhead omitted and cached decoding assumed. BF16 weight capacity remains fixed at 16.4 decimal GB, excluding runtime/cache memory.
+
+Energy (0.24 Wh), cooling water (0.26 mL) and emissions (0.03 g CO2e) use Google's published median Gemini Apps text-prompt reference from May 2025. They are not Qwen measurements or predictions for the weather question. Their animated accumulation is an illustrative time stretch, not an observed consumption curve. Energy-only cost is 0.24 / 1000 × an assumed EUR 0.30/kWh = EUR 0.000072; it is not API pricing. The source/assumptions disclosure is localized and accessible below the player, hidden in recording mode.
+
+Sources checked 2026-09-30:
+- https://cloud.google.com/blog/products/infrastructure/measuring-the-environmental-impact-of-ai-inference
+- https://huggingface.co/Qwen/Qwen3-8B
+- https://neurips2023-enlsp.github.io/papers/paper_75.pdf

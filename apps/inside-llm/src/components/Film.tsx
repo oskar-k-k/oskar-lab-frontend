@@ -123,6 +123,17 @@ export default function Film({platformUrl}: Readonly<{platformUrl: string}>) {
                 </button>)}</nav>
 
             </section>
+            <details className="resourceSources">
+                <summary>{t("llm.debugSources")}</summary>
+                <p>{t("llm.debugExplanation")}</p>
+                <p>{t("llm.debugEnvironment")}</p>
+                <ul>
+                    <li><a href="https://cloud.google.com/blog/products/infrastructure/measuring-the-environmental-impact-of-ai-inference" target="_blank" rel="noreferrer">{t("llm.debugGoogle")}</a></li>
+                    <li><a href="https://huggingface.co/Qwen/Qwen3-8B" target="_blank" rel="noreferrer">{t("llm.debugQwen")}</a></li>
+                    <li><a href="https://neurips2023-enlsp.github.io/papers/paper_75.pdf" target="_blank" rel="noreferrer">{t("llm.debugFormula")}</a></li>
+                </ul>
+                <p>{t("llm.debugChecked")}</p>
+            </details>
             <footer>
                 <span>{t("llm.note")}</span>
                 <span>OSKAR LAB © {new Date().getFullYear()}</span>

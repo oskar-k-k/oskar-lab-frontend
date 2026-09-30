@@ -21,6 +21,8 @@ export default function Scene({time}: Readonly<{time: number}>) {
             const height = Math.round(element.clientHeight * scale);
             if (element.width !== width || element.height !== height) { element.width = width; element.height = height; }
             renderFrame(ctx, width, height, time, {
+                inputTokens: Number(t("llm.debugInputCount")), outputTokens: Number(t("llm.debugOutputCount")),
+                debug: [t("llm.debugTitle"), t("llm.debugModel"), t("llm.debugTokens"), t("llm.debugOps"), t("llm.debugMemory"), t("llm.debugReference"), t("llm.debugEnergy"), t("llm.debugCarbon"), t("llm.debugCost"), t("llm.debugNote")],
                 architecture: t("llm.architecture"), outputPipeline: t("llm.outputPipeline"), chat: t("llm.chatEntry"), enter: t("llm.enterHint"), tokenNote: t("llm.tokenNote"),
                 causal: t("llm.causalNote"), shared: t("llm.sharedNote"), residual: t("llm.residualNote"),
                 output: t("llm.output"), repeat: t("llm.repeatNote"), prompt: t("llm.dataPrompt"), tokens: t("llm.dataTokens").split("|"),

@@ -1,4 +1,5 @@
 import {clampTime, noise} from "./timeline";
+import {resourceEstimate} from "./resources";
 import {exampleModel} from "./transformer";
 import {formatActivation, OUTPUT_PROBABILITIES} from "./data";
 import type {SceneLabels} from "./dataAnnotations";
@@ -264,6 +265,13 @@ export function renderFrame(ctx: CanvasRenderingContext2D, width: number, height
     }
     output(ctx, project, time, labels);
     chat(ctx, project, time, labels);
+    const estimate = resourceEstimate(time, labels.inputTokens, labels.outputTokens);
+    ctx.save(); ctx.shadowColor = "#000"; ctx.shadowBlur = 5;
+    labels.debug.forEach((label, index) => {
+        const value = label.replace("{input}", String(estimate.inputProcessed)).replace("{output}", String(estimate.generated)).replace("{value}", estimate.gigaFlops.toFixed(1)).replace("{energy}", estimate.energyWh.toFixed(3)).replace("{water}", estimate.waterMl.toFixed(3)).replace("{carbon}", estimate.carbonGrams.toFixed(3)).replace("{cost}", estimate.electricityEuro.toFixed(6));
+        text(ctx, value, 35, 38 + index * 25 + (index >= 5 ? 10 : 0), index === 0 ? 19 : 17, index === 0 ? "#ffffff" : "#dce3e8", "left");
+    });
+    ctx.restore();
     text(ctx, labels.example, 1555, 873, 13, "#74858e", "right");
     ctx.restore();
 }

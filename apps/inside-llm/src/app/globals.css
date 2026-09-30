@@ -518,3 +518,9 @@ footer {
 .volumeControl { width: 62px; accent-color: #bd9cff; }
 .viewControls button[aria-pressed="true"] { border-color: #8c6abb; color: #dbc5ff; }
 @media(max-width:650px) { .transportRow { flex-wrap: wrap; gap: 10px; } .viewControls { flex-wrap: wrap; } .volumeControl { width: 48px; } }
+
+.resourceSources { margin: 0 0 24px; color: var(--muted); line-height: 1.7; max-width: 900px; }
+.resourceSources summary { cursor: pointer; color: var(--text); padding: 10px 0; }
+.resourceSources summary:focus-visible { outline: 2px solid var(--cyan); }
+.resourceSources a { color: var(--cyan); text-decoration: underline; }
+.cinema .resourceSources { display: none; }
