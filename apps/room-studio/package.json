@@ -1,0 +1,27 @@
+{
+  "name": "@oskar-lab/room-studio",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 10037",
+    "build": "next build",
+    "start": "next start --port 10037",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@oskar-lab/auth": "*",
+    "@oskar-lab/config": "*",
+    "@oskar-lab/core": "*",
+    "@oskar-lab/i18n": "*",
+    "@oskar-lab/platform-shell": "*",
+    "@oskar-lab/ui": "*",
+    "next": "16.3.5",
+    "next-auth": "^5.0.0-beta.32",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.186.0"
+  }
+}

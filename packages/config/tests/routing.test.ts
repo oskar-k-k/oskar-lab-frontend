@@ -27,7 +27,8 @@ describe("independent app routing", () => {
         vi.stubEnv("APP_CHESS_URL", "http://127.0.0.1:12345");
         const routes = await createAppConfig("oskar-lab").rewrites();
         expect(routes).toContainEqual({source:"/apps/chess/:path*", destination:"http://127.0.0.1:12345/apps/chess/:path*"});
-        expect(routes).toHaveLength(6);
+        expect(routes).toContainEqual({source:"/apps/room-studio/:path*", destination:"http://127.0.0.1:10037/apps/room-studio/:path*"});
+        expect(routes).toHaveLength(7);
     });
 
     it("preserves the old developer-reference URL", async () => {

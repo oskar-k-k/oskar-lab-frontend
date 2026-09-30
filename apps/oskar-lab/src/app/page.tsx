@@ -4,6 +4,7 @@ import AppsExplorer from "./AppsExplorer";
 export const dynamic = "force-dynamic";
 
 const localApps: App[] = [
+    {id: -7, path: 'room-studio', title: 'Room Studio', description: 'Plan your real room in 3D.', thumbnail: '/catalog/room-studio/thumbnail.svg'},
     {
         id: -6,
         path: "workout",

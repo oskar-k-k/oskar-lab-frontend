@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "name": "",
+  "width": 5,
+  "depth": 4,
+  "height": 2.7,
+  "wall": "#e9e5dc",
+  "floor": "#c8ab87",
+  "items": [
+    {
+      "id": "starter-rug",
+      "kind": "rug",
+      "width": 2,
+      "depth": 2.6,
+      "height": 0.02,
+      "color": "#d3b797",
+      "x": -0.6,
+      "z": -0.1,
+      "rotation": 0
+    },
+    {
+      "id": "starter-bed",
+      "kind": "bed",
+      "width": 1.6,
+      "depth": 2.1,
+      "height": 0.85,
+      "color": "#b8c4a8",
+      "x": -1.35,
+      "z": -0.7,
+      "rotation": 0
+    },
+    {
+      "id": "starter-table",
+      "kind": "table",
+      "width": 1.4,
+      "depth": 0.8,
+      "height": 0.75,
+      "color": "#be956b",
+      "x": 1.3,
+      "z": -1.35,
+      "rotation": 0
+    },
+    {
+      "id": "starter-chair",
+      "kind": "chair",
+      "width": 0.5,
+      "depth": 0.5,
+      "height": 0.85,
+      "color": "#8b9b80",
+      "x": 1.3,
+      "z": -0.55,
+      "rotation": 0
+    },
+    {
+      "id": "starter-plant",
+      "kind": "plant",
+      "width": 0.5,
+      "depth": 0.5,
+      "height": 1.1,
+      "color": "#648565",
+      "x": 2.05,
+      "z": 1.4,
+      "rotation": 0
+    },
+    {
+      "id": "starter-shelf",
+      "kind": "shelf",
+      "width": 1,
+      "depth": 0.35,
+      "height": 1.8,
+      "color": "#ba956e",
+      "x": -1.7,
+      "z": 1.65,
+      "rotation": 0
+    }
+  ]
+}
