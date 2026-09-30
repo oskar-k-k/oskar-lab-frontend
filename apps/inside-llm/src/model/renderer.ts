@@ -11,15 +11,30 @@ const bounded = (value: number) => Math.max(0, Math.min(1, value));
 const ease = (value: number) => {const t = bounded(value); return t * t * (3 - 2 * t);};
 
 function projection(time: number): Project {
-    const travel = bounded((time - 8) / 38);
-    const overview = ease((time - 36) / 5) * (1 - ease((time - 45) / 5));
-    const focus = travel * 1660;
-    const zoom = 1 - overview * 0.48;
+    const enter = ease((time - 4) / 6);
+    const leave = ease((time - 43) / 7);
+    const overview = ease((time - 33) / 5) * (1 - ease((time - 42) / 4));
+    const travelFocus = -230 + bounded((time - 7) / 43) * 2100;
+    const focus = travelFocus * (1 - overview) + 450 * overview;
+    const distance = 2050 - enter * 650 + overview * 2400 + leave * 250;
+    const yaw = 0.93 + Math.sin(time / 60 * Math.PI * 2) * 0.09;
+    const pitch = 0.24;
     return ({x, y, z}) => {
-        const depth = z - focus;
-        const scale = zoom * 1400 / (1400 + Math.max(-450, depth) * 0.17);
-        return {x: 800 + (x + depth * 0.75) * scale, y: 470 + (y - depth * 0.18) * scale, scale};
+        const depth = (z - focus) * 1.85;
+        const horizontal = x * Math.cos(yaw) + depth * Math.sin(yaw);
+        const rotatedDepth = -x * Math.sin(yaw) + depth * Math.cos(yaw);
+        const vertical = y * Math.cos(pitch) - rotatedDepth * Math.sin(pitch);
+        const cameraDepth = y * Math.sin(pitch) + rotatedDepth * Math.cos(pitch);
+        const scale = 1250 / Math.max(650, distance + cameraDepth);
+        return {x: 800 + horizontal * scale, y: 440 + vertical * scale, scale};
     };
+}
+
+function worldSurface(ctx: CanvasRenderingContext2D, project: Project, point: Point) {
+    const origin = project(point);
+    const right = project({...point, x: point.x + 1});
+    const down = project({...point, y: point.y + 1});
+    ctx.transform(right.x - origin.x, right.y - origin.y, down.x - origin.x, down.y - origin.y, origin.x, origin.y);
 }
 
 function text(ctx: CanvasRenderingContext2D, value: string, x: number, y: number, size = 20, color = "#e6edf1", align: CanvasTextAlign = "center") {
@@ -28,8 +43,7 @@ function text(ctx: CanvasRenderingContext2D, value: string, x: number, y: number
 }
 
 function worldText(ctx: CanvasRenderingContext2D, project: Project, point: Point, value: string, size = 20, color = "#e6edf1") {
-    const p = project(point);
-    ctx.save(); ctx.translate(p.x, p.y); ctx.scale(p.scale, p.scale);
+    ctx.save(); worldSurface(ctx, project, point);
     text(ctx, value, 0, 0, size, color); ctx.restore();
 }
 
@@ -40,9 +54,17 @@ function line(ctx: CanvasRenderingContext2D, project: Project, a: Point, b: Poin
 }
 
 function plane(ctx: CanvasRenderingContext2D, project: Project, z: number, color: string) {
-    const corners = [{x: -495, y: -235, z}, {x: 495, y: -235, z}, {x: 495, y: 250, z}, {x: -495, y: 250, z}].map(project);
-    ctx.beginPath(); corners.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath();
-    ctx.fillStyle = "#11191dfc"; ctx.fill(); ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.stroke();
+    const front = [{x: -495, y: -235, z}, {x: 495, y: -235, z}, {x: 495, y: 250, z}, {x: -495, y: 250, z}];
+    const back = front.map(point => ({...point, z: z + 95}));
+    const face = (points: Point[], fill: string) => {
+        ctx.beginPath(); points.map(project).forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath();
+        ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.stroke();
+    };
+    face(back, "#14232d24");
+    face([front[0], back[0], back[1], front[1]], "#648b9830");
+    face([front[1], back[1], back[2], front[2]], "#45758b25");
+    face(front, "#101c2466");
+    for (let i = 0; i < 4; i++) line(ctx, project, front[i], back[i], color);
 }
 
 function vectors(ctx: CanvasRenderingContext2D, project: Project, z: number, values: readonly (readonly number[])[], tokens: readonly string[], active: boolean) {
@@ -73,18 +95,16 @@ function attention(ctx: CanvasRenderingContext2D, project: Project, block: numbe
     vectors(ctx, project, z, MODEL[block].input, labels.tokens, active);
     const target = Math.min(4, Math.floor(Math.max(0, time - 7 - block * 9) * 1.05));
     for (let source = 0; source <= target; source++) {
-        const a = project({x: -400 + source * 200, y: -130, z});
-        const b = project({x: -400 + target * 200, y: -130, z});
         const strength = MODEL[block].weights[target][source];
-        ctx.strokeStyle = active ? COLORS[source] : "#53707b";
-        ctx.lineWidth = active ? 1.5 + strength * 5 : 1;
-        const lift = (75 + Math.abs(target - source) * 32) * a.scale;
-        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.bezierCurveTo(a.x, a.y - lift, b.x, b.y - lift, b.x, b.y); ctx.stroke();
+        const arcPoint = (phase: number): Point => ({
+            x: -400 + source * 200 + (target - source) * 200 * (3 * phase ** 2 - 2 * phase ** 3),
+            y: -130 - Math.sin(phase * Math.PI) * (90 + Math.abs(target - source) * 30),
+            z: z + Math.sin(phase * Math.PI) * 65,
+        });
+        for (let step = 1; step <= 24; step++) line(ctx, project, arcPoint((step - 1) / 24), arcPoint(step / 24), active ? COLORS[source] : "#53707b", active ? 1.5 + strength * 3 : 0.7);
         if (active) {
-            const phase = (time * 1.6 + source * 0.2) % 1;
-            const px = a.x + (b.x - a.x) * (3 * phase * phase - 2 * phase ** 3);
-            const py = a.y - 3 * lift * phase * (1 - phase);
-            ctx.fillStyle = COLORS[source]; ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI * 2); ctx.fill();
+            const p = project(arcPoint((time * 1.6 + source * 0.2) % 1));
+            ctx.fillStyle = COLORS[source]; ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
         }
     }
     worldText(ctx, project, {x: 0, y: 232, z}, labels.causal, 15, "#8faab6");
@@ -93,7 +113,7 @@ function attention(ctx: CanvasRenderingContext2D, project: Project, block: numbe
 function network(ctx: CanvasRenderingContext2D, project: Project, block: number, time: number, labels: SceneLabels) {
     const z = block * 430 + 210;
     const active = time >= 12 + block * 9 && time < 16 + block * 9;
-    plane(ctx, project, z, "#5d4940");
+
     worldText(ctx, project, {x: 0, y: -275, z}, labels.feedForward, 34, "#edc5b5");
     worldText(ctx, project, {x: 0, y: 242, z}, labels.shared, 15, "#a39b97");
     for (let token = 0; token < 5; token++) {
@@ -101,15 +121,17 @@ function network(ctx: CanvasRenderingContext2D, project: Project, block: number,
         for (let column = 0; column < 3; column++) {
             const count = column === 1 ? 10 : 6;
             for (let row = 0; row < count; row++) {
-                const point = {x: x + (column - 1) * 49, y: -112 + row * 270 / (count - 1), z};
+                const point = {x, y: -112 + row * 270 / (count - 1), z: z + (column - 1) * 80};
                 if (column < 2) {
                     const nextCount = column === 0 ? 10 : 6;
                     for (let next = 0; next < nextCount; next++) {
-                        line(ctx, project, point, {x: x + column * 49, y: -112 + next * 270 / (nextCount - 1), z}, (next + row) % 2 ? "#e78e7052" : "#63baca52", active ? 1.2 : 0.7);
+                        line(ctx, project, point, {x, y: -112 + next * 270 / (nextCount - 1), z: z + column * 80}, (next + row) % 2 ? "#e78e7052" : "#63baca52", active ? 1.2 : 0.7);
                     }
                 }
                 const p = project(point);
-                ctx.fillStyle = active && (row + column + Math.floor(time * 4)) % 3 === 0 ? COLORS[token] : "#9eafb7";
+                const sphere = ctx.createRadialGradient(p.x - 1.5, p.y - 1.5, 0, p.x, p.y, Math.max(2, p.scale * 5));
+                sphere.addColorStop(0, "#ffffff"); sphere.addColorStop(0.4, active ? COLORS[token] : "#a0b9c5"); sphere.addColorStop(1, "#263d48");
+                ctx.fillStyle = sphere;
                 ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1.5, p.scale * 4), 0, Math.PI * 2); ctx.fill();
             }
         }
@@ -136,17 +158,15 @@ function network(ctx: CanvasRenderingContext2D, project: Project, block: number,
     worldText(ctx, project, {x: 0, y: 280, z}, labels.residual, 14, "#8bd4ad");
 }
 
-function chat(ctx: CanvasRenderingContext2D, time: number, labels: SceneLabels) {
-    const fade = 1 - ease((time - 5) / 2);
-    if (fade <= 0) return;
-    ctx.save(); ctx.globalAlpha = fade;
-    ctx.fillStyle = "#090d10"; ctx.fillRect(0, 0, 1600, 900);
-    text(ctx, labels.chat, 800, 300, 46);
+function chat(ctx: CanvasRenderingContext2D, project: Project, time: number, labels: SceneLabels) {
+    plane(ctx, project, -520, "#65999e");
+    ctx.save(); worldSurface(ctx, project, {x: -520, y: -290, z: -522}); ctx.scale(0.65, 0.65);
+    text(ctx, labels.chat, 800, 300, 64);
     ctx.fillStyle = "#182126"; ctx.strokeStyle = "#43515a"; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.roundRect(300, 360, 1000, 170, 24); ctx.fill(); ctx.stroke();
     const prompt = labels.tokens.join(" ").replace(" ?", "?");
     const typed = prompt.slice(0, Math.floor(bounded((time - 0.5) / 2.6) * prompt.length));
-    text(ctx, typed + (time < 3.4 && Math.floor(time * 3) % 2 === 0 ? "│" : ""), 345, 430, 36, "#edf3f5", "left");
+    text(ctx, typed + (time < 3.4 && Math.floor(time * 3) % 2 === 0 ? "│" : ""), 345, 430, 52, "#edf3f5", "left");
     ctx.fillStyle = time > 3.4 ? "#73d1ba" : "#38474d";
     ctx.beginPath(); ctx.roundRect(1170, 442, 85, 56, 12); ctx.fill();
     text(ctx, "↵", 1212, 483, 32, "#091216");
@@ -157,11 +177,9 @@ function chat(ctx: CanvasRenderingContext2D, time: number, labels: SceneLabels) 
     ctx.restore();
 }
 
-function output(ctx: CanvasRenderingContext2D, time: number, labels: SceneLabels) {
-    const fade = ease((time - 48) / 2);
-    if (!fade) return;
-    ctx.save(); ctx.globalAlpha = fade;
-    ctx.fillStyle = "#090d10f5"; ctx.fillRect(0, 0, 1600, 900);
+function output(ctx: CanvasRenderingContext2D, project: Project, time: number, labels: SceneLabels) {
+    plane(ctx, project, 1850, "#8bd4ad");
+    ctx.save(); worldSurface(ctx, project, {x: -520, y: -290, z: 1848}); ctx.scale(0.65, 0.65);
     text(ctx, labels.outputPipeline, 800, 95, 20, "#a1b5bd");
     text(ctx, labels.nextToken, 800, 160, 25, "#8bd4ad");
     text(ctx, labels.tokens.join(" ").replace(" ?", "?"), 800, 235, 40);
@@ -187,27 +205,27 @@ export function renderFrame(ctx: CanvasRenderingContext2D, width: number, height
     ctx.save(); ctx.scale(width / 1600, height / 900);
     ctx.fillStyle = "#090d10"; ctx.fillRect(0, 0, 1600, 900);
     const project = projection(time);
-    const focus = bounded((time - 8) / 38) * 1660;
-    const current = Math.min(3, Math.max(0, Math.floor((time - 7) / 9)));
-    const feedForwardActive = time >= 12 + current * 9;
-    for (let block = 3; block >= 0; block--) {
-        if (block === current) continue;
-        const z = block * 430;
-        const distance = z - focus;
-        ctx.save(); ctx.globalAlpha = distance < -190 ? 0.06 : 0.22;
-        plane(ctx, project, z, "#7e969e");
-        worldText(ctx, project, {x: 0, y: -275, z}, `${labels.transformer} ${block + 1}`, 24, "#93a7b1");
-        for (let token = 0; token < 5; token++) {
-            line(ctx, project, {x: -400 + token * 200, y: -130, z}, {x: -400 + token * 200, y: 160, z}, COLORS[token], 3);
-        }
-        ctx.restore();
+    for (let z = -650; z <= 2000; z += 215) {
+        line(ctx, project, {x: -650, y: 340, z}, {x: 650, y: 340, z}, "#354d5825");
     }
-    if (feedForwardActive) network(ctx, project, current, time, labels);
-    else attention(ctx, project, current, time, labels);
-    text(ctx, labels.architecture, 800, 52, 18, "#a1b5bd");
-    text(ctx, labels.tokenNote, 45, 835, 17, "#83949e", "left");
-    chat(ctx, time, labels);
-    output(ctx, time, labels);
+    for (let x = -600; x <= 600; x += 200) line(ctx, project, {x, y: 340, z: -650}, {x, y: 340, z: 2000}, "#354d5825");
+    output(ctx, project, time, labels);
+    for (let block = 3; block >= 0; block--) {
+        network(ctx, project, block, time, labels);
+        attention(ctx, project, block, time, labels);
+    }
+    for (let token = 0; token < 5; token++) {
+        const x = -400 + token * 200;
+        for (let row = 0; row < 6; row++) {
+            const y = -83 + row * 43;
+            line(ctx, project, {x, y, z: -425}, {x, y, z: 0}, `${COLORS[token]}55`);
+            for (let block = 0; block < 4; block++) {
+                line(ctx, project, {x, y, z: block * 430 + 95}, {x, y, z: block * 430 + 130}, `${COLORS[token]}45`);
+                line(ctx, project, {x, y, z: block * 430 + 290}, {x, y, z: block === 3 ? 1850 : (block + 1) * 430}, `${COLORS[token]}45`);
+            }
+        }
+    }
+    chat(ctx, project, time, labels);
     text(ctx, labels.example, 1555, 873, 13, "#74858e", "right");
     ctx.restore();
 }

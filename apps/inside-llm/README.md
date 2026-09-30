@@ -10,7 +10,7 @@ Enable recording mode, optionally fullscreen, and start the scene. Controls hide
 
 ## Rendering and meaning
 
-`model/renderer.ts` draws world-space numeric planes and compact networks in Canvas 2D, without stars, spirals, rings or additive glow. The camera travels across repeated blocks. Canvas resolution is capped at twice display size.
+`model/renderer.ts` projects a continuous 3D scene into Canvas 2D: translucent attention cuboids, spatial feed-forward neuron layers and world-anchored chat/output objects, without stars, spirals, rings or additive glow. The oblique perspective camera travels outside repeated blocks and pulls back to a complete overview. All labels inherit their world-plane orientation. Six parallel activation connections per token bridge adjacent stages. Canvas resolution is capped at twice display size.
 
 `model/transformer.ts` computes a deterministic, untrained miniature example with six-component vectors, causal single-head attention (identity Q/K/V projections), residual additions, post-layer normalization and a shared 6 → 10 → 6 ReLU feed-forward network. Each stage's output supplies the next stage's numbers. It is an educational reduction, not a trained language model. Real models typically use multiple learned attention heads and much larger vectors. The word-aligned token boundaries are illustrative: actual tokenizers may split words. Input values stand in for combined embedding and position information.
 
