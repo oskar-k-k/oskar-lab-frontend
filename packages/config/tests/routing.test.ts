@@ -29,7 +29,8 @@ describe("independent app routing", () => {
         expect(routes).toContainEqual({source:"/apps/chess/:path*", destination:"http://127.0.0.1:12345/apps/chess/:path*"});
         expect(routes).toContainEqual({source:"/apps/room-studio/:path*", destination:"http://127.0.0.1:10037/apps/room-studio/:path*"});
         expect(routes).toContainEqual({source:"/apps/2d-lab/:path*", destination:"http://127.0.0.1:10038/apps/2d-lab/:path*"});
-        expect(routes).toHaveLength(8);
+        expect(routes).toContainEqual({source:"/apps/inside-llm/:path*", destination:"http://127.0.0.1:10039/apps/inside-llm/:path*"});
+        expect(routes).toHaveLength(9);
     });
 
     it("preserves the old developer-reference URL", async () => {

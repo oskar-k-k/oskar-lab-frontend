@@ -1,7 +1,10 @@
+import {llmEn, llmDe} from "./llm";
+
 export const locales = ["en", "de"] as const;
 export type Locale = typeof locales[number];
 
 const en = {
+    ...llmEn,
     "scene2d.pan": "Pan view",
     "scene2d.scale": "Scale",
   "scene2d.scalex": "Scale along X",
@@ -489,6 +492,7 @@ const en = {
 } as const;
 
 const de: Record<keyof typeof en, string> = {
+    ...llmDe,
     "scene2d.pan": "Ansicht verschieben",
     "scene2d.scale": "Skalieren",
   "scene2d.scalex": "Entlang X skalieren",

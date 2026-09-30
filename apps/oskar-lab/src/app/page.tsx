@@ -4,6 +4,7 @@ import AppsExplorer from "./AppsExplorer";
 export const dynamic = "force-dynamic";
 
 const localApps: App[] = [
+    {id: -9, path: "inside-llm", title: "Inside a Language Model", description: "A cinematic journey from prompt to prediction.", thumbnail: "/catalog/inside-llm/thumbnail.svg"},
     {id: -8, path: '2d-lab', title: '2D Lab', description: 'An independent SVG scene and mesh editor.', thumbnail: '/catalog/2d-lab/thumbnail.svg'},
     {id: -7, path: 'room-studio', title: 'Room Studio', description: 'Plan your real room in 3D.', thumbnail: '/catalog/room-studio/thumbnail.svg'},
     {

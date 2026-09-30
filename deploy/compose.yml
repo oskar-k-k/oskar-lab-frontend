@@ -69,6 +69,9 @@ services:
       app:
       edge:
         aliases: [oskar-lab-platform]
+  inside-llm:
+    <<: *web
+    environment: {<<: *web-env, APP_NAME: inside-llm}
   room-studio:
     <<: *web
     environment: {<<: *web-env, APP_NAME: room-studio}
