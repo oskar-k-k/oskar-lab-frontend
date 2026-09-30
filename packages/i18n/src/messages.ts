@@ -2,6 +2,10 @@ export const locales = ["en", "de"] as const;
 export type Locale = typeof locales[number];
 
 const en = {
+    "scene2d.pan": "Pan view",
+    "scene2d.navigationHint": "Wheel: zoom · Middle/right drag or Space + drag: pan · Ctrl-click: toggle selection",
+    "scene2d.selectionCount": "Selected: {count}",
+    "scene2d.multiHint": "{count} elements selected. Drag a selected element or use arrow keys to move the group. Ctrl-click toggles individual elements.",
     "scene2d.facePicker": "Choose boundary points in order, then fill the selection.",
     "scene2d.chooseFile": "Choose JSON file",
     "scene2d.importHint": "Choose a project file or paste its JSON below. Import replaces the scene and can be undone.",
@@ -448,6 +452,10 @@ const en = {
 } as const;
 
 const de: Record<keyof typeof en, string> = {
+    "scene2d.pan": "Ansicht verschieben",
+    "scene2d.navigationHint": "Mausrad: Zoom · Mittlere/rechte Maustaste oder Leertaste + Ziehen: Ansicht verschieben · Strg-Klick: Auswahl umschalten",
+    "scene2d.selectionCount": "Ausgewählt: {count}",
+    "scene2d.multiHint": "{count} Elemente ausgewählt. Ziehe ein ausgewähltes Element oder nutze die Pfeiltasten, um die Gruppe zu bewegen. Strg-Klick wählt einzelne Elemente ab oder hinzu.",
     "scene2d.facePicker": "Wähle die Randpunkte der Reihe nach und fülle dann die Auswahl.",
     "scene2d.chooseFile": "JSON-Datei wählen",
     "scene2d.importHint": "Wähle eine Projektdatei oder füge ihren JSON-Inhalt unten ein. Der Import ersetzt die Szene und kann rückgängig gemacht werden.",

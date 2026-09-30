@@ -8,7 +8,49 @@ import {
   type Point,
   type MeshSelection,
   translateSelection,
+  selectionVertices,
 } from "./mesh";
+
+/** One selected object (null target) or topology element identified inside its owning mesh. */
+export type SceneSelection = { objectId: string; target: MeshSelection };
+
+/** Translates a selection atomically, moving shared vertices only once even for adjacent faces/edges. */
+export function moveSceneSelections(
+  scene: Scene2D,
+  selections: readonly SceneSelection[],
+  delta: Point,
+  policy = defaultEnginePolicy,
+): Scene2D {
+  if (!Number.isFinite(delta.x) || !Number.isFinite(delta.y))
+    throw new Error("Invalid movement");
+  const objects = scene.objects.map((object) => {
+    const targets = selections.filter((item) => item.objectId === object.id);
+    const ids = new Set(
+      targets.flatMap((item) =>
+        item.target
+          ? selectionVertices(object.mesh, item.target)
+          : object.mesh.vertices.map((v) => v.id),
+      ),
+    );
+    if (!ids.size) return object;
+    return {
+      ...object,
+      mesh: {
+        ...object.mesh,
+        vertices: object.mesh.vertices.map((v) =>
+          ids.has(v.id)
+            ? {
+                ...v,
+                x: Math.round((v.x + delta.x) * 1e6) / 1e6,
+                y: Math.round((v.y + delta.y) * 1e6) / 1e6,
+              }
+            : v,
+        ),
+      },
+    };
+  });
+  return parseScene({ ...scene, objects }, policy);
+}
 
 /** Moves an object or one of its topology elements, resolving IDs inside the owning object only. */
 export function moveSceneSelection(

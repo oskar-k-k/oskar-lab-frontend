@@ -8,16 +8,14 @@ import styles from "./SceneEditor.module.css";
 export default function SceneGeometry({
   object,
   mode,
-  active,
-  selection,
+  selections,
   size,
   begin,
   keyboard,
 }: {
   object: SceneObject;
   mode: SelectionMode;
-  active: boolean;
-  selection: MeshSelection;
+  selections: MeshSelection[];
   size: number;
   begin: (event: PointerEvent<SVGElement>, selection: MeshSelection) => void;
   keyboard: (
@@ -34,6 +32,12 @@ export default function SceneGeometry({
     role: mode === kind ? "button" : undefined,
     tabIndex: mode === kind ? 0 : undefined,
     "aria-label": mode === kind ? label : undefined,
+    "aria-pressed":
+      mode === kind
+        ? selections.some(
+            (s) => s?.kind === selection?.kind && s?.id === selection?.id,
+          )
+        : undefined,
     onPointerDown:
       mode === kind
         ? (event: PointerEvent<SVGElement>) => begin(event, selection)
@@ -44,8 +48,11 @@ export default function SceneGeometry({
         : undefined,
   });
   const color = (kind: string, id: string) =>
-    active &&
-    (mode === "object" || (selection?.kind === kind && selection.id === id))
+    selections.some((selection) =>
+      mode === "object"
+        ? selection === null
+        : selection?.kind === kind && selection.id === id,
+    )
       ? "#147da6"
       : "#607f92";
   return (
@@ -67,9 +74,11 @@ export default function SceneGeometry({
             .join(" ")}
           pointerEvents={mode === "object" || mode === "face" ? "auto" : "none"}
           fill={
-            active &&
-            (mode === "object" ||
-              (selection?.kind === "face" && selection.id === face.id))
+            selections.some((selection) =>
+              mode === "object"
+                ? selection === null
+                : selection?.kind === "face" && selection.id === face.id,
+            )
               ? "#73bddc"
               : "#a8bacb"
           }
@@ -124,7 +133,14 @@ export default function SceneGeometry({
             mode === "object" || mode === "vertex" ? "auto" : "none"
           }
         >
-          {mode === "vertex" && <circle cx={vertex.x} cy={vertex.y} r={size / 55} fill="transparent"/>}
+          {mode === "vertex" && (
+            <circle
+              cx={vertex.x}
+              cy={vertex.y}
+              r={size / 55}
+              fill="transparent"
+            />
+          )}
           <circle
             cx={vertex.x}
             cy={vertex.y}

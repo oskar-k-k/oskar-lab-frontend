@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useId,
   useRef,
   useState,
@@ -12,7 +13,8 @@ import {
   addObject,
   defaultEnginePolicy,
   moveObject,
-  moveSceneSelection,
+  moveSceneSelections,
+  type SceneSelection,
   parseScene,
   replaceObjectMesh,
   type EnginePolicy,
@@ -78,6 +80,21 @@ export default function SceneEditor({
     value.objects[0]?.id ?? null,
   );
   const [mode, setMode] = useState<SelectionMode>(policy.modes[0] ?? "object");
+  const [picks, setPicks] = useState<SceneSelection[]>(
+    value.objects[0] ? [{ objectId: value.objects[0].id, target: null }] : [],
+  );
+  const [panTool, setPanTool] = useState(false);
+  const spaceHeld = useRef(false);
+  const hovered = useRef(false);
+  const pan = useRef<{
+    x: number;
+    y: number;
+    centerX: number;
+    centerY: number;
+    scaleX: number;
+    scaleY: number;
+    pointerId: number;
+  } | null>(null);
   const [selection, setSelection] = useState<MeshSelection>(null);
   const [drawing, setDrawing] = useState(false);
   const [anchor, setAnchor] = useState<string | null>(null);
@@ -93,7 +110,7 @@ export default function SceneEditor({
     id: string;
     start: Point;
     pointerId: number;
-    selection: MeshSelection;
+    selections: SceneSelection[];
   } | null>(null);
   const scene = draft ?? value;
   const selected = scene.objects.find((object) => object.id === selectedId);
@@ -106,6 +123,123 @@ export default function SceneEditor({
     y: frame.centerY - size / 2,
     size,
   };
+
+  useEffect(() => {
+    function keyDown(event: globalThis.KeyboardEvent) {
+      const target = event.target;
+      const editing =
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
+      if (event.code === "Space" && hovered.current && !editing) {
+        event.preventDefault();
+        spaceHeld.current = true;
+      }
+    }
+    function release(event?: Event) {
+      if (!(event instanceof globalThis.KeyboardEvent) || event.code === "Space") spaceHeld.current = false;
+    }
+    window.addEventListener("keydown", keyDown);
+    window.addEventListener("keyup", release);
+    window.addEventListener("blur", release);
+    return () => {
+      window.removeEventListener("keydown", keyDown);
+      window.removeEventListener("keyup", release);
+      window.removeEventListener("blur", release);
+    };
+  }, []);
+
+  useEffect(() => {
+    const element = svg.current;
+    if (!element) return;
+    function wheel(event: WheelEvent) {
+      event.preventDefault();
+      if (gesture.current || pan.current) return;
+      const matrix = element!.getScreenCTM();
+      if (!matrix) return;
+      const cursor = new DOMPoint(event.clientX, event.clientY).matrixTransform(
+        matrix.inverse(),
+      );
+      const delta =
+        event.deltaY *
+        (event.deltaMode === 1
+          ? 16
+          : event.deltaMode === 2
+            ? element!.clientHeight
+            : 1);
+      const nextZoom = Math.max(
+        0.02,
+        Math.min(200, zoom * Math.exp(-delta * 0.0015)),
+      );
+      const ratio = zoom / nextZoom;
+      setFrame((f) => ({
+        ...f,
+        centerX: cursor.x + (f.centerX - cursor.x) * ratio,
+        centerY: cursor.y + (f.centerY - cursor.y) * ratio,
+      }));
+      setZoom(nextZoom);
+    }
+    element.addEventListener("wheel", wheel, { passive: false });
+    return () => element.removeEventListener("wheel", wheel);
+  }, [zoom]);
+  function isPicked(item: SceneSelection) {
+    return picks.some(
+      (p) =>
+        p.objectId === item.objectId &&
+        p.target?.kind === item.target?.kind &&
+        p.target?.id === item.target?.id,
+    );
+  }
+  function choose(objectId: string, target: MeshSelection, toggle: boolean) {
+    const item = { objectId, target };
+    const next = toggle
+      ? isPicked(item)
+        ? picks.filter(
+            (p) =>
+              !(
+                p.objectId === objectId &&
+                p.target?.kind === target?.kind &&
+                p.target?.id === target?.id
+              ),
+          )
+        : [...picks, item]
+      : isPicked(item)
+        ? picks
+        : [item];
+    const active =
+      next.find(
+        (p) =>
+          p.objectId === objectId &&
+          p.target?.kind === target?.kind &&
+          p.target?.id === target?.id,
+      ) ?? next[next.length - 1];
+    setPicks(next);
+    select(active?.objectId ?? null);
+    setSelection(active?.target ?? null);
+    return next;
+  }
+  function startPan(event: PointerEvent<SVGSVGElement>) {
+    if (!(
+      event.button === 1 ||
+      event.button === 2 ||
+      (event.button === 0 && (spaceHeld.current || panTool))
+    ))
+      return;
+    event.preventDefault();
+    event.stopPropagation();
+    const matrix = event.currentTarget.getScreenCTM();
+    if (!matrix) return;
+    pan.current = {
+      x: event.clientX,
+      y: event.clientY,
+      centerX: frame.centerX,
+      centerY: frame.centerY,
+      scaleX: matrix.a,
+      scaleY: matrix.d,
+      pointerId: event.pointerId,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
 
   function select(id: string | null) {
     if (id !== selectedId) {
@@ -141,6 +275,7 @@ export default function SceneEditor({
       );
       commit(next);
       select(id);
+      setPicks(activeMode === "object" ? [{objectId:id,target:null}] : []);
       if (shape === "empty" && policy.modes.includes("vertex"))
         setMode("vertex");
     } catch {
@@ -161,18 +296,15 @@ export default function SceneEditor({
     const target = point(event);
     const snap = (number: number) =>
       measurements.snap ? snapCoordinate(number, measurements) : number;
-    return translate(current.scene, current.id, current.selection, {
-      x: snap(target.x - current.start.x),
-      y: snap(target.y - current.start.y),
-    });
-  }
-  function translate(
-    scene: Scene2D,
-    id: string,
-    target: MeshSelection,
-    delta: Point,
-  ) {
-    return moveSceneSelection(scene, id, target, delta, policy);
+    return moveSceneSelections(
+      current.scene,
+      current.selections,
+      {
+        x: snap(target.x - current.start.x),
+        y: snap(target.y - current.start.y),
+      },
+      policy,
+    );
   }
   function editMesh(mesh: Mesh2D) {
     if (!selected) return false;
@@ -189,6 +321,7 @@ export default function SceneEditor({
     if (editMesh(createFace(selected.mesh, facePoints, id))) {
       setFacePoints([]);
       setSelection({ kind: "face", id });
+      setPicks([{ objectId: selected.id, target: { kind: "face", id } }]);
       setMode("face");
     }
   }
@@ -219,6 +352,7 @@ export default function SceneEditor({
     if (editMesh({ ...mesh, vertices, edges })) {
       setAnchor(id);
       setSelection({ kind: "vertex", id });
+      setPicks([{ objectId: selected.id, target: { kind: "vertex", id } }]);
     }
   }
   function begin(
@@ -232,12 +366,14 @@ export default function SceneEditor({
       appendPoint(point(event), target.id);
       return;
     }
-    select(objectId);
-    setSelection(target);
+    event.preventDefault();
+    event.currentTarget.focus();
+    const selections = choose(objectId, target, event.ctrlKey || event.metaKey);
+    if (event.ctrlKey || event.metaKey) return;
     gesture.current = {
       scene: value,
       id: objectId,
-      selection: target,
+      selections,
       start: point(event),
       pointerId: event.pointerId,
     };
@@ -256,15 +392,15 @@ export default function SceneEditor({
     };
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      select(objectId);
-      setSelection(target);
+      choose(objectId, target, event.ctrlKey || event.metaKey);
     }
     if (!directions[event.key]) return;
     event.preventDefault();
-    select(objectId);
-    setSelection(target);
+    const selections = choose(objectId, target, false);
     try {
-      commit(translate(value, objectId, target, directions[event.key]));
+      commit(
+        moveSceneSelections(value, selections, directions[event.key], policy),
+      );
     } catch {
       setError(true);
     }
@@ -272,6 +408,7 @@ export default function SceneEditor({
 
   function cancel() {
     gesture.current = null;
+    pan.current = null;
     setDraft(null);
     setError(false);
   }
@@ -306,6 +443,7 @@ export default function SceneEditor({
       );
       commit(moveObject(next, id, { x: 0.5, y: 0.5 }, policy));
       select(id);
+      setPicks(activeMode === "object" ? [{objectId:id,target:null}] : []);
     } catch {
       setError(true);
     }
@@ -326,6 +464,7 @@ export default function SceneEditor({
               onClick={() => {
                 cancel();
                 setMode(item);
+                setPicks([]);
                 setSelection(null);
                 setDrawing(false);
                 setAnchor(null);
@@ -383,8 +522,16 @@ export default function SceneEditor({
           {value.objects.map((object) => (
             <button
               key={object.id}
-              aria-pressed={selected?.id === object.id}
-              onClick={() => select(object.id)}
+              aria-pressed={
+                activeMode === "object"
+                  ? isPicked({ objectId: object.id, target: null })
+                  : selected?.id === object.id
+              }
+              onClick={(event) => {
+                if (activeMode === "object")
+                  choose(object.id, null, event.ctrlKey || event.metaKey);
+                else select(object.id);
+              }}
             >
               <span>◇ {object.name}</span>
               <small>
@@ -414,6 +561,13 @@ export default function SceneEditor({
                       });
                     else event.target.value = selected.name;
                   }}
+                  onKeyDownCapture={(event) => {
+                    if (event.code === "Space") {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      spaceHeld.current = true;
+                    }
+                  }}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") event.currentTarget.blur();
                   }}
@@ -436,12 +590,13 @@ export default function SceneEditor({
                       (object) => object.id !== selected.id,
                     ),
                   });
+                  setPicks(p=>p.filter(item=>item.objectId!==selected.id));
                   select(null);
                 }}
               >
                 {t("scene2d.deleteObject")}
               </button>
-              {center && activeMode === "object" && (
+              {center && activeMode === "object" && picks.length <= 1 && (
                 <>
                   <Measure
                     label={t("lab2d.centerX")}
@@ -470,6 +625,12 @@ export default function SceneEditor({
           <>
             <div className={styles.viewTools}>
               <button
+                aria-pressed={panTool}
+                onClick={() => setPanTool((p) => !p)}
+              >
+                {t("scene2d.pan")}
+              </button>
+              <button
                 onClick={() => {
                   setFrame(bounds(value));
                   setZoom(1);
@@ -479,19 +640,36 @@ export default function SceneEditor({
               </button>
               <button
                 aria-label={t("lab2d.zoomOut")}
-                onClick={() => setZoom((z) => Math.max(0.1, z / 1.4))}
+                onClick={() => setZoom((z) => Math.max(0.02, z / 1.4))}
               >
                 −
               </button>
               <button
                 aria-label={t("lab2d.zoomIn")}
-                onClick={() => setZoom((z) => Math.min(20, z * 1.4))}
+                onClick={() => setZoom((z) => Math.min(200, z * 1.4))}
               >
                 ＋
               </button>
             </div>
             <svg
               ref={svg}
+              data-pan={panTool}
+              onPointerEnter={() => {
+                hovered.current = true;
+              }}
+              onPointerLeave={() => {
+                hovered.current = false;
+              }}
+              tabIndex={0}
+              onPointerDownCapture={startPan}
+              onContextMenu={(event) => event.preventDefault()}
+              onDragStart={(event) => event.preventDefault()}
+              onKeyUp={(event) => {
+                if (event.code === "Space") spaceHeld.current = false;
+              }}
+              onBlur={() => {
+                spaceHeld.current = false;
+              }}
               className={styles.canvas}
               viewBox={`${view.x} ${view.y} ${size} ${size}`}
               role="img"
@@ -500,12 +678,22 @@ export default function SceneEditor({
                 if (event.target === event.currentTarget) {
                   if (drawing) appendPoint(point(event));
                   else {
+                    setPicks([]);
                     select(null);
                     setSelection(null);
                   }
                 }
               }}
               onPointerMove={(event) => {
+                const p = pan.current;
+                if (p && p.pointerId === event.pointerId) {
+                  setFrame((f) => ({
+                    ...f,
+                    centerX: p.centerX - (event.clientX - p.x) / p.scaleX,
+                    centerY: p.centerY - (event.clientY - p.y) / p.scaleY,
+                  }));
+                  return;
+                }
                 try {
                   const next = moved(event);
                   if (next) {
@@ -517,6 +705,10 @@ export default function SceneEditor({
                 }
               }}
               onPointerUp={(event) => {
+                if (pan.current) {
+                  pan.current = null;
+                  return;
+                }
                 if (!gesture.current) return;
                 try {
                   const next = moved(event);
@@ -529,8 +721,16 @@ export default function SceneEditor({
               }}
               onPointerCancel={cancel}
               onLostPointerCapture={() => {
+                pan.current = null;
                 gesture.current = null;
                 setDraft(null);
+              }}
+              onKeyDownCapture={(event) => {
+                if (event.code === "Space") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  spaceHeld.current = true;
+                }
               }}
               onKeyDown={(event) => {
                 if (event.key.toLowerCase() === "f") {
@@ -579,8 +779,9 @@ export default function SceneEditor({
                   key={object.id}
                   object={object}
                   mode={drawing ? "vertex" : activeMode}
-                  active={selectedId === object.id}
-                  selection={selectedId === object.id ? selection : null}
+                  selections={picks
+                    .filter((p) => p.objectId === object.id)
+                    .map((p) => p.target)}
                   size={size}
                   begin={(event, target) => begin(event, object.id, target)}
                   keyboard={(event, target) =>
@@ -589,11 +790,16 @@ export default function SceneEditor({
                 />
               ))}
             </svg>
-            <p className={styles.hint}>{t("scene2d.objectHint")}</p>
+            <p className={styles.hint}>
+              {t("scene2d.navigationHint")} ·{" "}
+              {t("scene2d.selectionCount", { count: picks.length })}
+            </p>
           </>
         </div>
         <div className={styles.details}>
-          {selected && activeMode !== "object" ? (
+          {picks.length > 1 ? (
+            <p>{t("scene2d.multiHint", { count: picks.length })}</p>
+          ) : selected && activeMode !== "object" ? (
             <>
               <button
                 aria-pressed={drawing}
@@ -643,6 +849,7 @@ export default function SceneEditor({
                 commit={editMesh}
                 setSelection={(target) => {
                   setSelection(target);
+                  setPicks(target ? [{ objectId: selected.id, target }] : []);
                   if (target) setMode(target.kind);
                 }}
                 extend={(id) => {

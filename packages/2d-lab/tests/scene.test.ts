@@ -5,6 +5,7 @@ import {
   exportSceneSvg,
   moveObject,
   moveSceneSelection,
+  moveSceneSelections,
   parseScene,
   replaceObjectMesh,
   type Scene2D,
@@ -21,6 +22,36 @@ function example() {
   return addObject(scene, "two", "Second", "triangle");
 }
 describe("independent scene objects", () => {
+  it("moves shared vertices only once when adjacent edges are selected", () => {
+    const scene = example();
+    const next = moveSceneSelections(
+      scene,
+      [
+        { objectId: "one", target: { kind: "edge", id: "edge-1" } },
+        { objectId: "one", target: { kind: "edge", id: "edge-2" } },
+      ],
+      { x: 0.2, y: 0 },
+    );
+    expect(next.objects[0].mesh.vertices[1].x).toBe(1.7);
+    expect(next.objects[0].mesh.vertices[3]).toEqual(
+      scene.objects[0].mesh.vertices[3],
+    );
+    expect(next.objects[1]).toEqual(scene.objects[1]);
+  });
+  it("moves multiple objects atomically and rejects the entire group if one exceeds limits", () => {
+    const scene = example();
+    const picks = [
+      { objectId: "one", target: null },
+      { objectId: "two", target: null },
+    ];
+    const next = moveSceneSelections(scene, picks, { x: 2, y: 1 });
+    expect(next.objects[0].mesh.vertices[0].x).toBe(0.5);
+    expect(next.objects[1].mesh.vertices[0].x).toBe(2);
+    expect(() =>
+      moveSceneSelections(scene, picks, { x: 1000, y: 0 }),
+    ).toThrow();
+    expect(scene.objects[0].mesh.vertices[0].x).toBe(-1.5);
+  });
   it("selects topology in any object without moving another mesh with the same vertex IDs", () => {
     const first = addObject({ version: 1, objects: [] }, "a", "A", "rectangle");
     const scene = addObject(first, "b", "B", "rectangle");

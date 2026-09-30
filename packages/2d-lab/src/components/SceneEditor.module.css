@@ -97,11 +97,21 @@
   position: relative;
 }
 .canvas {
+  user-select: none;
+  -webkit-user-select: none;
   display: block;
   width: 100%;
   height: 66vh;
   min-height: 460px;
   touch-action: none;
+}
+.canvas * {
+  user-select: none;
+  -webkit-user-select: none;
+}
+.canvas[data-pan="true"],
+.canvas[data-pan="true"] * {
+  cursor: grab;
 }
 .object {
   cursor: grab;

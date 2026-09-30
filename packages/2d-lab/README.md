@@ -62,3 +62,10 @@ import {defaultEnginePolicy, type Scene2D} from "@oskar-lab/2d-lab/scene";
 `parseScene` validates versioned JSON at the storage/import boundary. `exportSceneSvg` emits escaped, standalone SVG with a group for each object. The app adds JSON project import/export, history and local persistence. Default scene limit is 64 objects. This is a focused 2D mesh editor, not the entire Blender feature set: no curves, modifiers, animation, boolean operations or arbitrary SVG import.
 
 Run workspace `npm run check`. Package tests cover shared movement, face creation/validation/deletion, edge subdivision, graph rules, serialization and dependency boundaries.
+
+
+## Navigation and multi-selection
+
+The scene viewport pans without positional limits. Use middle/right-button drag, Space + left drag, or the Pan view button (also available to touch users). Wheel zoom is anchored at the cursor; zoom buttons use the view center. Frame scene restores the drawing bounds. Navigation changes only the viewport, never saved geometry or undo history. SVG text selection, native dragging and context menus are disabled only inside the canvas; property inputs remain normal editable fields.
+
+Ctrl-click (Cmd-click on macOS) adds or removes objects, vertices, edges or faces in the current mode. Drag a selected element to move the whole selection; arrow keys also move a focused selection. Shared vertices are translated once, and group edits are validated atomically. Switching selection modes clears the selection while retaining the camera. `moveSceneSelections` exposes this behavior to other engine consumers. A plain click on an already selected element preserves the group for dragging; click blank space to clear it.
