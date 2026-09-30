@@ -514,3 +514,7 @@ footer {
 
 .loopButton[aria-pressed="true"] { color: #c9aaff; border-color: #9272b7; background: #251a38; }
 @media(max-width:430px) { .viewControls { gap: 3px; } .loopButton { padding: 6px; } .playButton { min-width: 80px; padding: 8px; } }
+
+.volumeControl { width: 62px; accent-color: #bd9cff; }
+.viewControls button[aria-pressed="true"] { border-color: #8c6abb; color: #dbc5ff; }
+@media(max-width:650px) { .transportRow { flex-wrap: wrap; gap: 10px; } .viewControls { flex-wrap: wrap; } .volumeControl { width: 48px; } }

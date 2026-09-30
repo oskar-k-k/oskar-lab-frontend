@@ -64,15 +64,15 @@ export function particlePosition(index: number, value: number): Vector3 {
 }
 
 const CAMERA_STOPS = [
-    {time: 0, x: 0, yaw: 0.38, pitch: -0.3, roll: -0.08, distance: 1800},
+    {time: 0, x: -700, yaw: -0.5, pitch: -0.1, roll: 0, distance: 1250},
     {time: 5, x: -650, yaw: -0.65, pitch: 0.1, roll: 0.12, distance: 1050},
     {time: 10, x: -910, yaw: -0.85, pitch: -0.15, roll: 0, distance: 650},
-    {time: 18, x: -450, yaw: -0.55, pitch: 0.2, roll: -0.16, distance: 620},
+    {time: 18, x: -450, yaw: -0.55, pitch: 0.2, roll: -0.16, distance: 760},
     {time: 29, x: 100, yaw: 0.55, pitch: -0.25, roll: 0.1, distance: 780},
-    {time: 40, x: 590, yaw: -0.5, pitch: 0.25, roll: -0.1, distance: 600},
+    {time: 40, x: 590, yaw: -0.5, pitch: 0.25, roll: -0.1, distance: 740},
     {time: 49, x: 950, yaw: -0.95, pitch: -0.15, roll: 0.08, distance: 650},
     {time: 54, x: 350, yaw: -0.3, pitch: -0.1, roll: 0, distance: 1350},
-    {time: 60, x: 0, yaw: 0.38, pitch: -0.3, roll: -0.08, distance: 1800},
+    {time: 60, x: -700, yaw: -0.5, pitch: -0.1, roll: 0, distance: 1250},
 ];
 
 /** Moves along the signal path, then returns to the full-model overview in sixty seconds. */

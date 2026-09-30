@@ -5,6 +5,7 @@ import {useI18n} from "@oskar-lab/i18n/I18nProvider";
 import type {TranslationKey} from "@oskar-lab/i18n/messages";
 import {CHAPTER_STARTS, clampTime, DURATION, filmState, timestamp} from "../model/timeline";
 import Scene from "./Scene";
+import {useSoundtrack} from "../hooks/useSoundtrack";
 import {useFilmPlayback} from "../hooks/useFilmPlayback";
 
 const chapterKeys: TranslationKey[] = ["llm.chapter1", "llm.chapter2", "llm.chapter3", "llm.chapter4", "llm.chapter5", "llm.chapter6"];
@@ -13,6 +14,7 @@ const chapterKeys: TranslationKey[] = ["llm.chapter1", "llm.chapter2", "llm.chap
 export default function Film({platformUrl}: Readonly<{platformUrl: string}>) {
     const {t, locale, setLocale} = useI18n();
     const {time, setTime, playing, setPlaying, speed, setSpeed, loop, setLoop, toggle} = useFilmPlayback();
+    const music = useSoundtrack(time, playing, speed);
     const [cinema, setCinema] = useState(false);
     const [controlsVisible, setControlsVisible] = useState(true);
     const [error, setError] = useState("");
@@ -24,11 +26,11 @@ export default function Film({platformUrl}: Readonly<{platformUrl: string}>) {
             if (event.key === "Escape") setCinema(false);
             const target = event.target as HTMLElement;
             if (target.closest("button, input, select, a, textarea")) return;
-            if (event.code === "Space") {event.preventDefault(); toggle();}
+            if (event.code === "Space") {event.preventDefault(); void music.prepare(); toggle();}
         }
         window.addEventListener("keydown", keyboard);
         return () => window.removeEventListener("keydown", keyboard);
-    }, [toggle]);
+    }, [toggle, music]);
 
     useEffect(() => () => {if (hideTimer.current) clearTimeout(hideTimer.current);}, []);
 
@@ -84,13 +86,15 @@ export default function Film({platformUrl}: Readonly<{platformUrl: string}>) {
                     </div>
                     <div className="transportRow">
                         <div className="playback">
-                            <button className="playButton" onClick={toggle}>
+                            <button className="playButton" onClick={() => { void music.prepare(); toggle(); }}>
                                 <span aria-hidden="true">{playing ? "Ⅱ" : "▶"}</span>{t(playing ? "llm.pause" : time >= DURATION ? "llm.replay" : "llm.play")}</button>
                             <button className="iconButton" onClick={() => {setTime(0); setPlaying(false);}} aria-label={t("llm.restart")}>↺</button>
                             <span className="timecode">{timestamp(time)} <b>/ {timestamp(DURATION)}</b>
                             </span>
                         </div>
                         <div className="viewControls">
+                            <button aria-pressed={music.enabled} onClick={music.toggleMusic} title={t("llm.music")} data-audio-status={music.status}>{music.status === "loading" ? t("llm.musicLoading") : `♫ ${t("llm.music")}`}</button>
+                            <input className="volumeControl" aria-label={t("llm.volume")} type="range" min="0" max="1" step="0.05" value={music.volume} onChange={event => music.setVolume(Number(event.target.value))} />
                             <button className="loopButton" aria-label={t("llm.loop")} aria-pressed={loop} onClick={() => setLoop(value => !value)}>∞</button>
                             <label>
                                 <span className="srOnly">{t("llm.speed")}</span>
@@ -103,6 +107,7 @@ export default function Film({platformUrl}: Readonly<{platformUrl: string}>) {
                 </div>
             </section>
             {error && <p role="alert" className="error">{error}</p>}
+            {music.status === "error" && <p role="alert" className="error">{t("llm.musicError")}</p>}
             <section className="chapterSection">
                 <div className="sectionHeading">
                     <h2>{t("llm.chapters")}</h2>

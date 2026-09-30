@@ -25,7 +25,7 @@ export default function Scene({time}: Readonly<{time: number}>) {
                 candidates: t("llm.dataCandidates").split("|"),
                 attention: t("llm.dataAttention"), feedForward: t("llm.dataFeedForward"),
                 transformer: t("llm.dataTransformer"), embeddings: t("llm.dataEmbeddings"),
-                nextToken: t("llm.dataNextToken"), example: t("llm.dataExample"),
+                nextToken: t("llm.dataNextToken"), example: t("llm.dataExample"), answer: t("llm.weatherAnswer"),
             });
         }
         draw();

@@ -1,3 +1,4 @@
+import {tokenJourney} from "./signalJourney";
 import {makeProjection, type ScreenPoint} from "./projection";
 import {paintDataAnnotations, type SceneLabels} from "./dataAnnotations";
 import {cameraAt, layerCenter, LAYER_COUNT, PARTICLE_COUNT, particlePosition} from "./choreography";
@@ -51,7 +52,7 @@ function paintBackground(ctx: CanvasRenderingContext2D, time: number) {
 function strokeLink(ctx: CanvasRenderingContext2D, a: ScreenPoint, b: ScreenPoint, color: string, opacity: number) {
     if (!a.visible || !b.visible) return;
     const distance = Math.hypot(a.x - b.x, a.y - b.y);
-    if (distance > 160) return;
+    if (distance > 800) return;
     ctx.strokeStyle = color;
     ctx.globalAlpha = opacity;
     ctx.lineWidth = Math.min(3, a.scale * 1.7);
@@ -80,7 +81,11 @@ function paintConnections(ctx: CanvasRenderingContext2D, points: ScreenPoint[], 
             }
         }
         if (layer < LAYER_COUNT - 1) {
-            for (let node = 0; node < 20; node += 3) strokeLink(ctx, points[base + 100 + node], points[base + 120 + node], COLORS[layer % 5], 0.24);
+            for (let node = 0; node < 20; node++) {
+                for (let branch = 0; branch < 3; branch++) {
+                    strokeLink(ctx, points[base + 100 + node], points[base + 120 + (node * 3 + branch * 17) % 60], COLORS[(layer + branch) % 5], 0.14);
+                }
+            }
         }
     }
 }
@@ -153,6 +158,28 @@ function paintSignalRibbons(ctx: CanvasRenderingContext2D, time: number) {
     }
 }
 
+function paintPromptSignals(ctx: CanvasRenderingContext2D, time: number) {
+    glowSprites ??= createGlowSprites();
+    const project = makeProjection(cameraAt(time));
+    for (let token = 0; token < 5; token++) {
+        const journey = tokenJourney(token, time);
+        if (journey.progress <= 0 || journey.progress >= 1) continue;
+        const position = project(journey.position);
+        strokeLink(ctx, project(journey.from), project(journey.to), COLORS[token], 0.95);
+        for (const vector of [journey.from, journey.to, journey.position]) {
+            const point = project(vector);
+            if (!point.visible) continue;
+            const size = Math.min(80, 34 * point.scale);
+            ctx.globalAlpha = 0.95;
+            ctx.drawImage(glowSprites[token], point.x - size / 2, point.y - size / 2, size, size);
+        }
+        if (position.visible) {
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath(); ctx.arc(position.x, position.y, Math.min(6, 4 * position.scale), 0, Math.PI * 2); ctx.fill();
+        }
+    }
+}
+
 /** Draws one continuous model from input to output with a sixty-second camera path. */
 export function renderFrame(ctx: CanvasRenderingContext2D, width: number, height: number, value: number, labels: SceneLabels) {
     const time = clampTime(value);
@@ -166,6 +193,7 @@ export function renderFrame(ctx: CanvasRenderingContext2D, width: number, height
     paintConnections(ctx, points, time);
     paintSignalRibbons(ctx, time);
     paintParticles(ctx, points, time);
+    paintPromptSignals(ctx, time);
     ctx.globalCompositeOperation = "source-over";
     ctx.globalAlpha = 1;
     const vignette = ctx.createRadialGradient(800, 450, 350, 800, 450, 960);
