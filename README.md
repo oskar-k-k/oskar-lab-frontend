@@ -22,14 +22,9 @@ packages/
   config/         App routing and local service configuration
 scripts/
   dev.mjs         Starts selected or all app development servers
-extensions/
-  modern-reading/ Chrome extension for local word-prefix highlighting
 ```
 
-Modern Reading is built and installed independently of the Next.js servers. Run
-`npm.cmd run build --workspace=@oskar-lab/modern-reading` and load
-`extensions/modern-reading/dist` as an unpacked extension in `chrome://extensions`.
-See [its setup and usage guide](extensions/modern-reading/README.md).
+Modern Reading is maintained as a standalone repository at `D:\Projects\WebDev\Extensions\modern-reading`. It has its own dependencies, translations, tests and store archive. Oskar Lab can present it as an external project without importing its source.
 
 ## Start the platform and all apps
 

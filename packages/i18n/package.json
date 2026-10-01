@@ -5,8 +5,7 @@
   "exports": {
     "./I18nProvider": "./src/I18nProvider.tsx",
     "./messages": "./src/messages.ts",
-    "./legal": "./src/legal.ts",
-    "./modern-reading": "./src/modern-reading.mjs"
+    "./legal": "./src/legal.ts"
   },
   "dependencies": {},
   "peerDependencies": {
