@@ -24,6 +24,8 @@ The build already produces the complete installable directory. No server, accoun
 - **Enable reading** is the single main switch. It pauses/resumes reading across all websites and remembers your choice across reloads and browser restarts.
 - New installations default to **on**. HTTP/HTTPS host access is declared in the manifest so Chrome requests it during normal store installation. Unpacked developer loading may not show the same prompt. Protected browser pages remain inaccessible.
 - Existing installations preserve saved preferences, including an explicit off setting. When updating from 0.1.0, Chrome may require approval of the added installation-time permissions before re-enabling the extension. Reload the extension and existing website tabs after a local rebuild.
+- The popup keeps the same width when advanced settings open; space for its internal scrollbar is reserved. Mouse interactions do not show focus outlines; keyboard navigation retains a subtle green focus indicator.
+- The status reports whether reading mode is enabled, not whether all website paragraphs were detected.
 - **Advanced** starts collapsed. It contains the current-site exception, prefix strength (20–70%), a short live preview, minimum paragraph length and language.
 - **Pause on this website** stores the exact origin (scheme, hostname and port), not all its subdomains.
 - **Reset reading settings** turns reading on, clears exclusions, restores 50% strength and a 120-character minimum, and preserves the selected language.
@@ -70,3 +72,7 @@ The browser check loads the unchanged production build in an isolated persistent
 - One-word-at-a-time presentation (RSVP): [Spritz Reader](https://www.spritzreader.com/about).
 
 Only adjustable prefix highlighting is implemented in this first version. The other approaches are possible future modes.
+
+## Toolbar artwork
+
+Green MR icons are included at 16, 32, 48 and 128 pixels for the toolbar and extension manager. The source is `public/icons/mark.svg`. Regenerate the committed PNG files with `npm run icons --workspace=@oskar-lab/modern-reading` using Playwright Chromium (or `MODERN_READING_BROWSER=msedge`). Normal builds copy the PNGs and do not launch a browser.

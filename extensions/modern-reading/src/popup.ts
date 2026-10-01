@@ -14,12 +14,10 @@ let origin: string | undefined;
 let connected = false;
 let busy = false;
 let statusKey: keyof typeof modernReadingMessages.en = 'loading';
-let count = '';
 
-function notify(key: typeof statusKey, detail = '') {
+function notify(key: typeof statusKey) {
     statusKey = key;
-    count = detail;
-    status.textContent = `${modernReadingMessages[settings.locale][key]} ${detail}`.trim();
+    status.textContent = modernReadingMessages[settings.locale][key];
 }
 
 function render() {
@@ -44,7 +42,7 @@ function render() {
         if (segment.highlighted) node.style.fontWeight = '750';
         preview.append(node);
     }
-    notify(statusKey, count);
+    notify(statusKey);
 }
 
 async function refreshStatus() {
@@ -53,7 +51,7 @@ async function refreshStatus() {
     if (!response || typeof response !== 'object' || !('enabled' in response) || typeof response.enabled !== 'boolean' || !('count' in response) || typeof response.count !== 'number') throw new Error('Invalid reader status');
     if (!settings.automatic) { notify('ready'); return; }
     if (origin && settings.excludedOrigins.includes(origin)) { notify('sitePaused'); return; }
-    notify(response.enabled ? (response.count ? 'active' : 'empty') : 'ready', response.enabled && response.count ? String(response.count) : '');
+    notify(response.enabled ? 'active' : 'ready');
 }
 
 async function save(next: Settings) {
@@ -123,8 +121,12 @@ async function initialize() {
     } catch { notify('unsupported'); }
 }
 render();
+document.addEventListener('keydown', event => {
+    if (event.key === 'Tab') document.body.classList.add('keyboard-navigation');
+});
+document.addEventListener('pointerdown', () => document.body.classList.remove('keyboard-navigation'));
 void run(initialize);
-// Keep processing/empty feedback accurate as a page lazily loads more text.
+// Refresh the mode and detect lost connections without inferring page content from block counts.
 setInterval(() => {
     if (!busy && connected && statusKey !== 'error' && statusKey !== 'denied') {
         void refreshStatus().catch(() => { connected = false; notify('error'); render(); });

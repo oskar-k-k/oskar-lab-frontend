@@ -55,6 +55,18 @@ export async function checkNativePopup(context, page, worker) {
         const screenshot = await send('Page.captureScreenshot');
         await mkdir('test-results', {recursive: true});
         await writeFile('test-results/native-popup.png', Buffer.from(screenshot.data, 'base64'));
+        const measure = async () => (await send('Runtime.evaluate', {
+            expression: '({width:innerWidth, content:document.querySelector("main").getBoundingClientRect().width})',
+            returnByValue: true,
+        })).result.value;
+        const collapsed = await measure();
+        for (const open of [true, false, true]) {
+            await send('Runtime.evaluate', {expression: `document.querySelector('details').open = ${open}`});
+            await expect.poll(async () => (await send('Runtime.evaluate', {expression: 'innerHeight', returnByValue: true})).result.value).toBe(open ? 480 : metrics.result.value.height);
+            await expect.poll(measure).toEqual(collapsed);
+        }
+        const expanded = await send('Page.captureScreenshot');
+        await writeFile('test-results/native-popup-expanded.png', Buffer.from(expanded.data, 'base64'));
     } finally {
         await cdp.send('Target.closeTarget', {targetId: target.targetId});
         await cdp.detach();

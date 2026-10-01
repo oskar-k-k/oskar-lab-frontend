@@ -54,6 +54,20 @@ try {
     expect(await popup.evaluate(() => document.documentElement.getBoundingClientRect().width)).toBe(380);
     await popup.setViewportSize({width: 380, height: 580});
     await popup.locator('summary').click();
+    expect(await popup.locator('summary').evaluate(node => getComputedStyle(node).outlineStyle)).toBe('none');
+    await popup.keyboard.press('Tab');
+    expect(await popup.evaluate(() => getComputedStyle(document.activeElement).outlineStyle)).toBe('solid');
+    await popup.locator('#minimum').click();
+    expect(await popup.locator('#minimum').evaluate(node => getComputedStyle(node).outlineStyle)).toBe('none');
+    await popup.keyboard.press('Escape');
+    for (const size of [16, 32, 48, 128]) {
+        expect(await popup.evaluate(async size => {
+            const image = new Image();
+            image.src = chrome.runtime.getURL(`icons/icon-${size}.png`);
+            await image.decode();
+            return [image.naturalWidth, image.naturalHeight];
+        }, size)).toEqual([size, size]);
+    }
     await popup.locator('#locale').selectOption('de');
     await expect(popup.locator('html')).toHaveAttribute('lang', 'de');
     await popup.locator('summary').click();
@@ -72,6 +86,10 @@ try {
     await popup.locator('#fraction').fill('70');
     await popup.locator('#fraction').dispatchEvent('change');
     await expect(popup.locator('#fraction-value')).toHaveText('70%');
+    await popup.locator('#minimum').selectOption('1000');
+    await expect(page.locator('[data-modern-reading]')).toHaveCount(0);
+    await expect(popup.locator('#status')).toHaveText('Lesemodus für diese Website eingeschaltet.');
+    await popup.locator('#minimum').selectOption('120');
     await popup.locator('#excluded').check();
     await expect(page.locator('[data-modern-reading]')).toHaveCount(0);
     await page.reload();

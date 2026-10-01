@@ -1,13 +1,14 @@
 {
   "name": "@oskar-lab/modern-reading",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --root ../.. --config vitest.config.mts extensions/modern-reading",
-    "test:browser": "npm run build && node tests/browser.mjs"
+    "test:browser": "npm run build && node tests/browser.mjs",
+    "icons": "node generate-icons.mjs"
   },
   "dependencies": {
     "@oskar-lab/i18n": "*"
