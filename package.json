@@ -6,7 +6,7 @@
     "dev": "node scripts/dev.mjs",
     "dev:app": "node scripts/dev.mjs",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "lint": "eslint apps packages scripts",
+    "lint": "eslint apps packages scripts extensions",
     "test": "vitest run",
     "build": "npm run build --workspaces --if-present",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build"
@@ -31,6 +31,7 @@
   },
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "extensions/*"
   ]
 }

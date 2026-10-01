@@ -3,4 +3,4 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 export default defineConfig([...nextVitals, ...nextTs, {
     settings: {next: {rootDir:"apps/*/"}},
-}, globalIgnores(["**/.next/**", "**/.next-standalone/**", "**/out/**", "**/build/**", "**/next-env.d.ts"])]);
+}, globalIgnores(["**/.next/**", "**/.next-standalone/**", "**/out/**", "**/build/**", "**/dist/**", "**/next-env.d.ts"])]);

@@ -1,0 +1,1 @@
+export const modernReadingMessages: Record<'en' | 'de', Record<'description' | 'eyebrow' | 'title' | 'intro' | 'page' | 'automatic' | 'automaticHint' | 'excluded' | 'strength' | 'minimum' | 'characters' | 'preview' | 'sample' | 'privacy' | 'note' | 'loading' | 'ready' | 'active' | 'empty' | 'unsupported' | 'denied' | 'saved' | 'error' | 'language' | 'reset', string>>;

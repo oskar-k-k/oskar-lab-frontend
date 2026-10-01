@@ -20,6 +20,8 @@ node_modules/
 
 # production
 /build
+/extensions/*/dist/
+/extensions/*/test-results/
 
 # misc
 .DS_Store

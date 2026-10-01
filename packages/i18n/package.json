@@ -4,7 +4,8 @@
   "private": true,
   "exports": {
     "./I18nProvider": "./src/I18nProvider.tsx",
-    "./messages": "./src/messages.ts"
+    "./messages": "./src/messages.ts",
+    "./modern-reading": "./src/modern-reading.mjs"
   },
   "dependencies": {},
   "peerDependencies": {
