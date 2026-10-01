@@ -76,3 +76,5 @@ Only adjustable prefix highlighting is implemented in this first version. The ot
 ## Toolbar artwork
 
 Green MR icons are included at 16, 32, 48 and 128 pixels for the toolbar and extension manager. The source is `public/icons/mark.svg`. Regenerate the committed PNG files with `npm run icons --workspace=@oskar-lab/modern-reading` using Playwright Chromium (or `MODERN_READING_BROWSER=msedge`). Normal builds copy the PNGs and do not launch a browser.
+
+Privacy, the purpose of website access, compatibility limits, reading expectations and the current version are shown only at the bottom of Advanced. These product notes are not a substitute for the public store privacy policy or applicable publisher disclosures.

@@ -23,6 +23,7 @@ function notify(key: typeof statusKey) {
 function render() {
     const copy = modernReadingMessages[settings.locale];
     document.documentElement.lang = settings.locale;
+    element('version').textContent = chrome.runtime.getManifest().version;
     document.querySelectorAll<HTMLElement>('[data-copy]').forEach(node => {
         node.textContent = copy[node.dataset.copy as keyof typeof copy];
     });

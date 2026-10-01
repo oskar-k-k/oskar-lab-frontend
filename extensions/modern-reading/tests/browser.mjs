@@ -47,6 +47,7 @@ try {
     await expect(page.locator('pre [data-modern-reading], [contenteditable] [data-modern-reading]')).toHaveCount(0);
     await expect(popup.locator('#automatic')).toBeChecked();
     await expect(popup.locator('#advanced')).not.toHaveAttribute('open');
+    await expect(popup.locator('footer')).not.toBeVisible();
     await popup.setViewportSize({width: 380, height: 580});
     expect(await popup.evaluate(() => document.body.getBoundingClientRect().height)).toBeLessThan(320);
     // Guard against Chrome's initial narrow viewport collapsing the intrinsic popup width.
@@ -54,6 +55,8 @@ try {
     expect(await popup.evaluate(() => document.documentElement.getBoundingClientRect().width)).toBe(380);
     await popup.setViewportSize({width: 380, height: 580});
     await popup.locator('summary').click();
+    await expect(popup.locator('footer')).toBeVisible();
+    await expect(popup.locator('#version')).toHaveText(manifest.version);
     expect(await popup.locator('summary').evaluate(node => getComputedStyle(node).outlineStyle)).toBe('none');
     await popup.keyboard.press('Tab');
     expect(await popup.evaluate(() => getComputedStyle(document.activeElement).outlineStyle)).toBe('solid');
@@ -101,6 +104,8 @@ try {
     await expect(popup.locator('#fraction-value')).toHaveText('50%');
     await expect(popup.locator('#automatic')).toBeChecked();
     await popup.screenshot({path: 'test-results/popup-advanced.png', fullPage: true});
+    await popup.locator('footer').scrollIntoViewIfNeeded();
+    await popup.screenshot({path: 'test-results/popup-info.png'});
     await popup.locator('#locale').selectOption('en');
     await popup.locator('summary').click();
     await popup.screenshot({path: 'test-results/popup-en.png'});
