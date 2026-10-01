@@ -2,6 +2,10 @@
 
 Read and follow `../AGENTS.md` before changing frontend code.
 
+## Privacy, security and rights review
+
+Apply the workspace privacy, security and third-party rights rules to every app, shared package and extension, including free hobby projects. Proactively check data flows, external requests, storage, permissions, authorization and asset licenses when affected by a change. Keep privacy notices and store disclosures aligned with implementation. Before release, check applicable legal contact information and payment obligations; never invent missing operator details or promise legal compliance. Document unresolved material issues and report what was actually verified. Do not rely on the owner to discover these issues during review.
+
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
