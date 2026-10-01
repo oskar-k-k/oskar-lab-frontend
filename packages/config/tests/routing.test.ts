@@ -25,6 +25,9 @@ describe("independent app routing", () => {
 
     it("routes each product to its own configurable server", async () => {
         vi.stubEnv("APP_CHESS_URL", "http://127.0.0.1:12345");
+        vi.stubEnv("APP_ROOM_STUDIO_URL", undefined);
+        vi.stubEnv("APP_2D_LAB_URL", undefined);
+        vi.stubEnv("APP_INSIDE_LLM_URL", undefined);
         const routes = await createAppConfig("oskar-lab").rewrites();
         expect(routes).toContainEqual({source:"/apps/chess/:path*", destination:"http://127.0.0.1:12345/apps/chess/:path*"});
         expect(routes).toContainEqual({source:"/apps/room-studio/:path*", destination:"http://127.0.0.1:10037/apps/room-studio/:path*"});

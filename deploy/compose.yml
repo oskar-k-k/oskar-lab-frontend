@@ -72,6 +72,9 @@ services:
   inside-llm:
     <<: *web
     environment: {<<: *web-env, APP_NAME: inside-llm}
+  2d-lab:
+    <<: *web
+    environment: {<<: *web-env, APP_NAME: 2d-lab}
   room-studio:
     <<: *web
     environment: {<<: *web-env, APP_NAME: room-studio}

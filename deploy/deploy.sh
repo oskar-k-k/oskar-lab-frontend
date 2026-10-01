@@ -32,7 +32,7 @@ if [[ "$component" == backend ]]; then
 else
     # Start the platform first so product authentication calls resolve during health checks.
     "${compose[@]}" up -d --no-deps --wait --wait-timeout 120 platform
-    for service in inside-llm room-studio workout chess cloth-lab neon-vault portfolio core-design; do
+    for service in inside-llm 2d-lab room-studio workout chess cloth-lab neon-vault portfolio core-design; do
         "${compose[@]}" up -d --no-deps --wait --wait-timeout 120 "$service"
     done
 fi

@@ -4,7 +4,7 @@ COPY . .
 ARG PUBLIC_URL
 ENV NEXT_TELEMETRY_DISABLED=1 AUTH_URL=${PUBLIC_URL} AUTH_PLATFORM_URL=${PUBLIC_URL}
 ENV NEXT_PUBLIC_API_URL=http://backend:8080
-ENV APP_CHESS_URL=http://chess:3000 APP_CLOTH_LAB_URL=http://cloth-lab:3000 APP_NEON_VAULT_URL=http://neon-vault:3000 APP_PORTFOLIO_URL=http://portfolio:3000 APP_CORE_DESIGN_URL=http://core-design:3000 APP_WORKOUT_URL=http://workout:3000 APP_ROOM_STUDIO_URL=http://room-studio:3000 APP_INSIDE_LLM_URL=http://inside-llm:3000
+ENV APP_CHESS_URL=http://chess:3000 APP_CLOTH_LAB_URL=http://cloth-lab:3000 APP_NEON_VAULT_URL=http://neon-vault:3000 APP_PORTFOLIO_URL=http://portfolio:3000 APP_CORE_DESIGN_URL=http://core-design:3000 APP_WORKOUT_URL=http://workout:3000 APP_ROOM_STUDIO_URL=http://room-studio:3000 APP_INSIDE_LLM_URL=http://inside-llm:3000 APP_2D_LAB_URL=http://2d-lab:3000
 RUN test -n "$PUBLIC_URL" && npm ci && npm run check
 
 FROM node:22-bookworm-slim
