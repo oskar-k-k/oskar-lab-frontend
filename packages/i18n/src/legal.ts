@@ -5,7 +5,7 @@ export const legalMessages = {
         operator: "Operator", address: "Address", contact: "Contact", country: "Germany", back: "Back to Oskar Lab",
         updated: "Privacy information updated: 1 October 2026",
         pending: "These privacy disclosures are not yet complete. Hosting providers, processing locations, infrastructure retention periods and international transfer arrangements still need to be confirmed before public release.",
-        imprintIntro: "Provider information for Oskar Lab and the Modern Reading browser extension. Oskar Lab is the project name; the operator is the individual named below.",
+        imprintIntro: "Provider information for Oskar Lab and its associated applications and browser extensions. Oskar Lab is the project name; the operator is the individual named below.",
         contactNote: "For questions about the service, privacy, access to your data or deletion requests, please email the operator.",
         sections: [
             ["Controller and scope", "The controller is Oskar Konczarek, reachable using the address and email in the legal notice. These disclosures cover this platform, its integrated apps and Modern Reading. External sites have their own privacy notices."],
@@ -27,7 +27,7 @@ export const legalMessages = {
         operator: "Betreiber", address: "Anschrift", contact: "Kontakt", country: "Deutschland", back: "Zurück zu Oskar Lab",
         updated: "Stand der Datenschutzhinweise: 1. Oktober 2026",
         pending: "Diese Datenschutzhinweise sind noch nicht vollständig. Hostinganbieter, Verarbeitungsorte, Speicherfristen der Infrastruktur und Regelungen für Drittlandübermittlungen müssen vor der öffentlichen Freigabe noch bestätigt werden.",
-        imprintIntro: "Anbieterinformationen für Oskar Lab und die Browser-Erweiterung Modern Reading. Oskar Lab ist die Projektbezeichnung; Betreiber ist die unten genannte natürliche Person.",
+        imprintIntro: "Anbieterinformationen für Oskar Lab und die zugehörigen Anwendungen und Browser-Erweiterungen. Oskar Lab ist die Projektbezeichnung; Betreiber ist die unten genannte natürliche Person.",
         contactNote: "Bei Fragen zum Angebot, zum Datenschutz sowie für Auskunfts- oder Löschungsanfragen erreichst du den Betreiber per E-Mail.",
         sections: [
             ["Verantwortlicher und Geltungsbereich", "Verantwortlicher ist Oskar Konczarek, erreichbar über die Anschrift und E-Mail im Impressum. Diese Hinweise betreffen die Plattform, ihre integrierten Apps und Modern Reading. Für externe Seiten gelten deren eigene Datenschutzhinweise."],
