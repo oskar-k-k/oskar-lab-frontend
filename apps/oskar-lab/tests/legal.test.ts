@@ -14,7 +14,7 @@ describe("legal page access and indexing", () => {
     });
     it("returns noindex headers for every page containing operator information", async () => {
         const rules = await config.headers();
-        for (const route of ["/impressum", "/privacy", "/terms"]) {
+        for (const route of ["/impressum", "/privacy", "/terms", "/modern-reading/privacy"]) {
             expect(rules.find(rule => rule.source === route)?.headers).toContainEqual({key: "X-Robots-Tag", value: "noindex, noarchive, nosnippet"});
         }
     });

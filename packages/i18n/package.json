@@ -5,7 +5,8 @@
   "exports": {
     "./I18nProvider": "./src/I18nProvider.tsx",
     "./messages": "./src/messages.ts",
-    "./legal": "./src/legal.ts"
+    "./legal": "./src/legal.ts",
+    "./extension-privacy": "./src/extension-privacy.ts"
   },
   "dependencies": {},
   "peerDependencies": {
