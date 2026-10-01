@@ -21,3 +21,5 @@
 .page :is(button, input, a):focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
 .legal { width: min(100%, 760px); }
 .legal h2 { font-size: 1.15rem; margin-top: 28px; }
+.legal { overflow-wrap: anywhere; }
+.address { font-style: normal; line-height: 1.7; }

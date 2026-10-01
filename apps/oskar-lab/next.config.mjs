@@ -1,2 +1,12 @@
 import {createAppConfig} from "@oskar-lab/config/next";
-export default createAppConfig("oskar-lab");
+const config = {
+    ...createAppConfig("oskar-lab"),
+    async headers() {
+        return ["/impressum", "/privacy", "/terms"].map(source => ({source, headers: [
+            {key: "X-Robots-Tag", value: "noindex, noarchive, nosnippet"},
+            {key: "Referrer-Policy", value: "no-referrer"},
+            {key: "X-Content-Type-Options", value: "nosniff"},
+        ]}));
+    },
+};
+export default config;

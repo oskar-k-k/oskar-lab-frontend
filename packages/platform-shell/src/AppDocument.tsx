@@ -3,6 +3,7 @@ import {cookies} from "next/headers";
 import AuthProvider from "@oskar-lab/auth/AuthProvider";
 import I18nProvider from "@oskar-lab/i18n/I18nProvider";
 import {parseLocale} from "@oskar-lab/i18n/messages";
+import LegalLinks from "./LegalLinks";
 import "@oskar-lab/ui/styles/globals.css";
 
 const geistSans = Geist({
@@ -27,7 +28,7 @@ export default async function AppDocument({children,}: Readonly<{
           className={`${geistSans.variable} ${geistMono.variable}`}
       >
       <body>
-      <AuthProvider><I18nProvider initialLocale={locale}>{children}</I18nProvider></AuthProvider>
+      <AuthProvider><I18nProvider initialLocale={locale}>{children}<LegalLinks /></I18nProvider></AuthProvider>
       </body>
       </html>
   );

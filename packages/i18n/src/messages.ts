@@ -4,6 +4,7 @@ export const locales = ["en", "de"] as const;
 export type Locale = typeof locales[number];
 
 const en = {
+    "legal.navigation": "Legal information", "legal.imprint": "Legal notice", "legal.privacy": "Privacy notice", "legal.terms": "Terms of use", "legal.preview": "Accessible links to the central legal pages, also available in standalone apps.",
     ...llmEn,
     "scene2d.pan": "Pan view",
     "scene2d.scale": "Scale",
@@ -426,7 +427,7 @@ const en = {
     "auth.termsContent": "Only upload content you are permitted to use. Do not submit unlawful content, impersonate others, attack the service or interfere with other users. You retain your rights to uploaded content; processing is limited to providing the requested feature.",
     "auth.termsGames": "Oskar Lab contains experimental apps. Neon Vault uses fictional credits only: they have no monetary value, cannot be purchased for real money and cannot be paid out. No real-money gambling is offered.",
     "auth.termsOperation": "Features may change or be temporarily unavailable during development or maintenance. These terms do not promise permanent availability or long-term storage. Keep your own copy of important files. Statutory rights and statutory liability remain unaffected.",
-    "auth.termsEnd": "You can stop using the platform at any time. Accounts may be restricted when necessary to address abuse or protect the service. Account deletion and related requests can be directed to the operator once contact details are published.",
+    "auth.termsEnd": "You can stop using the platform at any time. Accounts may be restricted when necessary to address abuse or protect the service. Account deletion and related requests can be directed to the operator using the contact details in the legal notice.",
     "auth.privacyIntro": "Registration stores your username, email, password hash, and the time and version of your terms acceptance. Google sign-in additionally stores Google's account identifier; Oskar Lab does not receive your Google password.",
     "auth.privacySession": "An essential HTTP-only cookie maintains your session across the platform. The backend stores a hashed session credential for expiry and logout. These login features do not set advertising cookies.",
     "auth.privacyDraft": "Before public release, this information must be completed with the controller's identity and contact details, legal bases, retention periods, hosting and recipients, data-subject rights and supervisory authority. Google authentication also involves Google's services.",
@@ -492,6 +493,7 @@ const en = {
 } as const;
 
 const de: Record<keyof typeof en, string> = {
+    "legal.navigation": "Rechtliche Informationen", "legal.imprint": "Impressum", "legal.privacy": "Datenschutzerklärung", "legal.terms": "Nutzungsbedingungen", "legal.preview": "Zugängliche Links zu den zentralen Rechtstexten, auch in eigenständigen Apps.",
     ...llmDe,
     "scene2d.pan": "Ansicht verschieben",
     "scene2d.scale": "Skalieren",
@@ -914,7 +916,7 @@ const de: Record<keyof typeof en, string> = {
     "auth.termsContent": "Lade nur Inhalte hoch, die du verwenden darfst. Rechtswidrige Inhalte, Identitätsmissbrauch, Angriffe auf den Dienst und die Störung anderer Nutzer sind unzulässig. Deine Rechte an hochgeladenen Inhalten bleiben bei dir; die Verarbeitung dient der angeforderten Funktion.",
     "auth.termsGames": "Oskar Lab enthält experimentelle Apps. Neon Vault verwendet ausschließlich fiktive Spielpunkte: Sie haben keinen Geldwert, können nicht für echtes Geld gekauft und nicht ausgezahlt werden. Es wird kein Glücksspiel mit echtem Geld angeboten.",
     "auth.termsOperation": "Funktionen können sich ändern oder während Entwicklung und Wartung zeitweise ausfallen. Diese Bedingungen versprechen keine dauerhafte Verfügbarkeit oder langfristige Speicherung. Sichere wichtige Dateien selbst. Gesetzliche Rechte und die gesetzliche Haftung bleiben unberührt.",
-    "auth.termsEnd": "Du kannst die Nutzung jederzeit beenden. Konten können eingeschränkt werden, soweit dies zur Abwehr von Missbrauch oder zum Schutz des Dienstes erforderlich ist. Löschungsanfragen und damit verbundene Anliegen können nach Veröffentlichung der Kontaktdaten an den Betreiber gerichtet werden.",
+    "auth.termsEnd": "Du kannst die Nutzung jederzeit beenden. Konten können eingeschränkt werden, soweit dies zur Abwehr von Missbrauch oder zum Schutz des Dienstes erforderlich ist. Löschungsanfragen und damit verbundene Anliegen kannst du über die Kontaktdaten im Impressum an den Betreiber richten.",
     "auth.privacyIntro": "Bei der Registrierung werden Benutzername, E-Mail, Passwort-Hash sowie Zeitpunkt und Version deiner AGB-Zustimmung gespeichert. Beim Google-Login wird zusätzlich die Google-Kontokennung gespeichert; Oskar Lab erhält dein Google-Passwort nicht.",
     "auth.privacySession": "Ein notwendiges HTTP-only-Cookie hält deine Sitzung plattformweit aufrecht. Das Backend speichert einen Hash der Sitzungskennung für Ablauf und Abmeldung. Diese Login-Funktionen setzen keine Werbe-Cookies.",
     "auth.privacyDraft": "Vor der Veröffentlichung sind diese Hinweise um Verantwortlichen und Kontakt, Rechtsgrundlagen, Speicherdauer, Hosting und Empfänger, Betroffenenrechte und Aufsichtsbehörde zu ergänzen. Bei der Google-Anmeldung werden auch Dienste von Google genutzt.",

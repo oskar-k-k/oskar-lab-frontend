@@ -9,6 +9,7 @@ import Card from "@oskar-lab/ui/Cards/Card";
 import Grid from "@oskar-lab/ui/Grids/Grid";
 import Square from "@oskar-lab/ui/Grids/SquareView";
 import Header from "@oskar-lab/platform-shell/Header/Header";
+import LegalLinks from "@oskar-lab/platform-shell/LegalLinks";
 import StandardLayout from "@oskar-lab/ui/Layouts/StandardLayout";
 import Search from "@oskar-lab/ui/Search/Search";
 import LanguageSwitch from "@oskar-lab/ui/LanguageSwitch/LanguageSwitch";
@@ -32,6 +33,7 @@ function createDesignReferences(t: Translate): readonly DesignReference[] { retu
     {id: "structured-content", title: t("core.listsTablesStatus"), description: t("core.structuredContentDescription"), keywords: ["table", "tabelle", "list", "liste", "badge", "status"]},
 ]; }
 function createComponentReferences(t: Translate): readonly ComponentReference[] { return [
+    {id: "legal-links", title: "LegalLinks", description: t("legal.preview"), keywords: ["impressum", "privacy", "legal", "footer"], wide: true},
     {id:"2d-lab", title:"2D Lab", description:t("lab2d.previewDescription"), keywords:["2d-lab","vertices","edges","drawing","2d","punkte","kanten"], wide:true},
     {id: "range-slider", title: "RangeSlider", description: t("core.rangeSliderDescription"), keywords: ["range", "slider", "min", "max"]},
     {id: "tabs", title: "Tabs", description: t("core.tabsDescription"), keywords: ["tabs", "navigation", "content"], wide: true},
@@ -117,6 +119,7 @@ function ComponentGallery({references}: Readonly<{references: readonly Component
         {reference.id === "square" && <div className={styles.squareDemo}><Square color="var(--color-primary)" /><Square color="var(--color-accent-cyan)" /></div>}
         {reference.id === "search" && <Search value={previewQuery} onChange={setPreviewQuery} label={t("core.previewSearch")} placeholder={`${t("core.previewSearch")} …`} />}
         {reference.id === "language" && <LanguageSwitch />}
+        {reference.id === "legal-links" && <LegalLinks />}
         {reference.id === "header" && <div className={styles.componentFrame}><Header appName="Preview" center={<span>Center Slot</span>} right={<span>Right Slot</span>} /></div>}
         {reference.id === "layout" && <div className={styles.layoutFrame}><StandardLayout maxWidth={560} padding={18}><div className={styles.gridItem}>{t("core.centeredContent")}</div></StandardLayout></div>}
     </article>)}</div>;

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "exports": {
+    "./LegalLinks": "./src/LegalLinks.tsx",
     "./AppDocument": "./src/AppDocument.tsx",
     "./Auth/UserMenu.module.css": "./src/Auth/UserMenu.module.css",
     "./Auth/UserMenu": "./src/Auth/UserMenu.tsx",
