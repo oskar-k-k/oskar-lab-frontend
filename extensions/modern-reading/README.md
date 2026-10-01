@@ -15,23 +15,24 @@ npm.cmd run build --workspace=@oskar-lab/modern-reading
 2. Enable **Developer mode** in the top right.
 3. Choose **Load unpacked** and select `frontend/extensions/modern-reading/dist`.
 4. Pin **Modern Reading** using Chrome's Extensions menu.
-5. Open a normal website, click the extension, and enable reading on that page.
+5. Open a normal website. Longer text is highlighted automatically; no setup is needed.
 
 The build already produces the complete installable directory. No server, account, API key or backend is required. After source changes, rebuild and click **Reload** on Chrome's extension card, then reload your test website. This extension has not been published to the Chrome Web Store.
 
 ## Use
 
-- **Enable on this page** toggles the current document. A manual choice lasts until navigation/reload; it takes precedence over automatic mode in that document.
-- **Highlighted part** controls the first 20–70% of each word, rounded to complete graphemes. The preview updates immediately; website changes are saved when the slider is released.
-- **Minimum paragraph length** defaults to 120 characters. Text blocks below that threshold stay untouched.
-- **Automatically on websites** requests optional HTTP/HTTPS host access and registers a persistent content script. Existing accessible tabs and future pages receive it. Switching it off restores connected pages and removes future automatic injection. Chrome's grant remains until revoked in the extension's site-access settings.
-- **Exclude this website** stores the exact origin (scheme, hostname and port), not all its subdomains. It prevents automatic mode on that origin. Manual activation still works.
-- Changing the automatic mode or website exclusions clears temporary manual overrides in open pages. **Reset reading settings** disables automation, clears exclusions and restores defaults; it preserves the selected UI language and switches off the current document.
+- **Enable reading** is the single main switch. It pauses/resumes reading across all websites and remembers your choice across reloads and browser restarts.
+- New installations default to **on**. HTTP/HTTPS host access is declared in the manifest so Chrome requests it during normal store installation. Unpacked developer loading may not show the same prompt. Protected browser pages remain inaccessible.
+- Existing installations preserve saved preferences, including an explicit off setting. When updating from 0.1.0, Chrome may require approval of the added installation-time permissions before re-enabling the extension. Reload the extension and existing website tabs after a local rebuild.
+- **Advanced** starts collapsed. It contains the current-site exception, prefix strength (20–70%), a short live preview, minimum paragraph length and language.
+- **Pause on this website** stores the exact origin (scheme, hostname and port), not all its subdomains.
+- **Reset reading settings** turns reading on, clears exclusions, restores 50% strength and a 120-character minimum, and preserves the selected language.
 - Language initially follows Chrome's English/German locale, with English as fallback. Preferences are stored locally, not synced to a remote service.
+- Chrome's site-access controls remain authoritative. Restricting access to selected sites limits where the reader can run without changing the global preference. Restore access through Chrome's extension controls if needed.
 
 ## How it works
 
-Chrome reads `manifest.json` to discover the popup, permissions and background worker. The popup is ordinary HTML/CSS with bundled TypeScript. A content script runs in an isolated JavaScript world but can modify the page DOM. The service worker registers or unregisters automatic injection and reconciles revoked permissions.
+Chrome reads `manifest.json` to discover the popup, permissions and background worker. The popup is ordinary HTML/CSS with bundled TypeScript. A content script runs in an isolated JavaScript world but can modify the page DOM. The service worker registers or unregisters automatic injection according to the global switch; Chrome enforces site-access grants.
 
 `src/model.ts` validates persisted settings and splits Unicode words using `Intl.Segmenter`. `src/reader.ts` adds presentation-only spans to eligible text nodes without replacing surrounding elements or event handlers. It restores original text nodes on disable, preserves site edits inside its spans, and observes added/changed text. Processing yields between blocks. No remote scripts, analytics, page-text storage or uploads are used.
 
@@ -44,7 +45,7 @@ This extension lives in the existing npm workspace under `extensions/*`, separat
 - Chrome internal pages, browser PDF viewers, the Chrome Web Store and other protected pages reject injection. Embedded frames, shadow roots, canvas text and image text are not processed. Local `file://` pages are outside the requested permissions.
 - An individual text node above 20,000 characters is skipped to avoid a long synchronous transform. Rendering and segmentation costs still depend on page size.
 - Some heavily scripted sites may replace or manage their own text nodes. Disable the reader on those sites if their editor or rendering conflicts with DOM highlighting. Website compatibility is best-effort, not a guarantee for every URL.
-- Chrome desktop is the install target; the popup also supports narrow widths. This is not an Android Chrome extension.
+- Chrome desktop is the install target. The popup has an intrinsic width of 380 CSS pixels and a scrollable advanced section; its default view fits without scrolling. This is not an Android Chrome extension.
 
 ## Verify
 
@@ -57,9 +58,9 @@ npx.cmd playwright install chromium
 npm.cmd run test:browser --workspace=@oskar-lab/modern-reading
 ```
 
-The browser check loads a disposable copy in an isolated persistent Chromium profile. Because automated popup tabs do not receive a toolbar activeTab grant and cannot handle native host-permission dialogs, only the test copy is pre-granted host access and its active-tab query targets the local fixture. All storage, content-script injection, registration, messaging and page changes use real extension APIs. Production permissions stay optional. Screenshots are written to ignored `test-results/`.
+The browser check loads the unchanged production build in an isolated persistent Chromium profile. It checks automatic first use before any popup interaction, persistent global pause, origin exclusions, keyboard operation, collapsed height, intrinsic width, both languages, reset and dynamic text. The test opens the popup as a tab and overrides only its active-tab query to point to the local fixture. Storage, injection, registration and messaging use real extension APIs. Screenshots are written to ignored `test-results/`.
 
-`MODERN_READING_BROWSER=msedge` can use an installed Edge version that still supports sideloading flags; otherwise use Playwright Chromium. Native Chrome toolbar activation, granting/denying optional access and revoking site access should additionally be checked manually in the unpacked production build.
+`MODERN_READING_BROWSER=msedge` can use an installed Edge version that still supports sideloading flags; otherwise use Playwright Chromium. The browser suite additionally opens the real toolbar popup and verifies its 380-pixel width and compact height through the DevTools protocol. The native Chrome Web Store installation/permission dialog still requires a manual store-install check.
 
 ## Related reading approaches
 

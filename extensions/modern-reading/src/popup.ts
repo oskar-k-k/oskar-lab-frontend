@@ -2,14 +2,12 @@ import {modernReadingMessages} from '@oskar-lab/i18n/modern-reading';
 import {defaults, parseSettings, readingSegments, type Settings} from './model';
 
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
-const enabled = element<HTMLInputElement>('enabled');
 const automatic = element<HTMLInputElement>('automatic');
 const excluded = element<HTMLInputElement>('excluded');
 const fraction = element<HTMLInputElement>('fraction');
 const minimum = element<HTMLSelectElement>('minimum');
 const locale = element<HTMLSelectElement>('locale');
 const status = element<HTMLParagraphElement>('status');
-const origins = ['http://*/*', 'https://*/*'];
 let settings: Settings = {...defaults};
 let tabId: number | undefined;
 let origin: string | undefined;
@@ -33,7 +31,6 @@ function render() {
     automatic.checked = settings.automatic;
     excluded.checked = !!origin && settings.excludedOrigins.includes(origin);
     excluded.disabled = busy || !origin;
-    enabled.disabled = busy || !connected;
     fraction.value = String(settings.fraction * 100);
     minimum.value = String(settings.minimum);
     locale.value = settings.locale;
@@ -54,7 +51,8 @@ async function refreshStatus() {
     if (!connected || tabId === undefined) return;
     const response: unknown = await chrome.tabs.sendMessage(tabId, {type: 'modern-reading:status'});
     if (!response || typeof response !== 'object' || !('enabled' in response) || typeof response.enabled !== 'boolean' || !('count' in response) || typeof response.count !== 'number') throw new Error('Invalid reader status');
-    enabled.checked = response.enabled;
+    if (!settings.automatic) { notify('ready'); return; }
+    if (origin && settings.excludedOrigins.includes(origin)) { notify('sitePaused'); return; }
     notify(response.enabled ? (response.count ? 'active' : 'empty') : 'ready', response.enabled && response.count ? String(response.count) : '');
 }
 
@@ -80,20 +78,12 @@ async function run(action: () => Promise<void>) {
     }
 }
 
-enabled.addEventListener('change', () => { void run(async () => {
-    await chrome.tabs.sendMessage(tabId!, {type: 'modern-reading:toggle', enabled: enabled.checked});
-    await refreshStatus();
-}); });
 automatic.addEventListener('change', () => {
     const requested = automatic.checked;
-    // Request directly inside the user gesture, before any asynchronous work.
-    const permission = requested ? chrome.permissions.request({origins}) : Promise.resolve(true);
     void run(async () => {
-        if (!await permission) { notify('denied'); return; }
         await save({...settings, automatic: requested});
         const response: unknown = await chrome.runtime.sendMessage({type: 'modern-reading:reconcile'});
         if (!response || typeof response !== 'object' || !('ok' in response) || response.ok !== true) {
-            await save({...settings, automatic: false});
             throw new Error('Automatic injection could not be registered');
         }
         if (connected) await refreshStatus();
@@ -114,7 +104,7 @@ minimum.addEventListener('change', () => { void run(() => save({...settings, min
 locale.addEventListener('change', () => { void run(() => save({...settings, locale: locale.value === 'de' ? 'de' : 'en'})); });
 element('reset').addEventListener('click', () => { void run(async () => {
     await save({...defaults, locale: settings.locale});
-    if (connected) await chrome.tabs.sendMessage(tabId!, {type: 'modern-reading:toggle', enabled: false});
+    await chrome.runtime.sendMessage({type: 'modern-reading:reconcile'});
     await refreshStatus();
 }); });
 

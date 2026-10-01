@@ -9,6 +9,10 @@ const settle = () => new Promise(resolve => setTimeout(resolve, 120));
 afterEach(() => { reader?.configure(false, defaults); document.body.replaceChildren(); });
 
 describe('reading model', () => {
+    it('starts new installations automatically and preserves an explicit pause', () => {
+        expect(parseSettings(undefined).automatic).toBe(true);
+        expect(parseSettings({automatic: false}).automatic).toBe(false);
+    });
     it('preserves multilingual text, emoji, combining marks and whitespace exactly', () => {
         for (const text of ['Grüße!\nStraße 123 👩‍💻', 'e\u0301lan — beautiful', '你好 世界', '<script>alert("x")</script>']) {
             expect(readingSegments(text, 0.5).map(part => part.text).join('')).toBe(text);

@@ -2,7 +2,8 @@ import {chromium, expect} from '@playwright/test';
 import {createServer} from 'node:http';
 import {once} from 'node:events';
 import {resolve} from 'node:path';
-import {cp, mkdir, readFile, writeFile} from 'node:fs/promises';
+import {mkdir, readFile} from 'node:fs/promises';
+import {checkNativePopup} from './native-popup.mjs';
 
 const text = 'A quieter way to read. Follow the beginnings of these words and find a comfortable rhythm. This paragraph is deliberately long enough to exercise automatic paragraph detection.';
 const server = createServer((_request, response) => {
@@ -13,15 +14,10 @@ server.listen(0, '127.0.0.1');
 await once(server, 'listening');
 const address = server.address();
 const url = `http://127.0.0.1:${address.port}`;
-const extension = resolve('test-results/extension');
-await mkdir(extension, {recursive: true});
-await cp('dist', extension, {recursive: true});
+const extension = resolve('dist');
 const manifest = JSON.parse(await readFile('dist/manifest.json', 'utf8'));
-expect(manifest.host_permissions).toBeUndefined();
-// Headless tabs cannot invoke the toolbar's activeTab grant or native permission UI.
-// Grant hosts only to this disposable test copy; production remains opt-in.
-manifest.host_permissions = manifest.optional_host_permissions;
-await writeFile(resolve(extension, 'manifest.json'), JSON.stringify(manifest));
+expect(manifest.host_permissions).toEqual(['http://*/*', 'https://*/*']);
+expect(manifest.optional_host_permissions).toBeUndefined();
 let context;
 try {
     context = await chromium.launchPersistentContext('', {
@@ -33,6 +29,8 @@ try {
     const worker = context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker');
     const page = await context.newPage();
     await page.goto(url);
+    await expect(page.locator('#article [data-modern-reading]').first()).toBeAttached();
+    await checkNativePopup(context, page, worker);
     await page.bringToFront();
     const target = await worker.evaluate(async () => (await chrome.tabs.query({active: true, currentWindow: true}))[0]);
     const popup = await context.newPage();
@@ -43,44 +41,51 @@ try {
     }, {id: target.id, url});
     await page.bringToFront();
     await popup.goto(`chrome-extension://${worker.url().split('/')[2]}/popup.html`);
-    await expect(popup.locator('#enabled')).toBeEnabled();
-    await popup.locator('#enabled').focus();
-    await popup.keyboard.press('Space');
-    await expect(popup.locator('#enabled')).toBeChecked();
+    // Fresh installation works without opening the popup or granting runtime permissions.
     await expect(page.locator('#article [data-modern-reading]').first()).toBeAttached();
-    await expect(page.locator('#article')).toHaveText(`${text} Continue reading`);
+    await expect(page.locator('#article')).toHaveText(text + ' Continue reading');
     await expect(page.locator('pre [data-modern-reading], [contenteditable] [data-modern-reading]')).toHaveCount(0);
+    await expect(popup.locator('#automatic')).toBeChecked();
+    await expect(popup.locator('#advanced')).not.toHaveAttribute('open');
+    await popup.setViewportSize({width: 380, height: 580});
+    expect(await popup.evaluate(() => document.body.getBoundingClientRect().height)).toBeLessThan(320);
+    // Guard against Chrome's initial narrow viewport collapsing the intrinsic popup width.
+    await popup.setViewportSize({width: 180, height: 580});
+    expect(await popup.evaluate(() => document.documentElement.getBoundingClientRect().width)).toBe(380);
+    await popup.setViewportSize({width: 380, height: 580});
+    await popup.locator('summary').click();
     await popup.locator('#locale').selectOption('de');
     await expect(popup.locator('html')).toHaveAttribute('lang', 'de');
-    await expect(popup.locator('#status')).toContainText('Lesemodus aktiv');
+    await popup.locator('summary').click();
+    await mkdir('test-results', {recursive: true});
+    await popup.screenshot({path: 'test-results/popup-de.png'});
+    await popup.locator('#automatic').focus();
+    await popup.keyboard.press('Space');
+    await expect(page.locator('[data-modern-reading]')).toHaveCount(0);
+    await page.reload();
+    await expect(page.locator('[data-modern-reading]')).toHaveCount(0);
+    await popup.reload();
+    await expect(popup.locator('#automatic')).not.toBeChecked();
+    await popup.locator('#automatic').check();
+    await expect(page.locator('#article [data-modern-reading]').first()).toBeAttached();
+    await popup.locator('summary').click();
     await popup.locator('#fraction').fill('70');
     await popup.locator('#fraction').dispatchEvent('change');
     await expect(popup.locator('#fraction-value')).toHaveText('70%');
-    await popup.setViewportSize({width: 380, height: 850});
-    await mkdir('test-results', {recursive: true});
-    await popup.screenshot({path: 'test-results/popup-de.png', fullPage: true});
-    await popup.setViewportSize({width: 320, height: 850});
-    expect(await popup.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    await popup.screenshot({path: 'test-results/popup-narrow.png', fullPage: true});
-    await popup.locator('#enabled').uncheck();
-    await expect(page.locator('[data-modern-reading]')).toHaveCount(0);
-    await popup.locator('#locale').selectOption('en');
-    await popup.evaluate(() => { chrome.permissions.request = async () => false; });
-    await popup.locator('#automatic').click();
-    await expect(popup.locator('#status')).toContainText('Website access was not granted');
-    await expect(popup.locator('#automatic')).not.toBeChecked();
-    await popup.reload();
-    await popup.locator('#automatic').check();
-    await expect(popup.locator('#automatic')).toBeChecked();
-    await expect(page.locator('#article [data-modern-reading]').first()).toBeAttached();
     await popup.locator('#excluded').check();
     await expect(page.locator('[data-modern-reading]')).toHaveCount(0);
-    const unsupported = await context.newPage();
-    await unsupported.goto(`chrome-extension://${worker.url().split('/')[2]}/popup.html`);
-    await expect(unsupported.locator('#enabled')).toBeDisabled();
-    await expect(unsupported.locator('#status')).toContainText('This page cannot be changed');
+    await page.reload();
+    await expect.poll(() => worker.evaluate(async () => (await chrome.storage.local.get('settings')).settings.excludedOrigins.length)).toBe(1);
+    await expect(page.locator('[data-modern-reading]')).toHaveCount(0);
     await popup.locator('#excluded').uncheck();
     await expect(page.locator('#article [data-modern-reading]').first()).toBeAttached();
+    await popup.locator('#reset').click();
+    await expect(popup.locator('#fraction-value')).toHaveText('50%');
+    await expect(popup.locator('#automatic')).toBeChecked();
+    await popup.screenshot({path: 'test-results/popup-advanced.png', fullPage: true});
+    await popup.locator('#locale').selectOption('en');
+    await popup.locator('summary').click();
+    await popup.screenshot({path: 'test-results/popup-en.png'});
     await popup.close();
     await page.reload();
     await expect(page.locator('#article [data-modern-reading]').first()).toBeAttached();
@@ -89,13 +94,14 @@ try {
         document.querySelector('main').append(p);
     }, text);
     await expect(page.locator('#dynamic [data-modern-reading]')).toBeAttached();
-    await worker.evaluate(async () => {
-        const {settings} = await chrome.storage.local.get('settings');
-        await chrome.storage.local.set({settings: {...settings, automatic: false}});
-    });
+    const unsupported = await context.newPage();
+    await unsupported.goto('chrome-extension://' + worker.url().split('/')[2] + '/popup.html');
+    await expect(unsupported.locator('#automatic')).toBeEnabled();
+    await expect(unsupported.locator('#status')).toContainText('This page cannot be changed');
+    await unsupported.locator('#automatic').uncheck();
     await expect(page.locator('[data-modern-reading]')).toHaveCount(0);
     expect(errors).toEqual([]);
-    console.log('Browser checks passed: manual toggle, German UI, strength, narrow layout, automatic registration, exclusions, reload, dynamic text, restoration and no page errors. Native permission prompts require a manual Chrome check.');
+    console.log('Browser checks passed: automatic fresh install, persistent pause, keyboard toggle, collapsed popup sizing, EN/DE, strength, exclusions, reset, reload, dynamic text and protected-page feedback.');
 } finally {
     await context?.close();
     server.close();

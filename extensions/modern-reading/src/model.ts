@@ -6,13 +6,13 @@ export interface Settings {
     locale: 'en' | 'de';
 }
 
-export const defaults: Settings = {automatic: false, fraction: 0.5, minimum: 120, excludedOrigins: [], locale: 'en'};
+export const defaults: Settings = {automatic: true, fraction: 0.5, minimum: 120, excludedOrigins: [], locale: 'en'};
 
 /** Validates untrusted storage data and supplies safe defaults for malformed fields. */
 export function parseSettings(value: unknown): Settings {
     const data = value && typeof value === 'object' ? value as Record<string, unknown> : {};
     return {
-        automatic: data.automatic === true,
+        automatic: typeof data.automatic === 'boolean' ? data.automatic : defaults.automatic,
         fraction: typeof data.fraction === 'number' && Number.isFinite(data.fraction) ? Math.min(0.7, Math.max(0.2, data.fraction)) : defaults.fraction,
         minimum: typeof data.minimum === 'number' && Number.isFinite(data.minimum) ? Math.round(Math.min(1000, Math.max(40, data.minimum))) : defaults.minimum,
         excludedOrigins: Array.isArray(data.excludedOrigins) ? data.excludedOrigins.filter((origin): origin is string => {
