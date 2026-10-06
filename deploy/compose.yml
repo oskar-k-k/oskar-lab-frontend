@@ -72,6 +72,12 @@ services:
   inside-llm:
     <<: *web
     environment: {<<: *web-env, APP_NAME: inside-llm}
+  tierlist-matcher:
+    <<: *web
+    environment:
+      <<: *web-env
+      APP_NAME: tierlist-matcher
+      TIERLIST_BACKEND_URL: http://backend:8080
   2d-lab:
     <<: *web
     environment: {<<: *web-env, APP_NAME: 2d-lab}
