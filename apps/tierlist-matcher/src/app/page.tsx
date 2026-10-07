@@ -9,7 +9,7 @@ type Player = {id: string; name: string; submitted: boolean; answers: number[]};
 type Room = {code: string; category: string; phase: string; round: number; total: number; word: string; words: string[]; rows: string[]; players: Player[]; you: string; host: string; ownChoice: number};
 const base = process.env.NEXT_PUBLIC_APP_BASE_PATH ?? "";
 const defaults = ["S · Absolut top", "A · Sehr gut", "B · Ganz okay", "C · Eher nicht", "D · Nein danke", "E · Schwach", "F · Niemals", "? · Unentschieden"];
-const categories: Record<string, string> = {"": "Keine Kategorie · nur eigene Wörter", animals: "Tiere", food: "Essen & Snacks", dates: "Date-Ideen", intimacy: "Sexstellungen"};
+const categories: Record<string, string> = {"": "Keine Kategorie · nur eigene Wörter", toxic: "Toxische Charaktereigenschaften", animals: "Tiere", food: "Essen & Snacks", dates: "Date-Ideen", intimacy: "Sexstellungen"};
 async function request<T>(path: string, session?: Session, data?: unknown): Promise<T> {
     const response = await fetch(`${base}/api/game/rooms${path}`, {method: data === undefined ? "GET" : "POST", headers: {"Content-Type": "application/json", ...(session ? {"X-Tierlist-Token": session.token} : {})}, body: data === undefined ? undefined : JSON.stringify(data), cache: "no-store"});
     const result = await response.json();
