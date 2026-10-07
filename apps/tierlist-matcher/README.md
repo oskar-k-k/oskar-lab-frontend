@@ -11,7 +11,8 @@ answers only after all players submit; the host advances each round.
 Only the current term is visible during each round. The final screen contains
 everyone's complete list side by side, with your column first. Match scores
 average revealed tier distances relative to your choices. Images are optional
-local illustrations; intimate terms use abstract symbols.
+local illustrations; the 30-animal category uses device-native emoji pictures,
+and intimate terms use abstract symbols.
 Invite links show only a name field and a join button. Categories are optional;
 custom words (one per line) are mixed into a selected category or used alone.
 Duplicates are removed case-insensitively. Hosts select 1–100 rounds, capped

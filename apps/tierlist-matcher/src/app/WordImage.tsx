@@ -1,4 +1,5 @@
 import {wordGroups} from "./words";
+import {animalPictures} from "./animals";
 
 const drawings: Record<string, React.ReactNode> = {
     pizza: <><path d="M24 20Q50 9 76 20L50 82Z" fill="#f2ce79"/><path d="M24 20Q50 9 76 20" stroke="#cf8950" strokeWidth="10"/><circle cx="42" cy="33" r="5" fill="#e47864"/><circle cx="56" cy="46" r="5" fill="#e47864"/><circle cx="48" cy="62" r="4" fill="#e47864"/></>,
@@ -23,10 +24,11 @@ const drawings: Record<string, React.ReactNode> = {
     bowling: <><path d="M29 18Q18 18 24 34L20 59Q16 77 30 77T40 59L35 34Q41 18 29 18Z" fill="#e7eee0"/><path d="M24 36H35" stroke="#df8773" strokeWidth="6"/><circle cx="66" cy="62" r="23" fill="#b6a2dc"/><circle cx="60" cy="53" r="3" fill="#355543"/><circle cx="69" cy="51" r="3" fill="#355543"/><circle cx="66" cy="60" r="3" fill="#355543"/></>,
 };
 const intimate = wordGroups.intimacy.map(word => word.toLowerCase());
-/** Local, original vector illustrations. Intimate terms use abstract symbols. */
+/** Local vectors and device-native animal emoji. Intimate terms use abstract symbols. */
 export default function WordImage({word, className = ""}: {word: string; className?: string}) {
     const key = word.trim().toLowerCase();
     const index = intimate.indexOf(key);
+    if (animalPictures[key]) return <svg className={`word-image ${className}`} viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="16" fill="#202c22"/><text x="50" y="70" textAnchor="middle" fontSize="62" fontFamily="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">{animalPictures[key]}</text></svg>;
     const drawing = drawings[key] ?? (index >= 0 ? <g transform={`rotate(${index * 22.5} 50 50)`}><circle cx="39" cy="50" r="22" stroke="#b6a2dc" strokeWidth="6" fill="none"/><circle cx="61" cy="50" r="22" stroke="#b9d889" strokeWidth="6" fill="none"/><circle cx="50" cy="50" r="4" fill="#edc08c"/></g> : <text x="50" y="63" textAnchor="middle" fontSize="34" fontFamily="Arial,sans-serif" fontWeight="700" fill="#b9d889">{word.trim().slice(0, 2).toUpperCase()}</text>);
     return <svg className={`word-image ${className}`} viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="16" fill="#202c22"/>{drawing}</svg>;
 }
