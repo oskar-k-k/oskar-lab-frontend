@@ -14,7 +14,7 @@ export function createAppConfig(name) {
         distDir: standalone ? ".next-standalone" : ".next",
         allowedDevOrigins: ["127.0.0.1", "localhost"],
         reactCompiler: true,
-        transpilePackages: ["@oskar-lab/2d-lab", "@oskar-lab/core", "@oskar-lab/ui", "@oskar-lab/i18n", "@oskar-lab/auth", "@oskar-lab/platform-shell", "@oskar-lab/config"],
+        transpilePackages: ["@oskar-lab/api", "@oskar-lab/2d-lab", "@oskar-lab/core", "@oskar-lab/ui", "@oskar-lab/i18n", "@oskar-lab/auth", "@oskar-lab/platform-shell", "@oskar-lab/config"],
         turbopack: {root: workspaceRoot},
         outputFileTracingRoot: workspaceRoot,
         env: {NEXT_PUBLIC_APP_BASE_PATH: basePath},

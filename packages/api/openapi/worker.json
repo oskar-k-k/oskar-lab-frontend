@@ -1,0 +1,177 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Oskar Lab Virtual Try-On Worker",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "description": "Return a lightweight readiness response for deployment checks.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/try-on": {
+      "post": {
+        "summary": "Try On",
+        "description": "Generate a virtual try-on image from a person photo and garment photo.",
+        "operationId": "try_on_try_on_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_try_on_try_on_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Generated PNG image",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid image or category"
+          },
+          "413": {
+            "description": "Image exceeds the upload limit"
+          },
+          "415": {
+            "description": "Unsupported image media type"
+          },
+          "501": {
+            "description": "Unsupported engine"
+          },
+          "503": {
+            "description": "Worker unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_try_on_try_on_post": {
+        "properties": {
+          "person": {
+            "type": "string",
+            "format": "binary",
+            "title": "Person"
+          },
+          "garment": {
+            "type": "string",
+            "format": "binary",
+            "title": "Garment"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "default": "upper_body"
+          }
+        },
+        "type": "object",
+        "required": [
+          "person",
+          "garment"
+        ],
+        "title": "Body_try_on_try_on_post"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "engine": {
+            "type": "string",
+            "title": "Engine"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "engine"
+        ],
+        "title": "HealthResponse",
+        "description": "Public readiness fields returned by the worker."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

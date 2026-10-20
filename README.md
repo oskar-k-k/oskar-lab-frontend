@@ -164,3 +164,8 @@ Auth.js stores the opaque backend credential only inside its encrypted HTTP-only
 Before public release, supply the operator/contact details and complete and review the privacy notice. The draft leaves statutory liability intact; it is not a legal review. References: [BGB §307](https://www.gesetze-im-internet.de/bgb/__307.html), [BGB §309](https://www.gesetze-im-internet.de/bgb/__309.html), [DDG §5](https://www.gesetze-im-internet.de/ddg/__5.html).
 
 Local email addresses are not yet verified by email, and there is no email delivery/password-reset flow. They are not proof of ownership; provider linking therefore requires the existing password. Google OAuth must be tested with real configured credentials before release. Never enable unconditional email-based account linking.
+# Shared OpenAPI clients
+
+HTTP integrations use `@oskar-lab/api`. See [the API package guide](packages/api/README.md)
+for backend/worker export, client regeneration, runtime validation and security notes.
+`npm run check` also verifies that the checked-in OpenAPI types are current.

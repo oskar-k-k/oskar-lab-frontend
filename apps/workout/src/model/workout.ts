@@ -1,14 +1,12 @@
+import type {components} from "@oskar-lab/api/backend";
+
 /** Catalog names are translated; user-authored plan names and notes are preserved. */
-export type Exercise = {id: string; name: string; nameDe: string};
+export type Exercise = components["schemas"]["ExerciseDto"];
 /** Prescription ranges are inclusive. Durations and rests use seconds. */
-export type Entry = {
-    exerciseId: string; setsMin: number; setsMax: number; mode: "reps" | "seconds" | "unspecified";
-    targetMin: number | null; targetMax: number | null; restMin: number | null; restMax: number | null;
-    superset: string; notes: string; trackingMode?: "reps" | "seconds" | "weighted";
-};
+export type Entry = components["schemas"]["Entry"];
 /** Array order is the exercise order. Version prevents stale updates. */
-export type Plan = {id: string; version: number; name: string; notes: string; template: boolean; exercises: Entry[]};
-export type PlanPage = {plans: Plan[]; hasMore: boolean};
+export type Plan = components["schemas"]["Plan"];
+export type PlanPage = components["schemas"]["PlanPage"];
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 const integer = (v: unknown, min: number, max: number): v is number => typeof v === "number" && Number.isSafeInteger(v) && v >= min && v <= max;

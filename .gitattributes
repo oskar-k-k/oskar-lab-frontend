@@ -1,0 +1,3 @@
+# Keep reproducible OpenAPI artifacts identical on Windows and Linux.
+packages/api/openapi/*.json text eol=lf
+packages/api/src/generated/*.ts text eol=lf

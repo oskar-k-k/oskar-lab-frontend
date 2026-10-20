@@ -1,5 +1,6 @@
 "use client";
 
+import {createBrowserClient, multipartBody} from "@oskar-lab/api/client";
 import {appPath} from "@oskar-lab/config/paths";
 import {useEffect, useId, useMemo, useRef, useState} from "react";
 import {useI18n} from "@oskar-lab/i18n/I18nProvider";
@@ -50,9 +51,8 @@ export default function VirtualTryOnClient() {
 
         async function loadWorkerStatus(): Promise<void> {
             try {
-                const response = await fetch(appPath("/api/try-on"), {cache: "no-store"});
-                const payload = await response.json() as {online?: boolean};
-                if (active) setWorkerStatus(payload.online ? "online" : "offline");
+                const {data, response} = await createBrowserClient(`${window.location.origin}${appPath("")}`).GET("/api/try-on", {signal: AbortSignal.timeout(5000)});
+                if (active) setWorkerStatus(response.ok && data?.online === true ? "online" : "offline");
             } catch {
                 if (active) setWorkerStatus("offline");
             }
@@ -132,13 +132,12 @@ export default function VirtualTryOnClient() {
         setMessage(null);
         setResultImage(null);
 
-        const formData = new FormData();
-        formData.set("person", personImage);
-        formData.set("garment", garmentImage);
-        formData.set("category", "upper_body");
-
         try {
-            const response = await fetch(appPath("/api/try-on"), {method: "POST", body: formData});
+            const result = await createBrowserClient(`${window.location.origin}${appPath("")}`).POST("/api/try-on", {
+                body: {person: personImage, garment: garmentImage, category: "upper_body"},
+                bodySerializer: multipartBody, parseAs: "stream", signal: AbortSignal.timeout(16 * 60 * 1000),
+            });
+            const response = result.response.ok ? result.response : Response.json(result.error, {status: result.response.status});
             const contentType = response.headers.get("content-type") ?? "";
 
             if (!response.ok) {

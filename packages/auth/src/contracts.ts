@@ -1,7 +1,8 @@
+import type {components} from "@oskar-lab/api/backend";
 /** Version recorded with each explicit acceptance of the platform terms. */
 export const TERMS_VERSION = "2026-09-21";
 /** Public identity, without provider credentials or backend session tokens. */
-export type PlatformIdentity = {id: string; name: string | null; email: string; complete: boolean; termsVersion: string | null};
+export type PlatformIdentity = components["schemas"]["PlatformIdentity"];
 /** Validates identities at the backend boundary. */
 export function isIdentity(value: unknown): value is PlatformIdentity {
     if (!value || typeof value !== "object") return false;

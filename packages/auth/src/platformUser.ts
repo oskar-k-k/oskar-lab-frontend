@@ -1,3 +1,4 @@
+import {createBrowserClient} from "@oskar-lab/api/client";
 import {headers} from "next/headers";
 import {isIdentity} from "./contracts";
 
@@ -13,11 +14,10 @@ export type PlatformUser = Readonly<{
 /** Returns a verified identity; temporary account-service failures deny access without clearing the cookie. */
 export async function getCurrentUser(): Promise<PlatformUser | null> {
     const requestHeaders = await headers();
-    const response = await fetch(`${process.env.AUTH_PLATFORM_INTERNAL_URL ?? process.env.AUTH_PLATFORM_URL ?? "http://localhost:10030"}/api/auth/session`, {
+    const {response, data: session} = await createBrowserClient(process.env.AUTH_PLATFORM_INTERNAL_URL ?? process.env.AUTH_PLATFORM_URL ?? "http://localhost:10030").GET("/api/auth/session", {
         headers: {cookie: requestHeaders.get("cookie") ?? ""}, cache: "no-store", signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) throw new Error("Account service unavailable");
-    const session: unknown = await response.json();
     if (session && typeof session === "object" && "sessionUnavailable" in session && session.sessionUnavailable)
         throw new Error("Account service unavailable");
     if (!session || typeof session !== "object" || !("user" in session)) return null;

@@ -1,3 +1,5 @@
+import {createWorkerClient, multipartBody} from "@oskar-lab/api/client";
+
 const maxImageSize = 8 * 1024 * 1024;
 const acceptedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const workerTimeoutMs = 15 * 60 * 1000;
@@ -11,8 +13,15 @@ function isValidImage(value: FormDataEntryValue | null): value is File {
     return value instanceof File && acceptedImageTypes.has(value.type) && value.size > 0 && value.size <= maxImageSize;
 }
 
-function getWorkerHealthUrl(workerUrl: string): string {
-    return workerUrl.endsWith("/try-on") ? `${workerUrl.slice(0, -"/try-on".length)}/health` : workerUrl;
+function workerClient(workerUrl: string) {
+    const healthUrl = workerUrl.endsWith("/try-on") ? `${workerUrl.slice(0, -"/try-on".length)}/health` : workerUrl;
+    return createWorkerClient({
+        baseUrl: new URL(workerUrl).origin,
+        fetch: request => {
+            const target = new URL(request.url).pathname === "/try-on" ? workerUrl : healthUrl;
+            return fetch(new Request(target, request));
+        },
+    });
 }
 
 /** Returns the configured try-on worker availability for the frontend status badge. */
@@ -25,8 +34,7 @@ export async function GET() {
     const abortController = new AbortController();
     const timeout = setTimeout(() => abortController.abort(), workerHealthTimeoutMs);
     try {
-        const response = await fetch(getWorkerHealthUrl(workerUrl), {
-            cache: "no-store",
+        const {response, data: payload} = await workerClient(workerUrl).GET("/health", {
             signal: abortController.signal,
         });
 
@@ -34,11 +42,10 @@ export async function GET() {
             return Response.json({online: false, configured: true}, {headers: {"cache-control": "no-store"}});
         }
 
-        const payload = await response.json().catch(() => ({})) as Record<string, unknown>;
         return Response.json({
             online: true,
             configured: true,
-            engine: typeof payload.engine === "string" ? payload.engine : undefined,
+            engine: typeof payload?.engine === "string" ? payload.engine : undefined,
         }, {headers: {"cache-control": "no-store"}});
     } catch {
         return Response.json({online: false, configured: true}, {headers: {"cache-control": "no-store"}});
@@ -62,18 +69,12 @@ export async function POST(request: Request) {
         return jsonError("Upload one person image and one garment image as JPG, PNG, or WebP under 8 MB each.", 400);
     }
 
-    const workerForm = new FormData();
-    workerForm.set("person", person);
-    workerForm.set("garment", garment);
-    workerForm.set("category", String(formData.get("category") ?? "upper_body"));
-
     const abortController = new AbortController();
     const timeout = setTimeout(() => abortController.abort(), workerTimeoutMs);
     try {
-        const response = await fetch(workerUrl, {
-            method: "POST",
-            body: workerForm,
-            signal: abortController.signal,
+        const {response} = await workerClient(workerUrl).POST("/try-on", {
+            body: {person, garment, category: String(formData.get("category") ?? "upper_body")},
+            bodySerializer: multipartBody, parseAs: "stream", signal: abortController.signal,
         });
 
         if (!response.ok) {

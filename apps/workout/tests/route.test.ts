@@ -13,7 +13,7 @@ describe("workout platform bridge", () => {
         const fetcher = vi.fn().mockResolvedValue(Response.json([])); vi.stubGlobal("fetch", fetcher);
         expect((await GET(new Request("http://localhost/api/workout/templates"), context(["templates"]))).status).toBe(200);
         expect(currentUser).not.toHaveBeenCalled();
-        expect(fetcher.mock.calls[0][1].headers["X-Auth-Bridge"]).toBe("synthetic-secret-at-least-32-characters");
+        expect((fetcher.mock.calls[0][0] as Request).headers.get("X-Auth-Bridge")).toBe("synthetic-secret-at-least-32-characters");
     });
     it("rejects cross-origin writes and forged client identities", async () => {
         const fetcher = vi.fn(); vi.stubGlobal("fetch", fetcher);
@@ -32,7 +32,7 @@ describe("workout platform bridge", () => {
         expect((await POST(make({...draft, exercises: []}), context(["plans"]))).status).toBe(400);
         expect(fetcher).not.toHaveBeenCalled();
         expect((await POST(make(draft), context(["plans"]))).status).toBe(200);
-        expect(fetcher.mock.calls[0][1].headers["X-User-Id"]).toBe(id);
+        expect((fetcher.mock.calls[0][0] as Request).headers.get("X-User-Id")).toBe(id);
     });
     it("accepts the configured platform origin behind its reverse proxy", async () => {
         vi.stubEnv("AUTH_BRIDGE_SECRET", "synthetic-secret-at-least-32-characters");
@@ -55,9 +55,9 @@ describe("workout platform bridge", () => {
         const make = (body: unknown) => new Request("http://localhost/api/workout/logs", {method: "POST", headers: {origin: "http://localhost"}, body: JSON.stringify(body)});
         expect((await POST(make({...log, sets: []}), context(["logs"]))).status).toBe(400);
         expect((await POST(make(log), context(["logs"]))).status).toBe(200);
-        expect(fetcher.mock.calls[0][1].headers["X-User-Id"]).toBe(id);
+        expect((fetcher.mock.calls[0][0] as Request).headers.get("X-User-Id")).toBe(id);
         await GET(new Request(`http://localhost/api/workout/history/${id}?page=2`), context(["history", id]));
-        expect(fetcher.mock.calls[1][0]).toContain(`history/${id}?page=2`);
+        expect((fetcher.mock.calls[1][0] as Request).url).toContain(`history/${id}?page=2`);
     });
 
 });

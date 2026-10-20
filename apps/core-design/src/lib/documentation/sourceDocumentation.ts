@@ -58,7 +58,7 @@ async function sourceFiles(directory: string): Promise<string[]> {
     const entries = await readdir(directory, {withFileTypes: true});
     const nested = await Promise.all(entries.map(entry => {
         const entryPath = path.join(directory, entry.name);
-        if (entry.isDirectory()) return sourceFiles(entryPath);
+        if (entry.isDirectory()) return entry.name === "generated" ? [] : sourceFiles(entryPath);
         return /\.(ts|tsx)$/.test(entry.name) && !entry.name.endsWith(".test.ts") ? [entryPath] : [];
     }));
     return nested.flat();
@@ -105,7 +105,7 @@ async function generateSourceDocumentation(directory: string): Promise<SourceDoc
 
 /** Generates documentation for all shared Core source files. */
 export function generateCoreDocumentation(): Promise<SourceDocumentation[]> {
-    return Promise.all(["core/src", "auth/src", "2d-lab/src/model"].map(name => generateSourceDocumentation(path.resolve(process.cwd(), `../../packages/${name}`)))).then(groups => groups.flat());
+    return Promise.all(["core/src", "auth/src", "api/src", "2d-lab/src/model"].map(name => generateSourceDocumentation(path.resolve(process.cwd(), `../../packages/${name}`)))).then(groups => groups.flat());
 }
 
 /** Generates documentation for all global React components. */

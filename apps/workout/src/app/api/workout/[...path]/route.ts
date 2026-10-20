@@ -1,3 +1,4 @@
+import {createBackendClient} from "@oskar-lab/api/client";
 import {getCurrentUser} from "@oskar-lab/auth/platformUser";
 import {isSaveLog} from "../../../../model/tracking";
 import {isPlan} from "../../../../model/workout";
@@ -31,12 +32,20 @@ async function proxy(request: Request, context: {params: Promise<{path: string[]
         const query = new URL(request.url).searchParams;
         const page = query.get("page") ?? "0";
         if (!/^\d{1,5}$/.test(page) || Number(page) > 10000) return Response.json({code: "invalidPlan"}, {status: 400});
-        const response = await fetch(`${process.env.AUTH_BACKEND_URL ?? "http://127.0.0.1:10081"}/internal/workout/${route}${(route === "plans" || route.startsWith("history/")) && read ? `?page=${page}` : ""}`, {
-            method: request.method, cache: "no-store", signal: AbortSignal.timeout(10000),
-            headers: {"Content-Type": "application/json", "X-Auth-Bridge": secret, ...(user ? {"X-User-Id": user.id} : {})},
-            ...(body ? {body: JSON.stringify(body)} : {}),
-        });
-        const data: unknown = await response.json();
+        const client = createBackendClient({baseUrl: process.env.AUTH_BACKEND_URL ?? "http://127.0.0.1:10081", headers: {"X-Auth-Bridge": secret}});
+        const options = {signal: AbortSignal.timeout(10000)};
+        const header = {"X-User-Id": user?.id ?? ""};
+        let result;
+        if (read && route === "templates") result = await client.GET("/internal/workout/templates", options);
+        else if (read && route === "exercises") result = await client.GET("/internal/workout/exercises", options);
+        else if (read && route === "plans") result = await client.GET("/internal/workout/plans", {...options, params: {header, query: {page: Number(page)}}});
+        else if (read && route.startsWith("plans/")) result = await client.GET("/internal/workout/plans/{id}", {...options, params: {header, path: {id: path[1]}}});
+        else if (read && route.startsWith("history/")) result = await client.GET("/internal/workout/history/{exerciseId}", {...options, params: {header, path: {exerciseId: path[1]}, query: {page: Number(page)}}});
+        else if (request.method === "POST" && route === "logs" && isSaveLog(body)) result = await client.POST("/internal/workout/logs", {...options, params: {header}, body});
+        else if (request.method === "POST" && route === "plans" && isPlan(body)) result = await client.POST("/internal/workout/plans", {...options, params: {header}, body});
+        else if (request.method === "PUT" && isPlan(body)) result = await client.PUT("/internal/workout/plans/{id}", {...options, params: {header, path: {id: path[1]}}, body});
+        if (!result) return Response.json({code: "invalidPlan"}, {status: 400});
+        const {response, data} = result;
         return Response.json(response.ok ? data : {code: response.status === 409 ? "conflict" : "failed"},
             {status: response.status, headers: {"Cache-Control": "no-store"}});
     } catch { return Response.json({code: "unavailable"}, {status: 503}); }

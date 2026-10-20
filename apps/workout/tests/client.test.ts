@@ -17,7 +17,7 @@ it("recovers a read when the connection returns after standby", async () => {
 it("does not replay saves or retry a missing plan", async () => {
     const fetcher = vi.fn().mockRejectedValueOnce(new TypeError("offline"));
     vi.stubGlobal("fetch", fetcher);
-    await expect(request("logs", valid, {}, "POST")).rejects.toMatchObject({status: 503});
+    await expect(request("logs", valid, {id: "4dcd07cd-46cb-4e54-9e7d-7aa8a94b0ce1", exerciseId: "4dcd07cd-46cb-4e54-9e7d-7aa8a94b0ce1", trackingMode: "reps", sets: [{setNumber: 1, value: 8, weight: null}]}, "POST")).rejects.toMatchObject({status: 503});
     expect(fetcher).toHaveBeenCalledTimes(1);
     fetcher.mockResolvedValueOnce(new Response(null, {status: 404}));
     await expect(request("plans/missing", valid)).rejects.toMatchObject({status: 404});

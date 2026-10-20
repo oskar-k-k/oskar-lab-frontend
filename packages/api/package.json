@@ -1,0 +1,12 @@
+{
+  "name": "@oskar-lab/api",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./client": "./src/client.ts",
+    "./backend": "./src/generated/backend.ts",
+    "./browser": "./src/generated/browser.ts",
+    "./worker": "./src/generated/worker.ts"
+  },
+  "dependencies": {"openapi-fetch": "^0.17.0"}
+}

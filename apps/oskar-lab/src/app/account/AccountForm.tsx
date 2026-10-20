@@ -1,5 +1,6 @@
 "use client";
 
+import {createBrowserClient} from "@oskar-lab/api/client";
 import {useState, type FormEvent} from "react";
 import {SessionProvider, signIn, signOut, useSession} from "next-auth/react";
 import type {Session} from "next-auth";
@@ -41,9 +42,8 @@ function AccountFields({googleAvailable, returnTo, oauthError}: {googleAvailable
                 else if (result.user.complete) window.location.assign(returnTo);
             } else if (register) {
                 if (data.password !== data.passwordRepeat) { setError("passwordMismatch"); return; }
-                const response = await fetch("/api/auth/register", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({...data, acceptTerms: data.acceptTerms === "on", termsVersion: TERMS_VERSION})});
-                const result = await response.json();
-                if (!response.ok) { setError(result.code ?? "unavailable"); return; }
+                const {response, error} = await createBrowserClient(window.location.origin).POST("/api/auth/register", {body: {...data, acceptTerms: data.acceptTerms === "on", termsVersion: TERMS_VERSION}, signal: AbortSignal.timeout(10000)});
+                if (!response.ok) { setError(error?.code ?? "unavailable"); return; }
                 setRegister(false); setNotice(true);
             } else {
                 const result = await signIn("credentials", {identifier: data.identifier, password: data.password, redirect: false});

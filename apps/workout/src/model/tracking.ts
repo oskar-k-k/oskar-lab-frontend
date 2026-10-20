@@ -1,10 +1,11 @@
+import type {components} from "@oskar-lab/api/backend";
 import type {Entry} from "./workout";
 
-export type TrackingMode = "reps" | "seconds" | "weighted";
-export type SetResult = {setNumber: number; value: number; weight: number | null};
-export type SaveLog = {id: string; exerciseId: string; trackingMode: TrackingMode; sets: SetResult[]};
-export type ExerciseLog = {id: string; exerciseId: string; trackingMode: TrackingMode; recordedAt: string; sets: SetResult[]};
-export type History = {entries: ExerciseLog[]; hasMore: boolean};
+export type TrackingMode = components["schemas"]["SaveLog"]["trackingMode"];
+export type SetResult = components["schemas"]["SetResult"];
+export type SaveLog = components["schemas"]["SaveLog"];
+export type ExerciseLog = components["schemas"]["Log"];
+export type History = components["schemas"]["History"];
 export type SetDraft = {value: string; weight: string};
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 const uuid = (v: unknown): v is string => typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);

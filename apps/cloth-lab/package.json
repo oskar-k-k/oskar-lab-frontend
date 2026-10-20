@@ -18,6 +18,7 @@
     "@oskar-lab/i18n": "*",
     "@oskar-lab/auth": "*",
     "@oskar-lab/platform-shell": "*",
-    "@oskar-lab/config": "*"
+    "@oskar-lab/config": "*",
+    "@oskar-lab/api": "*"
   }
 }
