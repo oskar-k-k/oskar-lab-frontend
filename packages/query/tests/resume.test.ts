@@ -1,5 +1,5 @@
 import {afterEach, expect, it, vi} from "vitest";
-import {subscribeToResume} from "../src/services/resume";
+import {subscribeToResume} from "@oskar-lab/query/resume";
 
 afterEach(() => {vi.useRealTimers(); vi.unstubAllGlobals();});
 

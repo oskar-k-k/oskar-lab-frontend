@@ -1,8 +1,9 @@
 "use client";
-import {useEffect, useEffectEvent} from "react";
-import {subscribeToResume} from "../services/resume";
 
-/** Refreshes read-only data after standby without remounting the current exercise or drafts. */
+import {useEffect, useEffectEvent} from "react";
+import {subscribeToResume} from "./resume";
+
+/** Retries a failed route boundary on resume; normal server-state reads use QueryProvider instead. */
 export function useResume(callback: () => void) {
     const resume = useEffectEvent(callback);
     useEffect(() => subscribeToResume(() => resume()), []);

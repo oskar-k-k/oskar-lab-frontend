@@ -1,15 +1,16 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useInfiniteQuery, useMutation, useQueryClient, type InfiniteData} from "@tanstack/react-query";
+import {historyQuery, workoutKeys} from "../services/queries";
+import {useEffect, useRef, useState} from "react";
 import {usePathname} from "next/navigation";
 import {useCurrentUser} from "@oskar-lab/auth/useCurrentUser";
 import {useI18n} from "@oskar-lab/i18n/I18nProvider";
 import {appPath} from "@oskar-lab/config/paths";
 import type {Exercise} from "../model/workout";
-import {completedSets, isExerciseLog, isHistory, isSaveLog, type TrackingMode, type ExerciseLog, type SaveLog, type SetDraft} from "../model/tracking";
+import {completedSets, isExerciseLog, isSaveLog, type TrackingMode, type History, type SaveLog, type SetDraft} from "../model/tracking";
 import {request, WorkoutError} from "../services/client";
 import styles from "./Workout.module.css";
-import {useResume} from "../hooks/useResume";
 
 type Props = {exercise: Exercise; initialSets?: number; initialMode?: TrackingMode};
 type Draft = {rows: SetDraft[]; pending: SaveLog | null; unit: "reps" | "seconds"; withWeight: boolean};
@@ -42,16 +43,22 @@ function PersonalTracking({exercise, initialSets = 3, initialMode = "reps", owne
     const storageKey = `exercise-draft:${ownerId}:${exercise.id}`;
     const [draft, setDraft] = useState(() => readDraft(storageKey, initialSets, initialMode));
     const {unit, withWeight} = draft;
-    const [busy, setBusy] = useState(false);
+    const client = useQueryClient();
+    const saveAbort = useRef<AbortController | null>(null);
+    useEffect(() => {
+        const controller = new AbortController();
+        saveAbort.current = controller;
+        return () => controller.abort();
+    }, []);
+    const saveMutation = useMutation({mutationFn: (payload: SaveLog) => request("logs", isExerciseLog, payload, "POST", saveAbort.current?.signal)});
+    const busy = saveMutation.isPending;
     const [saved, setSaved] = useState(false);
     const [error, setError] = useState<number | null>(null);
-    const [history, setHistory] = useState<ExerciseLog[]>([]);
-    const [historyLoading, setHistoryLoading] = useState(true);
-    const [historyError, setHistoryError] = useState(false);
-    const [hasMore, setHasMore] = useState(false);
-    const [page, setPage] = useState(0);
-    const [reload, setReload] = useState(0);
-    useResume(() => {if (!busy) {setPage(0); setReload(value => value + 1);}});
+    const historyResult = useInfiniteQuery({...historyQuery(ownerId, exercise.id), enabled: !busy});
+    const history = [...new Map((historyResult.data?.pages.flatMap(page => page.entries) ?? []).map(log => [log.id, log])).values()];
+    const historyLoading = historyResult.isPending || historyResult.isFetchingNextPage;
+    const historyError = historyResult.isError;
+    const hasMore = historyResult.hasNextPage;
     const dirty = draft.rows.some(row => row.value !== "" || row.weight !== "");
     useEffect(() => {
         try {
@@ -63,16 +70,6 @@ function PersonalTracking({exercise, initialSets = 3, initialMode = "reps", owne
         window.addEventListener("beforeunload", prevent);
         return () => window.removeEventListener("beforeunload", prevent);
     }, [draft, dirty, storageKey]);
-    useEffect(() => {
-        let active = true;
-        request(`history/${exercise.id}?page=${page}`, isHistory).then(result => {
-            if (!active) return;
-            setHistory(current => page === 0 ? result.entries : [...current, ...result.entries.filter(log => !current.some(old => old.id === log.id))]);
-            setHasMore(result.hasMore); setHistoryError(false);
-        }).catch(() => {if (active) setHistoryError(true);})
-            .finally(() => {if (active) setHistoryLoading(false);});
-        return () => {active = false;};
-    }, [exercise.id, page, reload]);
 
     function update(index: number, field: keyof SetDraft, value: string) {
         setSaved(false); setError(null);
@@ -83,18 +80,22 @@ function PersonalTracking({exercise, initialSets = 3, initialMode = "reps", owne
         const sets = completedSets(draft.rows);
         if (!draft.pending && !sets) {setError(400); return;}
         const payload = draft.pending ?? {id: crypto.randomUUID(), exerciseId: exercise.id, trackingMode: unit, sets: sets!};
-        setDraft(current => ({...current, pending: payload})); setBusy(true); setError(null);
+        setDraft(current => ({...current, pending: payload})); setError(null);
+        void client.cancelQueries({queryKey: workoutKeys.history(ownerId, exercise.id)});
         try {
-            const log = await request("logs", isExerciseLog, payload, "POST");
-            setHistory(current => [log, ...current.filter(old => old.id !== log.id)]);
+            const log = await saveMutation.mutateAsync(payload);
+            client.setQueryData<InfiniteData<History>>(workoutKeys.history(ownerId, exercise.id), current => current ? {
+                ...current, pages: current.pages.map((page, index) => index === 0 ? {...page, entries: [log, ...page.entries.filter(old => old.id !== log.id)].slice(0, 20)} : page),
+            } : {pages: [{entries: [log], hasMore: false}], pageParams: [0]});
+            void client.invalidateQueries({queryKey: workoutKeys.history(ownerId, exercise.id)});
             setDraft(current => ({...current, rows: Array.from({length: initialSets}, () => ({value: "", weight: ""})), pending: null}));
-            setSaved(true); setHistoryLoading(true); setPage(0); setReload(value => value + 1);
+            setSaved(true);
         } catch (failure) {
             const status = failure instanceof WorkoutError ? failure.status : 503;
             setError(status);
             if (status === 400 || status === 401 || status === 403 || status === 404 || status === 409)
                 setDraft(current => ({...current, pending: null}));
-        } finally {setBusy(false);}
+        }
     }
     const valueLabel = t(unit === "seconds" ? "workout.durationSeconds" : "workout.reps");
     return <section className={styles.tracking}>
@@ -124,8 +125,8 @@ function PersonalTracking({exercise, initialSets = 3, initialMode = "reps", owne
             {saved && <p role="status" className={styles.success}>{t("workout.trackingSaved")}</p>}
         </form>
         <h2 className={styles.historyTitle}>{t("workout.history")}</h2>
-        {historyLoading && <p role="status">{t("workout.loading")}</p>}
-        {historyError && <div role="alert"><p>{t("workout.unavailable")}</p><button onClick={() => {setHistoryLoading(true); setReload(value => value + 1);}}>{t("workout.retry")}</button></div>}
+        {historyLoading && <p role="status">{t(historyResult.isPaused ? "query.waitingConnection" : "workout.loading")}</p>}
+        {historyError && <div role="alert"><p>{t("workout.unavailable")}</p><button onClick={() => void historyResult.refetch()}>{t("workout.retry")}</button></div>}
         {!historyLoading && !historyError && !history.length && <p className={styles.muted}>{t("workout.historyEmpty")}</p>}
         <ol className={styles.history}>{history.map(log => <li key={log.id}>
             <time dateTime={log.recordedAt}>{new Intl.DateTimeFormat(locale, {dateStyle: "medium", timeStyle: "short"}).format(new Date(log.recordedAt))}</time>
@@ -133,6 +134,6 @@ function PersonalTracking({exercise, initialSets = 3, initialMode = "reps", owne
             {log.sets.map(set => <div className={styles.historySet} key={set.setNumber}><span>{t("workout.setNumber", {number: set.setNumber})}</span>
                 <strong>{set.value} {t(log.trackingMode === "seconds" ? "workout.secondsShort" : "workout.reps")}{set.weight !== null && ` · ${new Intl.NumberFormat(locale).format(set.weight)} kg`}</strong></div>)}
         </li>)}</ol>
-        {hasMore && !historyError && <button disabled={historyLoading} onClick={() => {setHistoryLoading(true); setPage(value => value + 1);}}>{t("workout.more")}</button>}
+        {hasMore && !historyError && <button disabled={historyLoading} onClick={() => void historyResult.fetchNextPage()}>{t("workout.more")}</button>}
     </section>;
 }

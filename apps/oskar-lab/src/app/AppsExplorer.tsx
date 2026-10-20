@@ -1,5 +1,7 @@
 "use client";
 
+import {useQuery} from "@tanstack/react-query";
+import {catalogQuery} from "../lib/api/catalogQuery";
 import {useMemo, useState} from "react";
 import Card from "@oskar-lab/ui/Cards/Card";
 import Grid from "@oskar-lab/ui/Grids/Grid";
@@ -11,7 +13,12 @@ import styles from "./AppsExplorer.module.css";
 import {useI18n} from "@oskar-lab/i18n/I18nProvider";
 
 /** Displays and filters all available Oskar Lab apps. */
-export default function AppsExplorer({apps, backendAvailable}: Readonly<{apps: readonly App[]; backendAvailable: boolean}>) {
+export default function AppsExplorer({localApps, initialRemoteApps, backendAvailable: initialAvailable, fetchedAt}: Readonly<{
+    localApps: readonly App[]; initialRemoteApps: App[]; backendAvailable: boolean; fetchedAt: number;
+}>) {
+    const catalog = useQuery({...catalogQuery(), initialData: initialAvailable ? initialRemoteApps : undefined, initialDataUpdatedAt: fetchedAt});
+    const backendAvailable = !catalog.isError && catalog.data !== undefined;
+    const apps = useMemo(() => [...localApps, ...(catalog.data ?? []).filter(app => !localApps.some(local => local.path === app.path))], [localApps, catalog.data]);
     const [query, setQuery] = useState("");
     const {t} = useI18n();
     const localizedApps = useMemo(() => apps.map(app => ({

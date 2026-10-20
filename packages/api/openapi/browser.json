@@ -562,6 +562,26 @@
   },
   "openapi": "3.0.3",
   "paths": {
+    "/api/apps": {
+      "get": {
+        "operationId": "appCatalog",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageAppEntity"
+                }
+              }
+            },
+            "description": "Public app catalog"
+          },
+          "503": {
+            "description": "Catalog temporarily unavailable"
+          }
+        }
+      }
+    },
     "/api/auth/register": {
       "post": {
         "description": "Requires a same-origin request and JSON content type.",

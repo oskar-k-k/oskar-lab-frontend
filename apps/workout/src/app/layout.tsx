@@ -6,5 +6,5 @@ export const metadata: Metadata = {title: "Workout · Oskar Lab"};
 
 /** Shares the platform document, language and account controls. */
 export default function RootLayout({children}: Readonly<{children: React.ReactNode}>) {
-    return <AppDocument><WorkoutHeader />{children}</AppDocument>;
+    return <AppDocument enableQueries><WorkoutHeader />{children}</AppDocument>;
 }

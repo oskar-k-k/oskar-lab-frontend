@@ -1,6 +1,6 @@
 "use client";
 import {useI18n} from "@oskar-lab/i18n/I18nProvider";
-import {useResume} from "../hooks/useResume";
+import {useResume} from "@oskar-lab/query/useResume";
 import styles from "../components/Workout.module.css";
 
 /** Retries the current route after recovery without sending the user back to the plan list. */

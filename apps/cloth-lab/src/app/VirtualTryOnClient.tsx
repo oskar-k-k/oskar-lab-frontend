@@ -1,14 +1,13 @@
 "use client";
 
-import {createBrowserClient, multipartBody} from "@oskar-lab/api/client";
-import {appPath} from "@oskar-lab/config/paths";
+import {useQuery, useMutation} from "@tanstack/react-query";
+import {workerStatusQuery, generateImage} from "../services/tryOn";
 import {useEffect, useId, useMemo, useRef, useState} from "react";
 import {useI18n} from "@oskar-lab/i18n/I18nProvider";
 import styles from "./VirtualTryOnPage.module.css";
 
 type UploadSlot = "person" | "garment";
 type Status = "idle" | "ready" | "generating" | "success" | "error";
-type WorkerStatus = "checking" | "online" | "offline";
 
 const acceptedImageTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxImageSize = 8 * 1024 * 1024;
@@ -23,7 +22,11 @@ export default function VirtualTryOnClient() {
     const [personPreview, setPersonPreview] = useState<string | null>(null);
     const [garmentPreview, setGarmentPreview] = useState<string | null>(null);
     const [resultImage, setResultImage] = useState<string | null>(null);
-    const [workerStatus, setWorkerStatus] = useState<WorkerStatus>("checking");
+    const worker = useQuery(workerStatusQuery());
+    const workerStatus = worker.isPending && !worker.isPaused ? "checking" : !worker.isError && worker.data ? "online" : "offline";
+    const uploadAbort = useRef<AbortController | null>(null);
+    const generation = useMutation({mutationFn: ({person, garment, signal}: {person: File; garment: File; signal: AbortSignal}) =>
+        generateImage(person, garment, signal, {generic: t("tryOn.errorGeneric"), invalid: t("tryOn.invalidWorkerResponse")})});
     const personPreviewRef = useRef<string | null>(null);
     const garmentPreviewRef = useRef<string | null>(null);
     const resultImageRef = useRef<string | null>(null);
@@ -41,30 +44,10 @@ export default function VirtualTryOnClient() {
     }, [message, ready, status, t]);
 
     useEffect(() => () => {
+        uploadAbort.current?.abort();
         if (personPreviewRef.current) URL.revokeObjectURL(personPreviewRef.current);
         if (garmentPreviewRef.current) URL.revokeObjectURL(garmentPreviewRef.current);
         if (resultImageRef.current?.startsWith("blob:")) URL.revokeObjectURL(resultImageRef.current);
-    }, []);
-
-    useEffect(() => {
-        let active = true;
-
-        async function loadWorkerStatus(): Promise<void> {
-            try {
-                const {data, response} = await createBrowserClient(`${window.location.origin}${appPath("")}`).GET("/api/try-on", {signal: AbortSignal.timeout(5000)});
-                if (active) setWorkerStatus(response.ok && data?.online === true ? "online" : "offline");
-            } catch {
-                if (active) setWorkerStatus("offline");
-            }
-        }
-
-        void loadWorkerStatus();
-        const interval = window.setInterval(loadWorkerStatus, 10000);
-
-        return () => {
-            active = false;
-            window.clearInterval(interval);
-        };
     }, []);
 
     function validateFile(file: File): string | null {
@@ -126,53 +109,24 @@ export default function VirtualTryOnClient() {
     }
 
     async function generateTryOn(): Promise<void> {
-        if (!personImage || !garmentImage) return;
-
-        setStatus("generating");
-        setMessage(null);
-        setResultImage(null);
-
+        if (!personImage || !garmentImage || generation.isPending) return;
+        setStatus("generating"); setMessage(null); setResultImage(null);
+        const controller = new AbortController();
+        uploadAbort.current = controller;
         try {
-            const result = await createBrowserClient(`${window.location.origin}${appPath("")}`).POST("/api/try-on", {
-                body: {person: personImage, garment: garmentImage, category: "upper_body"},
-                bodySerializer: multipartBody, parseAs: "stream", signal: AbortSignal.timeout(16 * 60 * 1000),
-            });
-            const response = result.response.ok ? result.response : Response.json(result.error, {status: result.response.status});
-            const contentType = response.headers.get("content-type") ?? "";
-
-            if (!response.ok) {
-                if (contentType.includes("application/json")) {
-                    const payload = await response.json() as {error?: string};
-                    throw new Error(payload.error ?? t("tryOn.errorGeneric"));
-                }
-                throw new Error(t("tryOn.errorGeneric"));
-            }
-
-            if (contentType.includes("application/json")) {
-                const payload = await response.json() as {imageUrl?: string; imageBase64?: string};
-                const image = payload.imageUrl ?? (payload.imageBase64 ? `data:image/png;base64,${payload.imageBase64}` : null);
-                if (!image) throw new Error(t("tryOn.invalidWorkerResponse"));
-                setResultImage(current => {
-                    if (current?.startsWith("blob:")) URL.revokeObjectURL(current);
-                    resultImageRef.current = image;
-                    return image;
-                });
-            } else if (contentType.startsWith("image/")) {
-                const blob = await response.blob();
-                const imageUrl = URL.createObjectURL(blob);
-                setResultImage(current => {
-                    if (current?.startsWith("blob:")) URL.revokeObjectURL(current);
-                    resultImageRef.current = imageUrl;
-                    return imageUrl;
-                });
-            } else {
-                throw new Error(t("tryOn.invalidWorkerResponse"));
-            }
-
-            setStatus("success");
+            const image = await generation.mutateAsync({person: personImage, garment: garmentImage, signal: controller.signal});
+            if (controller.signal.aborted) return;
+            const imageUrl = typeof image === "string" ? image : URL.createObjectURL(image);
+            if (resultImageRef.current?.startsWith("blob:")) URL.revokeObjectURL(resultImageRef.current);
+            resultImageRef.current = imageUrl;
+            setResultImage(imageUrl); setStatus("success");
         } catch (error) {
-            setStatus("error");
-            setMessage(error instanceof Error ? error.message : t("tryOn.errorGeneric"));
+            if (!controller.signal.aborted) {
+                setStatus("error"); setMessage(error instanceof Error ? error.message : t("tryOn.errorGeneric"));
+            }
+        } finally {
+            generation.reset();
+            uploadAbort.current = null;
         }
     }
 

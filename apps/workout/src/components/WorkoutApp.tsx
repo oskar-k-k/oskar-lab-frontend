@@ -1,59 +1,63 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useQuery, useInfiniteQuery, useMutation, useQueryClient} from "@tanstack/react-query";
+import {catalogQuery, templatesQuery, personalPlansQuery, planQuery, workoutKeys} from "../services/queries";
+import {useEffect, useRef, useState} from "react";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {appPath} from "@oskar-lab/config/paths";
 import {useCurrentUser} from "@oskar-lab/auth/useCurrentUser";
 import {useI18n} from "@oskar-lab/i18n/I18nProvider";
-import {isExercise, isPlan, isPlanPage, type Exercise, type Plan} from "../model/workout";
+import {isPlan, type Plan} from "../model/workout";
 import {request, WorkoutError} from "../services/client";
 import PlanEditor from "./PlanEditor";
 import SessionView from "./SessionView";
 import styles from "./Workout.module.css";
-import {useResume} from "../hooks/useResume";
-
-const isCatalog = (v: unknown): v is Exercise[] => Array.isArray(v) && v.every(isExercise);
-const isPlans = (v: unknown): v is Plan[] => Array.isArray(v) && v.every(isPlan);
-
-
 /** Reloads account-scoped UI on identity changes so drafts cannot cross accounts. */
 export default function WorkoutApp({planId, exercisePosition}: {planId?: string; exercisePosition?: number}) {
     const {user, loading} = useCurrentUser();
     const {t} = useI18n();
     if (loading) return <main className={styles.page}><p role="status">{t("workout.loading")}</p></main>;
-    return <Sessions key={`${user?.id ?? "guest"}:${planId ?? "overview"}`} signedIn={!!user} planId={planId} exercisePosition={exercisePosition} />;
+    return <Sessions key={`${user?.id ?? "guest"}:${planId ?? "overview"}`} ownerId={user?.id ?? null} planId={planId} exercisePosition={exercisePosition} />;
 }
 
-function Sessions({signedIn, planId, exercisePosition}: {signedIn: boolean; planId?: string; exercisePosition?: number}) {
+function Sessions({ownerId, planId, exercisePosition}: {ownerId: string | null; planId?: string; exercisePosition?: number}) {
     const router = useRouter();
     const {t} = useI18n();
-    const [catalog, setCatalog] = useState<Exercise[]>([]);
-    const [templates, setTemplates] = useState<Plan[]>([]);
-    const [plans, setPlans] = useState<Plan[]>([]);
-    const [selected, setSelected] = useState<Plan | null>(null);
+    const signedIn = ownerId !== null;
+    const client = useQueryClient();
+    const saveAbort = useRef<AbortController | null>(null);
+    useEffect(() => {
+        const controller = new AbortController();
+        saveAbort.current = controller;
+        return () => controller.abort();
+    }, []);
     const [editing, setEditing] = useState<{plan: Plan; create: boolean} | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [busy, setBusy] = useState(false);
     const [error, setError] = useState<number | null>(null);
     const [saved, setSaved] = useState(false);
-    const [reload, setReload] = useState(0);
-    const [page, setPage] = useState(0);
-    const [hasMore, setHasMore] = useState(false);
-    useResume(() => {if (!editing && !busy) setReload(value => value + 1);});
-    useEffect(() => {
-        let active = true;
-        Promise.all([request("exercises", isCatalog), request("templates", isPlans),
-            signedIn && !planId ? request("plans", isPlanPage) : Promise.resolve({plans: [], hasMore: false})])
-            .then(async ([exercises, starters, personal]) => {
-                const session = planId ? starters.find(plan => plan.id === planId) ?? await request(`plans/${planId}`, isPlan) : null;
-                if (!active) return;
-                setCatalog(exercises); setTemplates(starters); setPlans(personal.plans);
-                setHasMore(personal.hasMore); setPage(0); setError(null); setSelected(session);
-            }).catch(e => {if (active) setError(e instanceof WorkoutError ? e.status : 503);})
-            .finally(() => {if (active) setLoading(false);});
-        return () => {active = false;};
-    }, [signedIn, reload, planId]);
+    const saveMutation = useMutation({mutationFn: ({plan, create}: {plan: Plan; create: boolean}) =>
+        request(create ? "plans" : `plans/${plan.id}`, isPlan, plan, create ? "POST" : "PUT", saveAbort.current?.signal)});
+    const catalogResult = useQuery(catalogQuery());
+    const starters = useQuery(templatesQuery());
+    const personal = useInfiniteQuery({...personalPlansQuery(ownerId), enabled: signedIn && !planId && !editing && !saveMutation.isPending});
+    const detail = useQuery({...planQuery(ownerId, planId ?? "", starters.data ?? []), enabled: !!planId && starters.isSuccess && !editing});
+    const catalog = catalogResult.data ?? [];
+    const templates = starters.data ?? [];
+    const plans = [...new Map((personal.data?.pages.flatMap(page => page.plans) ?? []).map(plan => [plan.id, plan])).values()];
+    const selected = planId ? detail.data ?? null : null;
+    const loading = catalogResult.isPending || starters.isPending ||
+        (signedIn && !planId && personal.isPending) || (!!planId && starters.isSuccess && detail.isPending);
+    const busy = saveMutation.isPending || personal.isFetchingNextPage;
+    const waitingForConnection = catalogResult.isPaused || starters.isPaused || (planId ? detail.isPaused : signedIn && personal.isPaused);
+    const hasMore = personal.hasNextPage;
+    const readError = catalogResult.error ?? starters.error ?? (planId ? detail.error : signedIn ? personal.error : null);
+    const displayedError = error ?? (readError ? readError instanceof WorkoutError ? readError.status : 503 : null);
+    function retry() {
+        void catalogResult.refetch();
+        void starters.refetch();
+        if (planId) void detail.refetch();
+        else if (signedIn) void personal.refetch();
+    }
     useEffect(() => {
         if (!editing) return;
         const prevent = (event: BeforeUnloadEvent) => event.preventDefault();
@@ -68,24 +72,15 @@ function Sessions({signedIn, planId, exercisePosition}: {signedIn: boolean; plan
     }
     async function save(plan: Plan) {
         if (!editing || busy) return;
-        setBusy(true); setError(null);
+        setError(null);
         try {
-            const result = await request(editing.create ? "plans" : `plans/${plan.id}`, isPlan, plan, editing.create ? "POST" : "PUT");
-            setPlans(current => [result, ...current.filter(p => p.id !== result.id)]);
-            setSelected(result); setEditing(null); setSaved(true);
+            const result = await saveMutation.mutateAsync({plan, create: editing.create});
+            client.setQueryData(workoutKeys.plan(ownerId, result.id), result);
+            void client.invalidateQueries({queryKey: [...workoutKeys.personal(ownerId), "plans"]});
+            setEditing(null); setSaved(true);
             if (planId !== result.id) router.push(`/sessions/${result.id}`);
             else window.scrollTo({top: 0});
-        } catch (e) {setError(e instanceof WorkoutError ? e.status : 503);}
-        finally {setBusy(false);}
-    }
-    async function more() {
-        setBusy(true); setError(null);
-        try {
-            const result = await request(`plans?page=${page + 1}`, isPlanPage);
-            setPlans(current => [...current, ...result.plans.filter(p => !current.some(old => old.id === p.id))]);
-            setHasMore(result.hasMore); setPage(page + 1);
-        } catch (e) {setError(e instanceof WorkoutError ? e.status : 503);}
-        finally {setBusy(false);}
+        } catch (failure) {setError(failure instanceof WorkoutError ? failure.status : 503);}
     }
     function cards(items: Plan[]) {
         return <div className={styles.cards}>{items.map(plan => <Link className={styles.card} key={plan.id} href={`/sessions/${plan.id}`}>
@@ -101,17 +96,17 @@ function Sessions({signedIn, planId, exercisePosition}: {signedIn: boolean; plan
             {!editing && signedIn && <button className={styles.primary} disabled={loading || !catalog.length} onClick={() => edit()}>{t("workout.create")}</button>}
         </header>}
         {!planId && !signedIn && <p className={styles.notice}>{t("workout.signInHint")} <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL ?? ""}/account`}>{t("workout.signIn")}</a></p>}
-        {loading && <p role="status">{t("workout.loading")}</p>}
+        {loading && <p role="status">{t(waitingForConnection ? "query.waitingConnection" : "workout.loading")}</p>}
         {saved && <p role="status" className={styles.success}>{t("workout.saved")}</p>}
-        {error && <div className={styles.error} role="alert">
-            <p>{t(error === 401 || error === 403 ? "workout.unauthorized" : error === 409 ? "workout.conflict" : error === 404 ? "workout.notFound" : error === 400 ? "workout.invalid" : "workout.unavailable")}</p>
-            {(error === 401 || error === 403) && <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL ?? ""}/account?returnTo=${encodeURIComponent(appPath(planId ? `/sessions/${planId}${exercisePosition === undefined ? "" : `/exercises/${exercisePosition}`}` : "/"))}`}>{t("workout.signIn")}</a>}
-            {!editing && <button onClick={() => {setLoading(!selected); setReload(value => value + 1);}}>{t("workout.retry")}</button>}
+        {displayedError && <div className={styles.error} role="alert">
+            <p>{t(displayedError === 401 || displayedError === 403 ? "workout.unauthorized" : displayedError === 409 ? "workout.conflict" : displayedError === 404 ? "workout.notFound" : displayedError === 400 ? "workout.invalid" : "workout.unavailable")}</p>
+            {(displayedError === 401 || displayedError === 403) && <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL ?? ""}/account?returnTo=${encodeURIComponent(appPath(planId ? `/sessions/${planId}${exercisePosition === undefined ? "" : `/exercises/${exercisePosition}`}` : "/"))}`}>{t("workout.signIn")}</a>}
+            {!editing && <button onClick={retry}>{t("workout.retry")}</button>}
         </div>}
         {editing ? <PlanEditor key={editing.plan.id} initial={editing.plan} catalog={catalog} busy={busy} onSave={save} onCancel={() => {setEditing(null); setError(null);}} /> : !loading && <>
             {!planId && signedIn && <section className={styles.section} aria-labelledby="personal-title"><h2 id="personal-title">{t("workout.personal")}</h2>
-                {!plans.length && !error && <p className={styles.muted}>{t("workout.empty")}</p>}{cards(plans)}
-                {hasMore && <button disabled={busy} onClick={more}>{t("workout.more")}</button>}
+                {!plans.length && !displayedError && <p className={styles.muted}>{t("workout.empty")}</p>}{cards(plans)}
+                {hasMore && <button disabled={busy} onClick={() => void personal.fetchNextPage()}>{t("workout.more")}</button>}
             </section>}
             {!planId && <section className={styles.section} aria-labelledby="templates-title"><h2 id="templates-title">{t("workout.templates")}</h2>{cards(templates)}</section>}
             {selected && <SessionView plan={selected} catalog={catalog} exercisePosition={exercisePosition}

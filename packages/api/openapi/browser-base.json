@@ -194,6 +194,26 @@
           }
         }
       }
+    },
+    "/api/apps": {
+      "get": {
+        "operationId": "appCatalog",
+        "responses": {
+          "200": {
+            "description": "Public app catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageAppEntity"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Catalog temporarily unavailable"
+          }
+        }
+      }
     }
   },
   "components": {

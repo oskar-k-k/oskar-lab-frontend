@@ -13,7 +13,8 @@
   "dependencies": {
     "@oskar-lab/ui": "*",
     "@oskar-lab/i18n": "*",
-    "@oskar-lab/auth": "*"
+    "@oskar-lab/auth": "*",
+    "@oskar-lab/query": "*"
   },
   "peerDependencies": {
     "react": "^19.2.4",

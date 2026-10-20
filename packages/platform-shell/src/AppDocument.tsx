@@ -4,6 +4,7 @@ import AuthProvider from "@oskar-lab/auth/AuthProvider";
 import I18nProvider from "@oskar-lab/i18n/I18nProvider";
 import {parseLocale} from "@oskar-lab/i18n/messages";
 import LegalLinks from "./LegalLinks";
+import AccountQueries from "./AccountQueries";
 import "@oskar-lab/ui/styles/globals.css";
 
 const geistSans = Geist({
@@ -17,8 +18,10 @@ const geistMono = Geist_Mono({
 });
 
 /** Provides shared document defaults; apps own their metadata and page layouts. */
-export default async function AppDocument({children,}: Readonly<{
+export default async function AppDocument({children, enableQueries = false}: Readonly<{
   children: React.ReactNode;
+  /** Enables account-isolated server-state caching for apps with HTTP interactions. */
+  enableQueries?: boolean;
 }>) {
   const locale = parseLocale((await cookies()).get("oskar-lab-locale")?.value);
   return (
@@ -28,7 +31,7 @@ export default async function AppDocument({children,}: Readonly<{
           className={`${geistSans.variable} ${geistMono.variable}`}
       >
       <body>
-      <AuthProvider><I18nProvider initialLocale={locale}>{children}<LegalLinks /></I18nProvider></AuthProvider>
+      <AuthProvider><I18nProvider initialLocale={locale}>{enableQueries ? <AccountQueries>{children}</AccountQueries> : children}<LegalLinks /></I18nProvider></AuthProvider>
       </body>
       </html>
   );

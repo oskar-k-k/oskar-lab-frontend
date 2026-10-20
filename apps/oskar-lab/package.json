@@ -19,6 +19,8 @@
     "@oskar-lab/auth": "*",
     "@oskar-lab/platform-shell": "*",
     "@oskar-lab/config": "*",
-    "@oskar-lab/api": "*"
+    "@oskar-lab/api": "*",
+    "@oskar-lab/query": "*",
+    "@tanstack/react-query": "^5"
   }
 }

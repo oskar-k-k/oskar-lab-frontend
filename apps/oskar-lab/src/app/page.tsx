@@ -50,20 +50,16 @@ const localApps: App[] = [
     },
 ];
 
-async function loadApps(): Promise<{apps: App[]; backendAvailable: boolean}> {
+async function loadRemoteApps() {
+    let remoteApps: App[] = [];
+    let backendAvailable = false;
     try {
-        const response = await appsApi.getAll();
-        const remoteOnlyApps = response.content.filter(remoteApp => (
-            !localApps.some(localApp => localApp.path === remoteApp.path)
-        ));
-
-        return {apps: [...localApps, ...remoteOnlyApps], backendAvailable: true};
-    } catch {
-        return {apps: localApps, backendAvailable: false};
-    }
+        remoteApps = (await appsApi.getAll()).content;
+        backendAvailable = true;
+    } catch { /* The local catalog remains usable while the backend is unavailable. */ }
+    return {initialRemoteApps: remoteApps, backendAvailable, fetchedAt: Date.now()};
 }
 
 export default async function Home() {
-    const {apps, backendAvailable} = await loadApps();
-    return <AppsExplorer apps={apps} backendAvailable={backendAvailable} />;
+    return <AppsExplorer localApps={localApps} {...await loadRemoteApps()} />;
 }

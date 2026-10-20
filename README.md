@@ -166,6 +166,10 @@ Before public release, supply the operator/contact details and complete and revi
 Local email addresses are not yet verified by email, and there is no email delivery/password-reset flow. They are not proof of ownership; provider linking therefore requires the existing password. Google OAuth must be tested with real configured credentials before release. Never enable unconditional email-based account linking.
 # Shared OpenAPI clients
 
+Server-state caching uses the optional [shared TanStack Query package](packages/query/README.md).
+The platform catalog, Workout and Cloth Lab enable account-isolated caches;
+apps with only local state keep their current lightweight setup.
+
 HTTP integrations use `@oskar-lab/api`. See [the API package guide](packages/api/README.md)
 for backend/worker export, client regeneration, runtime validation and security notes.
 `npm run check` also verifies that the checked-in OpenAPI types are current.
