@@ -35,7 +35,8 @@ describe("independent app routing", () => {
         expect(routes).toContainEqual({source:"/apps/2d-lab/:path*", destination:"http://127.0.0.1:10038/apps/2d-lab/:path*"});
         expect(routes).toContainEqual({source:"/apps/inside-llm/:path*", destination:"http://127.0.0.1:10039/apps/inside-llm/:path*"});
         expect(routes).toContainEqual({source:"/apps/tierlist-matcher/:path*", destination:"http://127.0.0.1:10040/apps/tierlist-matcher/:path*"});
-        expect(routes).toHaveLength(10);
+        expect(routes).toContainEqual({source:"/apps/thailand/:path*", destination:"http://127.0.0.1:10041/apps/thailand/:path*"});
+        expect(routes).toHaveLength(11);
     });
 
     it("preserves the old developer-reference URL", async () => {

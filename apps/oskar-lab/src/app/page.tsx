@@ -1,5 +1,7 @@
 import {App, appsApi} from "@/lib/api/apps";
 import AppsExplorer from "./AppsExplorer";
+import {auth} from "@oskar-lab/auth/server";
+import {canAccessThailand} from "@oskar-lab/auth/privateProjects";
 
 export const dynamic = "force-dynamic";
 
@@ -66,5 +68,8 @@ async function loadApps(): Promise<{apps: App[]; backendAvailable: boolean}> {
 
 export default async function Home() {
     const {apps, backendAvailable} = await loadApps();
-    return <AppsExplorer apps={apps} backendAvailable={backendAvailable} />;
+    const visible = apps.filter(app => app.path !== "thailand");
+    const session = await auth();
+    if (canAccessThailand(session)) visible.unshift({id: -11, path: "thailand", title: "Thailand · Unsere Reise", description: "Eure private Reise-Timeline mit Flügen, Erlebnissen und Tickets.", thumbnail: "/apps/thailand/cover"});
+    return <AppsExplorer apps={visible} backendAvailable={backendAvailable} />;
 }

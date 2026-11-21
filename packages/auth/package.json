@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "exports": {
+    "./privateProjects": "./src/privateProjects.private.ts",
     "./contracts": "./src/contracts.ts",
     "./backend": "./src/backend.ts",
     "./useCurrentUser": "./src/useCurrentUser.ts",

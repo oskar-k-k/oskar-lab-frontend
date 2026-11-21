@@ -72,6 +72,13 @@ services:
   inside-llm:
     <<: *web
     environment: {<<: *web-env, APP_NAME: inside-llm}
+  thailand:
+    <<: *web
+    environment: {<<: *web-env, APP_NAME: thailand, THAILAND_DATA_DIR: /private-data}
+    volumes:
+      - ./private/thailand:/private-data:ro
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/apps/thailand/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
   tierlist-matcher:
     <<: *web
     environment:

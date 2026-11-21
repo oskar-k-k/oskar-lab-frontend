@@ -59,7 +59,7 @@ async function sourceFiles(directory: string): Promise<string[]> {
     const nested = await Promise.all(entries.map(entry => {
         const entryPath = path.join(directory, entry.name);
         if (entry.isDirectory()) return sourceFiles(entryPath);
-        return /\.(ts|tsx)$/.test(entry.name) && !entry.name.endsWith(".test.ts") ? [entryPath] : [];
+        return /\.(ts|tsx)$/.test(entry.name) && !/\.(test|private)\.tsx?$/.test(entry.name) ? [entryPath] : [];
     }));
     return nested.flat();
 }

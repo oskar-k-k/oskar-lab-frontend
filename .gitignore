@@ -44,4 +44,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 /deploy/private/
+**/private-data/
 __pycache__/
