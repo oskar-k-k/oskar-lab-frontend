@@ -159,11 +159,24 @@
   background: var(--timeline-current, var(--color-primary));
 }
 .bubbleLabel {
+  position: absolute;
+  top: 4rem;
+  right: calc(50% + 4.75rem);
+  width: calc(50% - 3rem);
+  transform: translateY(-0.85rem);
   font-size: 0.75rem;
+  line-height: 1.5;
   letter-spacing: 0.025em;
   color: var(--timeline-muted, var(--color-text-muted));
-  margin-top: 0.4rem;
+  background: var(--timeline-background, var(--color-background));
+  padding: 0.3rem 0.25rem;
+  overflow-wrap: anywhere;
 }
+.item:nth-child(even) .bubbleLabel {
+  right: auto;
+  left: calc(50% + 4.75rem);
+}
+
 .bubbleTitle {
   width: 100%;
   overflow-wrap: anywhere;
@@ -185,14 +198,14 @@
 }
 @media (max-width: 640px) {
   .stationGroup {
-    width: calc(50% - 1rem);
-    margin-left: calc(50% + 1rem);
+    width: calc(50% - 2.5rem);
+    margin-left: calc(50% + 2.5rem);
   }
   .summary {
     padding-inline: 0;
   }
   .summary::before {
-    width: calc(50% + 1rem);
+    width: calc(50% + 2.5rem);
     top: 3rem;
   }
   .bubble {
@@ -205,6 +218,20 @@
   }
   .bubbleLabel {
     font-size: 0.6875rem;
+    width: 6.25rem;
+    top: 3rem;
+    right: auto;
+    left: -5.625rem;
+  }
+  .item:nth-child(even) .bubbleLabel {
+    left: calc(100% - 0.625rem);
+  }
+  .stationGroup:has(> .disclosure[open]) .bubbleLabel {
+    position: static;
+    order: -1;
+    transform: none;
+    width: auto;
+    max-width: 100%;
   }
   .stationGroup:has(> .disclosure[open]) {
     width: 100%;
@@ -264,4 +291,23 @@
   padding: 0.4rem 0.65rem;
   border-radius: 1rem;
   background: var(--timeline-background, var(--color-background));
+}
+
+@media (max-width: 360px) {
+  .bubble {
+    width: 5rem;
+    height: 5rem;
+    margin-bottom: 1rem;
+  }
+  .bubbleLabel {
+    width: 5.75rem;
+    left: -5.375rem;
+  }
+  .item:nth-child(even) .bubbleLabel {
+    left: calc(100% - 0.375rem);
+  }
+  .summary::before,
+  .bubbleLabel {
+    top: 2.5rem;
+  }
 }

@@ -5,7 +5,7 @@ import styles from "./Timeline.module.css";
 export type TimelineStation = Readonly<{
   /** Stable, document-unique ID, also usable as an anchor target. */
   id: string;
-  /** Date, time or milestone label displayed alongside the content. */
+  /** Date, time or milestone label; bubble view places it on the horizontal rail connection. */
   label: ReactNode;
   /** Arbitrary content, including headings, connected endpoints and actions. */
   content: ReactNode;
@@ -40,12 +40,12 @@ function BubbleStation({
         <span className={styles.bubble} aria-hidden="true">
           {station.visual ?? <span className={styles.fallback} />}
         </span>
-        {station.title != null && (
+        {station.label != null && (
           <span className={styles.bubbleLabel}>{station.label}</span>
         )}
-        <span className={styles.bubbleTitle}>
-          {station.title ?? station.label}
-        </span>
+        {station.title != null && (
+          <span className={styles.bubbleTitle}>{station.title}</span>
+        )}
       </summary>
       <div className={styles.revealed}>{station.content}</div>
     </details>

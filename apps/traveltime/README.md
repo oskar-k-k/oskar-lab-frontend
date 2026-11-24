@@ -71,3 +71,10 @@ local date, time and place and open the same booking details. The domain keeps o
 flight entry; edit mode keeps its combined card. Unknown durations are labeled, never
 inferred by subtracting local clock hours. The shared Timeline exposes neutral `end` and
 `connectionLabel` slots for the same pattern in other apps; no data/storage changes occur.
+
+Station date/time labels sit on the horizontal rail connection. Each includes its IANA zone
+and the backend-validated UTC offset at that instant; unknown times do not invent an offset.
+Flight departure and arrival disclosures render only the selected endpoint, with shared
+booking notes/documents; edit mode retains both endpoints. The shared bubble layout keeps
+rail labels readable at mobile widths and moves them above the circle while expanded.
+No additional processing, external requests, storage or permissions are introduced.

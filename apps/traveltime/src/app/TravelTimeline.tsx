@@ -6,8 +6,10 @@ import {
   timelineRows,
   nextTimelineRow,
   flightDuration,
+  pointUtcOffset,
 } from "../model/timeline";
 import Timeline from "@oskar-lab/ui/Timeline/Timeline";
+import BookingDetails from "./BookingDetails";
 import BookingVisual from "./BookingVisual";
 import styles from "./Travel.module.css";
 /** Renders connected transports and interleaved stay points without owning API state. */
@@ -34,13 +36,6 @@ export default function TravelTimeline({
 }) {
   const { t, locale } = useI18n();
   const label = (key: string) => t(("travel." + key) as TranslationKey);
-  const date = (value: string) =>
-    new Intl.DateTimeFormat(locale, {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      timeZone: "UTC",
-    }).format(new Date(value + "T12:00:00Z"));
   const rows = timelineRows(entries);
   const next = nextTimelineRow(rows, now);
   return (
@@ -66,14 +61,32 @@ export default function TravelTimeline({
           const paired =
             !editing && row.entry.type === "FLIGHT" && row.points.length === 2;
           const stationLabel = (p: Entry["points"][number]) => (
-            <time dateTime={p.date + (p.time ? "T" + p.time : "")}>
-              {new Intl.DateTimeFormat(locale, {
-                day: "numeric",
-                month: "short",
-                timeZone: "UTC",
-              }).format(new Date(p.date + "T12:00:00Z"))}
-              {p.time ? " · " + p.time.slice(0, 5) : ""}
-            </time>
+            <>
+              <time
+                dateTime={
+                  p.date + (p.time ? "T" + p.time + (p.utcOffset ?? "") : "")
+                }
+              >
+                {new Intl.DateTimeFormat(locale, {
+                  day: "numeric",
+                  month: "short",
+                  timeZone: "UTC",
+                }).format(new Date(p.date + "T12:00:00Z"))}
+                {p.time
+                  ? " · " +
+                    (p.timeMeaning !== "EXACT"
+                      ? label(p.timeMeaning) + " "
+                      : "") +
+                    p.time.slice(0, 5)
+                  : ""}
+              </time>
+              <small className={styles.stationZone}>{p.timeZone}</small>
+              {pointUtcOffset(p) && (
+                <small className={styles.stationZone}>
+                  {pointUtcOffset(p)}
+                </small>
+              )}
+            </>
           );
           const item = {
             id: `booking-${row.entry.id}-${point.role}`,
@@ -91,84 +104,20 @@ export default function TravelTimeline({
             label:
               !editing ||
               index === 0 ||
-              rows[index - 1].points[0].date !== point.date ? (
-                <time
-                  dateTime={point.date + (point.time ? "T" + point.time : "")}
-                >
-                  {new Intl.DateTimeFormat(locale, {
-                    day: "numeric",
-                    month: "short",
-                    timeZone: "UTC",
-                  }).format(new Date(point.date + "T12:00:00Z"))}
-                  {point.time
-                    ? " · " +
-                      (point.timeMeaning !== "EXACT"
-                        ? label(point.timeMeaning) + " "
-                        : "") +
-                      point.time.slice(0, 5)
-                    : ""}
-                </time>
-              ) : null,
+              rows[index - 1].points[0].date !== point.date
+                ? stationLabel(point)
+                : null,
             content: (
-              <article
-                className={editing ? styles.card : styles.bookingDetails}
-              >
-                <div className={styles.eyebrow}>
-                  {label(row.entry.type)} ·{" "}
-                  {row.points.length === 1
-                    ? label(point.role)
-                    : row.entry.durationMinutes !== null
-                      ? `${Math.floor(row.entry.durationMinutes / 60)}h ${row.entry.durationMinutes % 60} ${label("minutes")}`
-                      : ""}
-                </div>
-                <h2>{row.entry.title}</h2>
-                <div className={styles.endpoints}>
-                  {row.points.map((p) => (
-                    <div key={p.role}>
-                      <small>{label(p.role)}</small>
-                      <strong>
-                        {p.time
-                          ? `${p.timeMeaning !== "EXACT" ? label(p.timeMeaning) + " " : ""}${p.time.slice(0, 5)}`
-                          : label("unknown")}
-                      </strong>
-                      <span>{date(p.date)}</span>
-                      <span>{p.placeName}</span>
-                      <small>{p.address}</small>
-                      <small>{p.timeZone}</small>
-                    </div>
-                  ))}
-                </div>
-                <details>
-                  <summary>{label("notes")}</summary>
-                  {row.entry.reference && (
-                    <p>
-                      {label("reference")}: {row.entry.reference}
-                    </p>
-                  )}
-                  <p className={styles.notes}>{row.entry.notes}</p>
-                </details>
-                <div className={styles.actions}>
-                  <button onClick={() => onDocuments(row.entry)}>
-                    {label("documents")}
-                  </button>
-                  {editable && (
-                    <>
-                      <button
-                        disabled={disabled}
-                        onClick={() => onEdit(row.entry)}
-                      >
-                        {label("edit")}
-                      </button>
-                      <button
-                        disabled={disabled}
-                        onClick={() => onDelete(row.entry)}
-                      >
-                        {label("delete")}
-                      </button>
-                    </>
-                  )}
-                </div>
-              </article>
+              <BookingDetails
+                entry={row.entry}
+                points={paired ? [point] : row.points}
+                editing={editing}
+                editable={editable}
+                disabled={disabled}
+                onDocuments={onDocuments}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
             ),
           };
           if (!paired) return item;
@@ -190,7 +139,18 @@ export default function TravelTimeline({
               ),
               label: stationLabel(arrival),
               visual: <BookingVisual type={row.entry.type} />,
-              content: item.content,
+              content: (
+                <BookingDetails
+                  entry={row.entry}
+                  points={[arrival]}
+                  editing={false}
+                  editable={editable}
+                  disabled={disabled}
+                  onDocuments={onDocuments}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              ),
             },
           };
         })}

@@ -373,3 +373,9 @@
 .bookingDetails .endpoints > div {
   min-width: 120px;
 }
+
+.stationZone {
+  display: block;
+  font-size: 0.85em;
+  line-height: 1.5;
+}

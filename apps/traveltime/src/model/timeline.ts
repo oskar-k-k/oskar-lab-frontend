@@ -53,3 +53,9 @@ export function flightDuration(entry: Entry, locale: string): string | null {
     .filter(Boolean)
     .join(" ");
 }
+
+/** Formats the backend-validated offset for this exact local timestamp without guessing unknown times. */
+export function pointUtcOffset(point: Entry["points"][number]): string | null {
+  if (!point.time || !point.utcOffset) return null;
+  return "UTC" + (point.utcOffset === "Z" ? "+00:00" : point.utcOffset);
+}

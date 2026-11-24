@@ -3,6 +3,7 @@ import {
   timelineRows,
   nextTimelineRow,
   flightDuration,
+  pointUtcOffset,
 } from "../src/model/timeline";
 import type { Entry } from "../src/app/TravelWorkspace";
 it("interleaves an activity with connected hotel endpoints while keeping flights grouped", () => {
@@ -97,4 +98,16 @@ it("formats the backend elapsed flight duration instead of subtracting local clo
   expect(flightDuration({ ...entry, durationMinutes: 60 }, "en")).toMatch(/1/);
   expect(flightDuration({ ...entry, durationMinutes: null }, "en")).toBeNull();
   expect(flightDuration({ ...entry, durationMinutes: 0 }, "en")).toMatch(/0/);
+});
+
+it("uses each station's validated seasonal offset and leaves unknown times unguessed", () => {
+  const point = {
+    time: "10:00:00",
+    timeZone: "Europe/Berlin",
+    utcOffset: "+01:00",
+  } as Entry["points"][number];
+  expect(pointUtcOffset(point)).toBe("UTC+01:00");
+  expect(pointUtcOffset({ ...point, utcOffset: "+02:00" })).toBe("UTC+02:00");
+  expect(pointUtcOffset({ ...point, utcOffset: "Z" })).toBe("UTC+00:00");
+  expect(pointUtcOffset({ ...point, time: null, utcOffset: null })).toBeNull();
 });
