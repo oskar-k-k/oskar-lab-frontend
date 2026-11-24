@@ -11,6 +11,6 @@ export function catalogQuery() {
         });
         if (!response.ok) throw new ApiError(response.status, response.statusText);
         if (!isAppPage(data)) throw new TypeError("The apps API returned an invalid page.");
-        return data.content;
+        return data.content.filter(app => app.path !== "thailand");
     }});
 }

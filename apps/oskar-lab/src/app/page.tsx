@@ -1,9 +1,12 @@
 import {App, appsApi} from "@/lib/api/apps";
 import AppsExplorer from "./AppsExplorer";
+import {auth} from "@oskar-lab/auth/server";
+import {canAccessThailand} from "@oskar-lab/auth/privateProjects";
 
 export const dynamic = "force-dynamic";
 
 const localApps: App[] = [
+    {id: -10, path: "tierlist-matcher", title: "Tierlist Matcher", description: "Rank together, reveal your choices and compare your complete tierlists.", thumbnail: "/catalog/tierlist-matcher/thumbnail.svg"},
     {id: -9, path: "inside-llm", title: "Inside a Language Model", description: "A cinematic journey from prompt to prediction.", thumbnail: "/catalog/inside-llm/thumbnail.svg"},
     {id: -8, path: '2d-lab', title: '2D Lab', description: 'An independent SVG scene and mesh editor.', thumbnail: '/catalog/2d-lab/thumbnail.svg'},
     {id: -7, path: 'room-studio', title: 'Room Studio', description: 'Plan your real room in 3D.', thumbnail: '/catalog/room-studio/thumbnail.svg'},
@@ -61,5 +64,8 @@ async function loadRemoteApps() {
 }
 
 export default async function Home() {
-    return <AppsExplorer localApps={localApps} {...await loadRemoteApps()} />;
+    const loaded = await loadRemoteApps();
+    const visible = [...localApps];
+    if (canAccessThailand(await auth())) visible.unshift({id: -11, path: "thailand", title: "Thailand · Unsere Reise", description: "Eure private Reise-Timeline mit Flügen, Erlebnissen und Tickets.", thumbnail: "/apps/thailand/cover"});
+    return <AppsExplorer localApps={visible} {...loaded} initialRemoteApps={loaded.initialRemoteApps.filter(app => app.path !== "thailand")} />;
 }

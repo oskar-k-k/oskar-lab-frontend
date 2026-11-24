@@ -28,12 +28,16 @@ describe("independent app routing", () => {
         vi.stubEnv("APP_ROOM_STUDIO_URL", undefined);
         vi.stubEnv("APP_2D_LAB_URL", undefined);
         vi.stubEnv("APP_INSIDE_LLM_URL", undefined);
+        vi.stubEnv("APP_TIERLIST_MATCHER_URL", undefined);
+        vi.stubEnv("APP_THAILAND_URL", undefined);
         const routes = await createAppConfig("oskar-lab").rewrites();
         expect(routes).toContainEqual({source:"/apps/chess/:path*", destination:"http://127.0.0.1:12345/apps/chess/:path*"});
         expect(routes).toContainEqual({source:"/apps/room-studio/:path*", destination:"http://127.0.0.1:10037/apps/room-studio/:path*"});
         expect(routes).toContainEqual({source:"/apps/2d-lab/:path*", destination:"http://127.0.0.1:10038/apps/2d-lab/:path*"});
         expect(routes).toContainEqual({source:"/apps/inside-llm/:path*", destination:"http://127.0.0.1:10039/apps/inside-llm/:path*"});
-        expect(routes).toHaveLength(9);
+        expect(routes).toContainEqual({source:"/apps/tierlist-matcher/:path*", destination:"http://127.0.0.1:10040/apps/tierlist-matcher/:path*"});
+        expect(routes).toContainEqual({source:"/apps/thailand/:path*", destination:"http://127.0.0.1:10041/apps/thailand/:path*"});
+        expect(routes).toHaveLength(11);
     });
 
     it("preserves the old developer-reference URL", async () => {

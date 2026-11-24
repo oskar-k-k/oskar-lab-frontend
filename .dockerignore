@@ -10,4 +10,5 @@
 .run
 coverage
 deploy/private
+**/private-data
 **/__pycache__

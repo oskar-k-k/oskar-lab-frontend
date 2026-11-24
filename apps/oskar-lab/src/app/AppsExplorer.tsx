@@ -53,6 +53,7 @@ export default function AppsExplorer({localApps, initialRemoteApps, backendAvail
                                     description={app.description ?? ""}
                                     href={`/apps/${app.path}`}
                                     image={app.thumbnail ?? `/catalog/${app.path}/thumbnail.png`}
+                                    imageUnoptimized={app.path === "thailand"}
                                     imageAspect="square"
                                     className={app.path === "portfolio" ? styles.portfolioCard : styles.projectCard}
                                 />

@@ -11,6 +11,8 @@ type Props = {
     href?: string;
     /** Optional preview image shown above the card content. */
     image?: string;
+    /** Fetch protected images directly with the browser session, never via the shared optimizer. */
+    imageUnoptimized?: boolean;
     /** Controls the reserved preview image format. */
     imageAspect?: "wide" | "square";
     /** Optional additional class for local card variants. */
@@ -23,6 +25,7 @@ export default function Card({
                                  description,
                                  href,
                                  image,
+                                 imageUnoptimized = false,
                                  imageAspect = "wide",
                                  className = "",
                              }: Props) {
@@ -32,6 +35,7 @@ export default function Card({
             {image && (
                 <Image
                     src={image}
+                    unoptimized={imageUnoptimized}
                     alt={title}
                     width={400}
                     height={250}
