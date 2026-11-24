@@ -1,5 +1,22 @@
 {
-  "name": "@oskar-lab/thailand", "version": "0.1.0", "private": true,
-  "scripts": {"dev": "next dev --port 10041", "build": "next build", "start": "next start --port 10041", "typecheck": "tsc --noEmit"},
-  "dependencies": {"next": "16.3.5", "next-auth": "^5.0.0-beta.32", "react": "19.2.4", "react-dom": "19.2.4", "@oskar-lab/auth": "*", "@oskar-lab/config": "*", "@oskar-lab/platform-shell": "*", "@oskar-lab/ui": "*", "@oskar-lab/i18n": "*"}
+  "name": "@oskar-lab/thailand",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 10041",
+    "build": "next build",
+    "start": "next start --port 10041",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.4.6",
+    "next-auth": "^5.0.0-beta.32",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "@oskar-lab/auth": "*",
+    "@oskar-lab/config": "*",
+    "@oskar-lab/platform-shell": "*",
+    "@oskar-lab/ui": "*",
+    "@oskar-lab/i18n": "*"
+  }
 }
