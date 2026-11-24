@@ -23,7 +23,7 @@ export default function AppsExplorer({localApps, initialRemoteApps, backendAvail
     const {t} = useI18n();
     const localizedApps = useMemo(() => apps.map(app => ({
         ...app,
-        description: app.path === "inside-llm" ? t("llm.description") : app.path === "2d-lab" ? t("scene2d.description") : app.path === "room-studio" ? t("room.subtitle") : app.path === "workout" ? t("apps.workoutDescription") : app.path === "portfolio" ? t("apps.portfolioDescription") : app.path === "core-design" ? t("apps.coreDescription") : app.path === "chess" ? t("apps.chessDescription") : app.path === "cloth-lab" ? t("apps.virtualTryOnDescription") : app.path === "neon-vault" ? t("apps.neonVaultDescription") : app.description,
+        description: app.path === "traveltime" ? t("travel.intro") : app.path === "inside-llm" ? t("llm.description") : app.path === "2d-lab" ? t("scene2d.description") : app.path === "room-studio" ? t("room.subtitle") : app.path === "workout" ? t("apps.workoutDescription") : app.path === "portfolio" ? t("apps.portfolioDescription") : app.path === "core-design" ? t("apps.coreDescription") : app.path === "chess" ? t("apps.chessDescription") : app.path === "cloth-lab" ? t("apps.virtualTryOnDescription") : app.path === "neon-vault" ? t("apps.neonVaultDescription") : app.description,
     })), [apps, t]);
     const visibleApps = useMemo(() => {
         const normalizedQuery = query.trim().toLocaleLowerCase("de");

@@ -1,9 +1,13 @@
+import {timelineEn, timelineDe} from "./timeline";
+import {travelEn, travelDe} from "./travel";
 import {llmEn, llmDe} from "./llm";
 
 export const locales = ["en", "de"] as const;
 export type Locale = typeof locales[number];
 
 const en = {
+    ...travelEn,
+    ...timelineEn,
     "thailand.unavailable.title": "The travel timeline is not available yet",
     "thailand.unavailable.description": "Your access was verified, but the private travel data could not be loaded.",
     "thailand.unavailable.action": "The site operator needs to restore the travel data on the server. Please try again once it is available.",
@@ -498,6 +502,8 @@ const en = {
 } as const;
 
 const de: Record<keyof typeof en, string> = {
+    ...travelDe,
+    ...timelineDe,
     "thailand.unavailable.title": "Die Reise-Timeline ist noch nicht verfügbar",
     "thailand.unavailable.description": "Dein Zugriff wurde bestätigt, aber die privaten Reisedaten konnten nicht geladen werden.",
     "thailand.unavailable.action": "Der Betreiber muss die Reisedaten auf dem Server wiederherstellen. Bitte versuche es erneut, sobald sie verfügbar sind.",

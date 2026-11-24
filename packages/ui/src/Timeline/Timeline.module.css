@@ -1,0 +1,72 @@
+.timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--timeline-text, var(--color-text));
+}
+.item {
+  display: grid;
+  grid-template-columns: var(--timeline-label-width, 9rem) 1.25rem minmax(
+      0,
+      1fr
+    );
+  gap: 1rem;
+  scroll-margin-top: 1.5rem;
+}
+.label {
+  min-width: 0;
+  padding-block: 1.25rem;
+  color: var(--timeline-muted, var(--color-text-muted));
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+.track {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.track::before {
+  content: "";
+  position: absolute;
+  inset-block: 1.5rem -1.5rem;
+  width: 1px;
+  background: var(--timeline-line, var(--color-border));
+}
+.item:last-child .track::before {
+  display: none;
+}
+.marker {
+  z-index: 1;
+  width: 0.625rem;
+  height: 0.625rem;
+  margin-top: 1.5rem;
+  border-radius: 50%;
+  background: var(--timeline-line, var(--color-border));
+}
+.item[aria-current] .marker {
+  background: var(--timeline-current, var(--color-primary));
+  outline: 3px solid var(--timeline-line, var(--color-border));
+  outline-offset: 3px;
+}
+.content {
+  min-width: 0;
+  padding-bottom: 1.25rem;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .item {
+    grid-template-columns: 1.25rem minmax(0, 1fr);
+    gap: 0 0.75rem;
+  }
+  .label {
+    grid-column: 2;
+    padding-block: 0.75rem 0.375rem;
+  }
+  .track {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .content {
+    grid-column: 2;
+  }
+}

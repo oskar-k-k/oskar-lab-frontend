@@ -16,7 +16,7 @@ ROOT = Path('/opt/oskar-lab')
 KEYS = ROOT / 'storage-config' / 'orbit-projects.json'
 MANIFEST = ROOT / 'storage-config' / 'orbit-assets.json'
 APPS = ('oskar-lab', 'chess', 'cloth-lab', 'neon-vault', 'portfolio', 'core-design',
-        'workout', 'room-studio', '2d-lab', 'inside-llm', 'tierlist-matcher', 'thailand')
+        'workout', 'room-studio', '2d-lab', 'inside-llm', 'tierlist-matcher', 'thailand', 'traveltime')
 TYPES = ['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp', 'image/x-icon',
          'image/vnd.microsoft.icon', 'application/pdf', 'application/json', 'text/plain']
 

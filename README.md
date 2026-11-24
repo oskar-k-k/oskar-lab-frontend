@@ -12,6 +12,7 @@ apps/
   neon-vault/     Casino demo
   portfolio/     Personal portfolio
   core-design/   Live package documentation and previews
+  traveltime/    Private booked-trip timelines
   room-studio/   Local-first 3D room and furniture planner
 packages/
   core/           Framework-independent classes
@@ -44,6 +45,7 @@ Open http://localhost:10030 (or http://127.0.0.1:10030). The platform proxies ea
 | Portfolio | 10034 | /apps/portfolio |
 | Core & Design | 10035 | /apps/core-design |
 | Room Studio | 10037 | /apps/room-studio |
+| TravelTime | 10042 | /apps/traveltime |
 | Spring Boot | 10081 | API /apps |
 | PostgreSQL | 10054 | Container port 5432 |
 | Try-on worker | 10078 | /health, /try-on |

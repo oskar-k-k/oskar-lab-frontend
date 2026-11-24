@@ -1,0 +1,22 @@
+{
+  "name": "@oskar-lab/traveltime",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 10042",
+    "build": "next build",
+    "start": "next start --port 10042",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.4.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "@oskar-lab/auth": "*",
+    "@oskar-lab/config": "*",
+    "@oskar-lab/platform-shell": "*",
+    "@oskar-lab/ui": "*",
+    "@oskar-lab/i18n": "*",
+    "@oskar-lab/api": "*"
+  }
+}

@@ -25,13 +25,14 @@ const worker = await read(new URL("openapi/worker.json", root));
 const browser = await read(new URL("openapi/browser-base.json", root));
 browser.components.schemas = {...backend.components.schemas, ...browser.components.schemas};
 for (const [path, item] of Object.entries(backend.paths)) {
-    if (!path.startsWith("/internal/workout/")) continue;
+    const travel = path.startsWith("/internal/travel/trips");
+    if (!travel && !path.startsWith("/internal/workout/")) continue;
     const copy = structuredClone(item);
     for (const operation of Object.values(copy)) {
         operation.parameters = operation.parameters?.filter(parameter => parameter.in !== "header");
         operation.security = path.endsWith("/templates") || path.endsWith("/exercises") ? [] : [{sessionCookie: []}];
     }
-    browser.paths[path.replace("/internal/workout/", "/api/workout/")] = copy;
+    browser.paths[travel ? path.replace("/internal/travel/trips", "/api/travel") : path.replace("/internal/workout/", "/api/workout/")] = copy;
 }
 for (const [name, schema] of Object.entries({backend, browser, worker})) {
     if (name === "browser") await output(`openapi/${name}.json`, JSON.stringify(stable(schema), null, 2) + "\n");

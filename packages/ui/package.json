@@ -20,7 +20,8 @@
     "./Search/Search": "./src/Search/Search.tsx",
     "./styles/globals.css": "./src/styles/globals.css",
     "./styles/reset.css": "./src/styles/reset.css",
-    "./styles/variables.css": "./src/styles/variables.css"
+    "./styles/variables.css": "./src/styles/variables.css",
+    "./Timeline/Timeline": "./src/Timeline/Timeline.tsx"
   },
   "dependencies": {
     "@oskar-lab/core": "*",

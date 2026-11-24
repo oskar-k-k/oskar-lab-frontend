@@ -3,6 +3,7 @@
 import {useMemo, useState} from "react";
 import Lab2DPreview from "./Lab2DPreview";
 import RangeSlider from "@oskar-lab/ui/RangeSlider/RangeSlider";
+import Timeline from "@oskar-lab/ui/Timeline/Timeline";
 import Tabs from "@oskar-lab/ui/Tabs/Tabs";
 import Button from "@oskar-lab/ui/Buttons/Button";
 import Card from "@oskar-lab/ui/Cards/Card";
@@ -26,6 +27,7 @@ type DesignReference = SearchReference & Readonly<{token?: string}>;
 type ComponentReference = SearchReference & Readonly<{wide?: boolean}>;
 function createDesignReferences(t: Translate): readonly DesignReference[] { return [
     ...colors.map(color => ({id: `color-${color}`, title: color, description: t("core.globalColor", {token: `--color-${color}`}), keywords: ["farbe", "color", "token", "css", ...(color.startsWith("background") ? ["hintergrund"] : [])], token: color})),
+    {id: "timeline", title: "Timeline", description: t("core.timelineDescription"), keywords: ["timeline", "milestone", "chronology", "zeit", "verlauf"]},
     {id: "range-slider", title: "RangeSlider", description: t("core.rangeSliderDescription"), keywords: ["range", "slider", "min", "max"]},
     {id: "tabs", title: "Tabs", description: t("core.tabsDescription"), keywords: ["tabs", "navigation", "content"]},
     {id: "typography", title: t("core.typography"), description: t("core.typographyDescription"), keywords: ["text", "schrift", "heading", "typography", "typografie"]},
@@ -35,6 +37,7 @@ function createDesignReferences(t: Translate): readonly DesignReference[] { retu
 function createComponentReferences(t: Translate): readonly ComponentReference[] { return [
     {id: "legal-links", title: "LegalLinks", description: t("legal.preview"), keywords: ["impressum", "privacy", "legal", "footer"], wide: true},
     {id:"2d-lab", title:"2D Lab", description:t("lab2d.previewDescription"), keywords:["2d-lab","vertices","edges","drawing","2d","punkte","kanten"], wide:true},
+    {id: "timeline", title: "Timeline", description: t("core.timelineDescription"), keywords: ["timeline", "milestone", "chronology", "zeit", "verlauf"], wide: true},
     {id: "range-slider", title: "RangeSlider", description: t("core.rangeSliderDescription"), keywords: ["range", "slider", "min", "max"]},
     {id: "tabs", title: "Tabs", description: t("core.tabsDescription"), keywords: ["tabs", "navigation", "content"], wide: true},
     {id: "button", title: "Button", description: t("core.primaryActions"), keywords: ["buttons", "knopf", "aktion"]},
@@ -70,6 +73,15 @@ function RangePreview() {
         min={1} max={20} value={value} onChange={setValue} />;
 }
 
+function TimelinePreview() {
+    const {t} = useI18n();
+    return <><Timeline label={t("core.timelineLabel")} currentItemId="preview-progress" items={[
+        {id:"preview-request", label:<time dateTime="2030-12-01">01.12.2030</time>, content:<p>{t("core.timelineFirst")}</p>},
+        {id:"preview-progress", label:<time dateTime="2030-12-02">02.12.2030</time>, content:<><strong>{t("core.timelineSecond")}</strong><p>{t("core.timelineContent")}</p></>},
+        {id:"preview-complete", label:<time dateTime="2030-12-03">03.12.2030</time>, content:<p>{t("core.timelineLast")}</p>},
+    ]} /><p>{t("core.timelineTokens")}</p></>;
+}
+
 function TabsPreview() {
     const {t} = useI18n();
     return <Tabs label={t("core.tabsLabel")} items={[
@@ -84,6 +96,7 @@ function DesignTab() {
         <section className={styles.section}><h2>2D Lab</h2><Lab2DPreview /></section>
         <section className={styles.section}><h2>RangeSlider</h2><RangePreview /></section>
         <section className={styles.section}><h2>Tabs</h2><TabsPreview /></section>
+        <section className={styles.section}><h2>Timeline</h2><p>{t("core.timelineDescription")}</p><TimelinePreview /></section>
         <section className={styles.section}>
             <h2>{t("core.colors")}</h2><p className={styles.intro}>{t("core.colorsDescription")}</p>
             <div className={styles.colorGrid}>{colors.map(color => <article className={styles.colorCard} key={color}><div className={styles.swatch} style={{background: `var(--color-${color})`}} /><strong>{color}</strong><code>--color-{color}</code></article>)}</div>
@@ -113,6 +126,7 @@ function ComponentGallery({references}: Readonly<{references: readonly Component
         {reference.id === "2d-lab" && <Lab2DPreview />}
         {reference.id === "range-slider" && <RangePreview />}
         {reference.id === "tabs" && <TabsPreview />}
+        {reference.id === "timeline" && <TimelinePreview />}
         {reference.id === "button" && <div className={styles.demoRow}><Button variant="primary">Primary</Button><Button>Secondary</Button><Button disabled>Disabled</Button></div>}
         {reference.id === "card" && <Card title="Project Card" description={t("core.previewCardDescription")} />}
         {reference.id === "grid" && <Grid cardWidth={70} gap={8}>{[1, 2, 3].map(item => <div className={styles.gridItem} key={item}>{item}</div>)}</Grid>}

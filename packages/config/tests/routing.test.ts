@@ -39,7 +39,7 @@ describe("independent app routing", () => {
         expect(routes).toContainEqual({source:"/apps/inside-llm/:path*", destination:"http://127.0.0.1:10039/apps/inside-llm/:path*"});
         expect(routes).toContainEqual({source:"/apps/tierlist-matcher/:path*", destination:"http://127.0.0.1:10040/apps/tierlist-matcher/:path*"});
         expect(routes).toContainEqual({source:"/apps/thailand/:path*", destination:"http://127.0.0.1:10041/apps/thailand/:path*"});
-        expect(routes).toHaveLength(11);
+        expect(routes).toHaveLength(12);
     });
 
     it("preserves the old developer-reference URL", async () => {
