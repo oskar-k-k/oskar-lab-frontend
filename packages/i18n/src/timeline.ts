@@ -1,6 +1,8 @@
 export const timelineEn = {
   "core.timelineDescription":
-    "An ordered, responsive sequence with date labels, connected markers and custom content. Callers control sorting and grouping.",
+    "A responsive timeline with cards or alternating image bubbles. Activate a bubble to reveal details; only one is open at a time. Callers own ordering and content.",
+  "core.timelineBubbles": "Bubble view",
+  "core.timelineCards": "Card view",
   "core.timelineLabel": "Example milestones",
   "core.timelineFirst": "Request received",
   "core.timelineSecond": "In progress",
@@ -8,11 +10,13 @@ export const timelineEn = {
   "core.timelineContent":
     "Each milestone can contain headings, notes and actions.",
   "core.timelineTokens":
-    "Theme with --timeline-text, --timeline-muted, --timeline-line, --timeline-current and --timeline-label-width. Defaults use global design tokens.",
+    "Theme with --timeline-text, --timeline-muted, --timeline-line, --timeline-current, --timeline-label-width, --timeline-background and --timeline-bubble. Defaults use global design tokens.",
 } as const;
 export const timelineDe: Record<keyof typeof timelineEn, string> = {
   "core.timelineDescription":
-    "Eine geordnete, responsive Folge mit Datumsangaben, verbundenen Markierungen und eigenen Inhalten. Sortierung und Gruppierung bestimmt die nutzende App.",
+    "Eine responsive Timeline mit Karten oder abwechselnden Bildkreisen. Ein Kreis öffnet die Details; jeweils einer bleibt offen. Reihenfolge und Inhalte bestimmt die nutzende App.",
+  "core.timelineBubbles": "Kreisansicht",
+  "core.timelineCards": "Kartenansicht",
   "core.timelineLabel": "Beispiel-Meilensteine",
   "core.timelineFirst": "Anfrage erhalten",
   "core.timelineSecond": "In Bearbeitung",
@@ -20,5 +24,5 @@ export const timelineDe: Record<keyof typeof timelineEn, string> = {
   "core.timelineContent":
     "Jeder Meilenstein kann Überschriften, Notizen und Aktionen enthalten.",
   "core.timelineTokens":
-    "Anpassbar mit --timeline-text, --timeline-muted, --timeline-line, --timeline-current und --timeline-label-width. Standardwerte nutzen globale Design-Tokens.",
+    "Anpassbar mit --timeline-text, --timeline-muted, --timeline-line, --timeline-current, --timeline-label-width, --timeline-background und --timeline-bubble. Standardwerte nutzen globale Design-Tokens.",
 };

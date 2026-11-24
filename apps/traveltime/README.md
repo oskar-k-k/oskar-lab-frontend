@@ -53,3 +53,14 @@ boundary, invalid responses, hotel interleaving, offsets/date-only times and sha
 semantics. Check desktop/mobile forms and timeline, loading/empty/error states and keyboard
 focus. Local UI fixtures must be synthetic and ignored; never claim those replace real backend
 permission/storage tests. The backend CI separately validates Flyway with isolated PostgreSQL.
+
+## Timeline presentation
+
+The default reading view uses the shared Timeline `bubbles` variant: alternating circular
+local illustrations around one central rail, with short titles and local date/time labels.
+Native summary/disclosure controls reveal one booking at a time and support keyboard use.
+Owners switch to Edit timeline for the existing expanded card layout and management actions.
+The shared component accepts caller-owned React visuals (including approved local/private
+images) without fetching media itself. TravelTime uses locally authored SVG scenes, never
+external stock photos, maps or automatic document thumbnails. No personal data, API, storage,
+sharing or authorization behavior changes with this presentation update.

@@ -7,6 +7,8 @@ export const travelEn = {
   "travel.denied":
     "You no longer have permission for this action. Reload the trip.",
   "travel.timeline": "Trip timeline",
+  "travel.editTimeline": "Edit timeline",
+  "travel.doneEditing": "Done editing",
   "travel.title": "Your journey, beautifully in order.",
   "travel.intro": "Everything you have booked. One calm timeline.",
   "travel.trips": "Your trips",
@@ -108,6 +110,8 @@ export const travelDe: Record<keyof typeof travelEn, string> = {
   "travel.denied":
     "Du hast für diese Aktion keine Berechtigung mehr. Lade die Reise neu.",
   "travel.timeline": "Reise-Timeline",
+  "travel.editTimeline": "Timeline bearbeiten",
+  "travel.doneEditing": "Bearbeitung beenden",
   "travel.title": "Eure Reise. Alles zur richtigen Zeit.",
   "travel.intro": "Alles, was ihr gebucht habt. In einer ruhigen Timeline.",
   "travel.trips": "Eure Reisen",

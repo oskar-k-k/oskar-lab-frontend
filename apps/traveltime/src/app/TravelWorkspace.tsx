@@ -36,6 +36,7 @@ function TravelWorkspaceContent() {
     [entries, setEntries] = useState<Entry[]>([]);
   const requestGeneration = useRef(0);
   const documentGeneration = useRef(0);
+  const [editingTimeline, setEditingTimeline] = useState(false);
   const [success, setSuccess] = useState(false);
   const [now, setNow] = useState(0);
   const [loading, setLoading] = useState(true),
@@ -198,7 +199,9 @@ function TravelWorkspaceContent() {
         <a href="/account">{label("accountLink")}</a>
       </header>
       <main className={styles.main}>
-        <section className={styles.hero}>
+        <section
+          className={trip && !editingTimeline ? styles.tripHero : styles.hero}
+        >
           <p className={styles.eyebrow}>TRAVELTIME</p>
           <h1>{trip ? trip.title : label("title")}</h1>
           <p>
@@ -258,6 +261,7 @@ function TravelWorkspaceContent() {
                       window.history.replaceState(null, "", appPath("/"));
                       setNewTrip(false);
                       setTrip(null);
+                      setEditingTimeline(false);
                       setSelected(null);
                       setEdit(undefined);
                       void loadTrips();
@@ -266,6 +270,20 @@ function TravelWorkspaceContent() {
                     {label("back")}
                   </button>
                   {trip.canEdit && (
+                    <button
+                      aria-pressed={editingTimeline}
+                      onClick={() => {
+                        setEditingTimeline(!editingTimeline);
+                        setNewTrip(false);
+                        setEdit(undefined);
+                        setShare(false);
+                        setSelected(null);
+                      }}
+                    >
+                      {label(editingTimeline ? "doneEditing" : "editTimeline")}
+                    </button>
+                  )}
+                  {trip.canEdit && editingTimeline && (
                     <>
                       <button
                         className={styles.primary}
@@ -553,7 +571,8 @@ function TravelWorkspaceContent() {
                 entries={entries}
                 now={now}
                 loading={loading}
-                editable={trip.canEdit}
+                editing={editingTimeline}
+                editable={trip.canEdit && editingTimeline}
                 disabled={writeDisabled}
                 onDocuments={(entry) => void showDocuments(entry)}
                 onEdit={setEdit}

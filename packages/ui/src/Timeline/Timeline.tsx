@@ -9,6 +9,10 @@ export type TimelineItem = Readonly<{
   label: ReactNode;
   /** Arbitrary content, including headings, connected endpoints and actions. */
   content: ReactNode;
+  /** Short visible heading for the collapsible bubble variant. */
+  title?: ReactNode;
+  /** Optional decorative image or illustration inside the circular bubble. No network requests are made by Timeline. */
+  visual?: ReactNode;
 }>;
 
 /** Properties for a responsive, ordered sequence of milestones. */
@@ -21,19 +25,23 @@ export type TimelineProps = Readonly<{
   currentItemId?: string;
   /** Optional scoped theme or layout class; see the Timeline CSS variables. */
   className?: string;
+  /** Cards show content immediately; bubbles alternate around a central rail and reveal content on activation. */
+  variant?: "cards" | "bubbles";
 }>;
 
-/** Renders an accessible vertical timeline without project logic or client-side state. */
+/** Renders an accessible vertical timeline with cards or native keyboard-accessible bubble disclosures. */
 export default function Timeline({
   items,
   label,
   currentItemId,
   className = "",
+  variant = "cards",
 }: TimelineProps) {
+  const group = items.length ? `timeline-${items[0].id}` : undefined;
   return (
     <ol
       role="list"
-      className={`${styles.timeline} ${className}`}
+      className={`${styles.timeline} ${variant === "bubbles" ? styles.bubbles : ""} ${className}`}
       aria-label={label}
     >
       {items.map((item) => (
@@ -43,11 +51,30 @@ export default function Timeline({
           id={item.id}
           aria-current={item.id === currentItemId ? "step" : undefined}
         >
-          <div className={styles.label}>{item.label}</div>
-          <div className={styles.track} aria-hidden="true">
-            <span className={styles.marker} />
-          </div>
-          <div className={styles.content}>{item.content}</div>
+          {variant === "bubbles" ? (
+            <details className={styles.disclosure} name={group}>
+              <summary className={styles.summary}>
+                <span className={styles.bubble} aria-hidden="true">
+                  {item.visual ?? <span className={styles.fallback} />}
+                </span>
+                {item.title != null && (
+                  <span className={styles.bubbleLabel}>{item.label}</span>
+                )}
+                <span className={styles.bubbleTitle}>
+                  {item.title ?? item.label}
+                </span>
+              </summary>
+              <div className={styles.revealed}>{item.content}</div>
+            </details>
+          ) : (
+            <>
+              <div className={styles.label}>{item.label}</div>
+              <div className={styles.track} aria-hidden="true">
+                <span className={styles.marker} />
+              </div>
+              <div className={styles.content}>{item.content}</div>
+            </>
+          )}
         </li>
       ))}
     </ol>

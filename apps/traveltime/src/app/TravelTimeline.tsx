@@ -4,6 +4,7 @@ import type { TranslationKey } from "@oskar-lab/i18n/messages";
 import type { Entry } from "./TravelWorkspace";
 import { timelineRows, nextTimelineRow } from "../model/timeline";
 import Timeline from "@oskar-lab/ui/Timeline/Timeline";
+import BookingVisual from "./BookingVisual";
 import styles from "./Travel.module.css";
 /** Renders connected transports and interleaved stay points without owning API state. */
 export default function TravelTimeline({
@@ -11,6 +12,7 @@ export default function TravelTimeline({
   now,
   loading,
   editable,
+  editing = false,
   disabled,
   onDocuments,
   onEdit,
@@ -20,6 +22,7 @@ export default function TravelTimeline({
   now: number;
   loading: boolean;
   editable: boolean;
+  editing?: boolean;
   disabled: boolean;
   onDocuments: (entry: Entry) => void;
   onEdit: (entry: Entry) => void;
@@ -38,7 +41,7 @@ export default function TravelTimeline({
   const next = nextTimelineRow(rows, now);
   return (
     <>
-      {next && (
+      {editing && next && (
         <a
           className={styles.next}
           href={`#booking-${next.entry.id}-${next.points[0].role}`}
@@ -48,6 +51,7 @@ export default function TravelTimeline({
         </a>
       )}
       <Timeline
+        variant={editing ? "cards" : "bubbles"}
         className={styles.timeline}
         label={label("timeline")}
         currentItemId={
@@ -57,12 +61,42 @@ export default function TravelTimeline({
           const point = row.points[0];
           return {
             id: `booking-${row.entry.id}-${point.role}`,
+            title: (
+              <>
+                {row.entry.title}
+                {row.points.length === 1 && (
+                  <small className={styles.stationRole}>
+                    {label(point.role)}
+                  </small>
+                )}
+              </>
+            ),
+            visual: <BookingVisual type={row.entry.type} />,
             label:
-              index === 0 || rows[index - 1].points[0].date !== point.date ? (
-                <time dateTime={point.date}>{date(point.date)}</time>
+              !editing ||
+              index === 0 ||
+              rows[index - 1].points[0].date !== point.date ? (
+                <time
+                  dateTime={point.date + (point.time ? "T" + point.time : "")}
+                >
+                  {new Intl.DateTimeFormat(locale, {
+                    day: "numeric",
+                    month: "short",
+                    timeZone: "UTC",
+                  }).format(new Date(point.date + "T12:00:00Z"))}
+                  {point.time
+                    ? " · " +
+                      (point.timeMeaning !== "EXACT"
+                        ? label(point.timeMeaning) + " "
+                        : "") +
+                      point.time.slice(0, 5)
+                    : ""}
+                </time>
               ) : null,
             content: (
-              <article className={styles.card}>
+              <article
+                className={editing ? styles.card : styles.bookingDetails}
+              >
                 <div className={styles.eyebrow}>
                   {label(row.entry.type)} ·{" "}
                   {row.points.length === 1
