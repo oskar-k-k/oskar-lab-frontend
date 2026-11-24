@@ -79,7 +79,7 @@ function TimelinePreview() {
     const visual=<svg viewBox="0 0 120 120" width="120" height="120" aria-hidden="true"><path fill="var(--color-primary-soft)" d="M0 0h120v120H0z"/><circle cx="86" cy="30" r="14" fill="var(--color-accent-yellow)"/><path d="m0 110 40-70 29 42 18-25 33 53" fill="var(--color-primary)"/><path d="m24 68 16-28 19 28-18-7Z" fill="var(--color-text)"/></svg>;
     return <><div className={styles.demoRow}><button type="button" aria-pressed={bubbles} onClick={()=>setBubbles(true)}>{t("core.timelineBubbles")}</button><button type="button" aria-pressed={!bubbles} onClick={()=>setBubbles(false)}>{t("core.timelineCards")}</button></div>
     <Timeline label={t("core.timelineLabel")} variant={bubbles ? "bubbles" : "cards"} currentItemId="preview-progress" items={[
-        {id:"preview-request", title:t("core.timelineFirst"), visual, label:<time dateTime="2030-12-01">01.12.2030</time>, content:<p>{t("core.timelineContent")}</p>},
+        {id:"preview-request", title:t("core.timelineFirst"), visual, label:<time dateTime="2030-12-01">01.12.2030</time>, content:<p>{t("core.timelineContent")}</p>, connectionLabel:t("core.timelineConnection"), end:{id:"preview-connected",title:t("core.timelineSecond"),visual,label:<time dateTime="2030-12-02">02.12.2030</time>,content:<p>{t("core.timelineContent")}</p>}},
         {id:"preview-progress", title:t("core.timelineSecond"), visual, label:<time dateTime="2030-12-02">02.12.2030</time>, content:<><strong>{t("core.timelineSecond")}</strong><p>{t("core.timelineContent")}</p></>},
         {id:"preview-complete", title:t("core.timelineLast"), visual, label:<time dateTime="2030-12-03">03.12.2030</time>, content:<p>{t("core.timelineContent")}</p>},
     ]} /><p>{t("core.timelineTokens")}</p></>;

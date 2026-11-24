@@ -2,7 +2,11 @@
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import type { TranslationKey } from "@oskar-lab/i18n/messages";
 import type { Entry } from "./TravelWorkspace";
-import { timelineRows, nextTimelineRow } from "../model/timeline";
+import {
+  timelineRows,
+  nextTimelineRow,
+  flightDuration,
+} from "../model/timeline";
 import Timeline from "@oskar-lab/ui/Timeline/Timeline";
 import BookingVisual from "./BookingVisual";
 import styles from "./Travel.module.css";
@@ -59,12 +63,24 @@ export default function TravelTimeline({
         }
         items={rows.map((row, index) => {
           const point = row.points[0];
-          return {
+          const paired =
+            !editing && row.entry.type === "FLIGHT" && row.points.length === 2;
+          const stationLabel = (p: Entry["points"][number]) => (
+            <time dateTime={p.date + (p.time ? "T" + p.time : "")}>
+              {new Intl.DateTimeFormat(locale, {
+                day: "numeric",
+                month: "short",
+                timeZone: "UTC",
+              }).format(new Date(p.date + "T12:00:00Z"))}
+              {p.time ? " · " + p.time.slice(0, 5) : ""}
+            </time>
+          );
+          const item = {
             id: `booking-${row.entry.id}-${point.role}`,
             title: (
               <>
-                {row.entry.title}
-                {row.points.length === 1 && (
+                {paired ? point.placeName : row.entry.title}
+                {(row.points.length === 1 || paired) && (
                   <small className={styles.stationRole}>
                     {label(point.role)}
                   </small>
@@ -154,6 +170,28 @@ export default function TravelTimeline({
                 </div>
               </article>
             ),
+          };
+          if (!paired) return item;
+          const arrival = row.points[1];
+          return {
+            ...item,
+            label: stationLabel(point),
+            connectionLabel:
+              flightDuration(row.entry, locale) ?? label("unknownDuration"),
+            end: {
+              id: `booking-${row.entry.id}-${arrival.role}`,
+              title: (
+                <>
+                  {arrival.placeName}
+                  <small className={styles.stationRole}>
+                    {label(arrival.role)}
+                  </small>
+                </>
+              ),
+              label: stationLabel(arrival),
+              visual: <BookingVisual type={row.entry.type} />,
+              content: item.content,
+            },
           };
         })}
       />

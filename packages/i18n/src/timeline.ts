@@ -1,9 +1,10 @@
 export const timelineEn = {
   "core.timelineDescription":
-    "A responsive timeline with cards or alternating image bubbles. Activate a bubble to reveal details; only one is open at a time. Callers own ordering and content.",
+    "A responsive timeline with cards or alternating image bubbles. Activate a bubble to reveal details; only one is open at a time. Optional paired stations share one side and a labeled downward arrow. Callers own ordering and content.",
   "core.timelineBubbles": "Bubble view",
   "core.timelineCards": "Card view",
   "core.timelineLabel": "Example milestones",
+  "core.timelineConnection": "2 hr 30 min",
   "core.timelineFirst": "Request received",
   "core.timelineSecond": "In progress",
   "core.timelineLast": "Completed",
@@ -14,10 +15,11 @@ export const timelineEn = {
 } as const;
 export const timelineDe: Record<keyof typeof timelineEn, string> = {
   "core.timelineDescription":
-    "Eine responsive Timeline mit Karten oder abwechselnden Bildkreisen. Ein Kreis öffnet die Details; jeweils einer bleibt offen. Reihenfolge und Inhalte bestimmt die nutzende App.",
+    "Eine responsive Timeline mit Karten oder abwechselnden Bildkreisen. Ein Kreis öffnet die Details; jeweils einer bleibt offen. Optionale Stationspaare teilen eine Seite und einen beschrifteten Abwärtspfeil. Reihenfolge und Inhalte bestimmt die nutzende App.",
   "core.timelineBubbles": "Kreisansicht",
   "core.timelineCards": "Kartenansicht",
   "core.timelineLabel": "Beispiel-Meilensteine",
+  "core.timelineConnection": "2 Std. 30 Min.",
   "core.timelineFirst": "Anfrage erhalten",
   "core.timelineSecond": "In Bearbeitung",
   "core.timelineLast": "Abgeschlossen",

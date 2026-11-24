@@ -34,3 +34,22 @@ export function nextTimelineRow(
     return point.date >= today;
   });
 }
+
+/** Uses backend-computed elapsed time, including time-zone changes; unknown durations remain explicit. */
+export function flightDuration(entry: Entry, locale: string): string | null {
+  if (entry.durationMinutes === null) return null;
+  const hours = Math.floor(entry.durationMinutes / 60);
+  const minutes = entry.durationMinutes % 60;
+  const format = (value: number, unit: "hour" | "minute") =>
+    new Intl.NumberFormat(locale, {
+      style: "unit",
+      unit,
+      unitDisplay: "short",
+    }).format(value);
+  return [
+    hours > 0 ? format(hours, "hour") : null,
+    minutes > 0 || hours === 0 ? format(minutes, "minute") : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}

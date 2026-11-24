@@ -75,3 +75,40 @@ it("renders bubble details collapsed with a shared exclusive disclosure group an
     html.indexOf("Private details"),
   );
 });
+
+it("keeps paired endpoints inside one timeline position with an accessible connection label", () => {
+  const html = renderToStaticMarkup(
+    createElement(Timeline, {
+      label: "Connected journey",
+      variant: "bubbles",
+      items: [
+        {
+          id: "departure",
+          label: "Dec 1, 20:00",
+          title: "Departure",
+          content: "Departure details",
+          connectionLabel: "10 hr 20 min",
+          end: {
+            id: "arrival",
+            label: "Dec 2, 12:20",
+            title: "Arrival",
+            content: "Arrival details",
+          },
+        },
+        {
+          id: "hotel",
+          label: "Dec 2",
+          title: "Hotel",
+          content: "Stay details",
+        },
+      ],
+    }),
+  );
+  expect(html.match(/<li /g)).toHaveLength(2);
+  expect(html.match(/<details /g)).toHaveLength(3);
+  expect(html).toContain('id="arrival"');
+  expect(html.indexOf("Departure")).toBeLessThan(html.indexOf("10 hr 20 min"));
+  expect(html.indexOf("10 hr 20 min")).toBeLessThan(html.indexOf("Arrival"));
+  expect(html.indexOf("Arrival")).toBeLessThan(html.indexOf('id="hotel"'));
+  expect(html).not.toMatch(/<details[^>]* open/);
+});

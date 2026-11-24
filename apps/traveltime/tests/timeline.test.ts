@@ -1,5 +1,9 @@
 import { expect, it } from "vitest";
-import { timelineRows, nextTimelineRow } from "../src/model/timeline";
+import {
+  timelineRows,
+  nextTimelineRow,
+  flightDuration,
+} from "../src/model/timeline";
 import type { Entry } from "../src/app/TravelWorkspace";
 it("interleaves an activity with connected hotel endpoints while keeping flights grouped", () => {
   const point = (role: string, date: string) => ({
@@ -84,4 +88,13 @@ it("uses offsets across time zones and keeps date-only events available for thei
   expect(
     nextTimelineRow(rows, Date.parse("2030-12-03T17:01:00Z")),
   ).toBeUndefined();
+});
+
+it("formats the backend elapsed flight duration instead of subtracting local clock times", () => {
+  const entry = { durationMinutes: 620 } as Entry;
+  expect(flightDuration(entry, "en")).toMatch(/10.*20/);
+  expect(flightDuration(entry, "de")).toMatch(/10.*20/);
+  expect(flightDuration({ ...entry, durationMinutes: 60 }, "en")).toMatch(/1/);
+  expect(flightDuration({ ...entry, durationMinutes: null }, "en")).toBeNull();
+  expect(flightDuration({ ...entry, durationMinutes: 0 }, "en")).toMatch(/0/);
 });

@@ -99,6 +99,7 @@ export const travelEn = {
     "The upload was not confirmed. Check the document list before trying again.",
   "travel.fileTooLarge": "Choose a PDF, PNG or JPEG up to 5 MiB.",
   "travel.duration": "Travel time",
+  "travel.unknownDuration": "Duration to be confirmed",
   "travel.dateOnly": "Day only",
 } as const;
 export const travelDe: Record<keyof typeof travelEn, string> = {
@@ -203,5 +204,6 @@ export const travelDe: Record<keyof typeof travelEn, string> = {
     "Der Upload wurde nicht bestätigt. Prüfe vor einem erneuten Versuch die Dokumentenliste.",
   "travel.fileTooLarge": "Wähle eine PDF-, PNG- oder JPEG-Datei bis 5 MiB.",
   "travel.duration": "Reisedauer",
+  "travel.unknownDuration": "Dauer noch unbekannt",
   "travel.dateOnly": "Nur Tagesangabe",
 };

@@ -64,3 +64,10 @@ The shared component accepts caller-owned React visuals (including approved loca
 images) without fetching media itself. TravelTime uses locally authored SVG scenes, never
 external stock photos, maps or automatic document thumbnails. No personal data, API, storage,
 sharing or authorization behavior changes with this presentation update.
+
+Flights in reading view have separate departure and arrival bubbles on the same side, linked
+by a dashed downward arrow with backend-computed elapsed duration. Both display their own
+local date, time and place and open the same booking details. The domain keeps one atomic
+flight entry; edit mode keeps its combined card. Unknown durations are labeled, never
+inferred by subtracting local clock hours. The shared Timeline exposes neutral `end` and
+`connectionLabel` slots for the same pattern in other apps; no data/storage changes occur.

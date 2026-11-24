@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import styles from "./Timeline.module.css";
 
 /** A neutral timeline item; callers own ordering, grouping and localized content. */
-export type TimelineItem = Readonly<{
+export type TimelineStation = Readonly<{
   /** Stable, document-unique ID, also usable as an anchor target. */
   id: string;
   /** Date, time or milestone label displayed alongside the content. */
@@ -11,9 +11,46 @@ export type TimelineItem = Readonly<{
   content: ReactNode;
   /** Short visible heading for the collapsible bubble variant. */
   title?: ReactNode;
-  /** Optional decorative image or illustration inside the circular bubble. No network requests are made by Timeline. */
+  /** Decorative image or illustration; callers own its media source and access policy. */
   visual?: ReactNode;
 }>;
+
+/** One timeline position, optionally with a connected second bubble on the same side. */
+export type TimelineItem = TimelineStation &
+  Readonly<{
+    /** Optional second station in bubble view; both endpoints share one alternating position. */
+    end?: TimelineStation;
+    /** Localized duration or other relationship label on the downward connector. */
+    connectionLabel?: ReactNode;
+  }>;
+
+/** Renders one independently expandable station within the shared disclosure group. */
+function BubbleStation({
+  station,
+  group,
+  anchor,
+}: {
+  station: TimelineStation;
+  group: string | undefined;
+  anchor?: string;
+}) {
+  return (
+    <details id={anchor} className={styles.disclosure} name={group}>
+      <summary className={styles.summary}>
+        <span className={styles.bubble} aria-hidden="true">
+          {station.visual ?? <span className={styles.fallback} />}
+        </span>
+        {station.title != null && (
+          <span className={styles.bubbleLabel}>{station.label}</span>
+        )}
+        <span className={styles.bubbleTitle}>
+          {station.title ?? station.label}
+        </span>
+      </summary>
+      <div className={styles.revealed}>{station.content}</div>
+    </details>
+  );
+}
 
 /** Properties for a responsive, ordered sequence of milestones. */
 export type TimelineProps = Readonly<{
@@ -52,20 +89,23 @@ export default function Timeline({
           aria-current={item.id === currentItemId ? "step" : undefined}
         >
           {variant === "bubbles" ? (
-            <details className={styles.disclosure} name={group}>
-              <summary className={styles.summary}>
-                <span className={styles.bubble} aria-hidden="true">
-                  {item.visual ?? <span className={styles.fallback} />}
-                </span>
-                {item.title != null && (
-                  <span className={styles.bubbleLabel}>{item.label}</span>
-                )}
-                <span className={styles.bubbleTitle}>
-                  {item.title ?? item.label}
-                </span>
-              </summary>
-              <div className={styles.revealed}>{item.content}</div>
-            </details>
+            <div className={styles.stationGroup}>
+              <BubbleStation station={item} group={group} />
+              {item.end && (
+                <>
+                  <div className={styles.connection}>
+                    {item.connectionLabel != null && (
+                      <span>{item.connectionLabel}</span>
+                    )}
+                  </div>
+                  <BubbleStation
+                    station={item.end}
+                    group={group}
+                    anchor={item.end.id}
+                  />
+                </>
+              )}
+            </div>
           ) : (
             <>
               <div className={styles.label}>{item.label}</div>
