@@ -30,11 +30,14 @@ export function createAppConfig(name) {
             ];
         },
         async rewrites() {
-            if (!platform) return [{source:"/api/auth/:path*", destination:`${process.env.AUTH_PLATFORM_URL ?? "http://localhost:10030"}/api/auth/:path*`, basePath:false}];
-            return Object.entries(appPorts).filter(([id]) => id !== name).map(([id, port]) => ({
+            const routes = !platform ? [{source:"/api/auth/:path*", destination:`${process.env.AUTH_PLATFORM_URL ?? "http://localhost:10030"}/api/auth/:path*`, basePath:false}] : Object.entries(appPorts).filter(([id]) => id !== name).map(([id, port]) => ({
                 source:`/apps/${id}/:path*`,
                 destination:`${process.env[`APP_${id.replaceAll("-", "_").toUpperCase()}_URL`] ?? `http://127.0.0.1:${port}`}/apps/${id}/:path*`,
             }));
+            if (process.env.ORBIT_ASSETS_ENABLED !== "true") return routes;
+            const assets = platform ? ["/catalog/:path*", "/favicon.ico", "/file.svg", "/globe.svg", "/next.svg", "/vercel.svg", "/window.svg"] : name === "portfolio" ? ["/oskar.jpg"] : [];
+            const backend = process.env.AUTH_BACKEND_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:10081";
+            return {beforeFiles: assets.map(asset => ({source: `${basePath}${asset}`, destination: `${backend}/public-assets/${name}${asset}`, basePath: false})), afterFiles: routes, fallback: []};
         },
     };
 }

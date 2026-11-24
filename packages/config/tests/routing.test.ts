@@ -23,14 +23,16 @@ describe("independent app routing", () => {
         expect(appPath("/api/try-on")).toBe("/api/try-on");
     });
 
-    it("routes each product to its own configurable server", async () => {
+    it.each(["false", "true"])("routes each product to its own configurable server with Orbit assets %s", async enabled => {
+        vi.stubEnv("ORBIT_ASSETS_ENABLED", enabled);
         vi.stubEnv("APP_CHESS_URL", "http://127.0.0.1:12345");
         vi.stubEnv("APP_ROOM_STUDIO_URL", undefined);
         vi.stubEnv("APP_2D_LAB_URL", undefined);
         vi.stubEnv("APP_INSIDE_LLM_URL", undefined);
         vi.stubEnv("APP_TIERLIST_MATCHER_URL", undefined);
         vi.stubEnv("APP_THAILAND_URL", undefined);
-        const routes = await createAppConfig("oskar-lab").rewrites();
+        const configured = await createAppConfig("oskar-lab").rewrites();
+        const routes = Array.isArray(configured) ? configured : configured.afterFiles;
         expect(routes).toContainEqual({source:"/apps/chess/:path*", destination:"http://127.0.0.1:12345/apps/chess/:path*"});
         expect(routes).toContainEqual({source:"/apps/room-studio/:path*", destination:"http://127.0.0.1:10037/apps/room-studio/:path*"});
         expect(routes).toContainEqual({source:"/apps/2d-lab/:path*", destination:"http://127.0.0.1:10038/apps/2d-lab/:path*"});

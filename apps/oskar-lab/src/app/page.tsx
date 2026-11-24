@@ -66,6 +66,6 @@ async function loadRemoteApps() {
 export default async function Home() {
     const loaded = await loadRemoteApps();
     const visible = [...localApps];
-    if (canAccessThailand(await auth())) visible.unshift({id: -11, path: "thailand", title: "Thailand · Unsere Reise", description: "Eure private Reise-Timeline mit Flügen, Erlebnissen und Tickets.", thumbnail: "/apps/thailand/cover"});
+    if (canAccessThailand(await auth())) visible.unshift({id: -11, path: "thailand", title: "Thailand Â· Unsere Reise", description: "Eure private Reise-Timeline mit FlÃ¼gen, Erlebnissen und Tickets.", thumbnail: "/apps/thailand/cover"});
     return <AppsExplorer localApps={visible} {...loaded} initialRemoteApps={loaded.initialRemoteApps.filter(app => app.path !== "thailand")} />;
 }

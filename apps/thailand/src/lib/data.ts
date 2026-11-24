@@ -1,35 +1,59 @@
 import "server-only";
-import {readFile} from "node:fs/promises";
-import path from "node:path";
-import {hasAccess} from "./access";
-import type {Trip} from "./model";
+import {authorizedUser} from "./access";
+import {isTrip, type Trip} from "./model";
 
-/** Signals that authorized travel data cannot currently be loaded. */
+/** Signals unavailable or invalid private data without disclosing storage diagnostics. */
 export class TripDataUnavailableError extends Error {
-    constructor() {
-        super("Private travel data is unavailable");
-        this.name = "TripDataUnavailableError";
-    }
+    constructor() { super("Private travel data is unavailable"); this.name = "TripDataUnavailableError"; }
 }
 
-export const dataDirectory = () => process.env.THAILAND_DATA_DIR ?? path.join(process.cwd(), "private-data");
-/** Authorization happens at the data boundary, including direct document requests. */
-export async function readTrip(): Promise<Trip | null> {
-    if (!await hasAccess()) return null;
-    // Runtime-mounted private files must never be copied into a traced build artifact.
-    try {
-        return JSON.parse(await readFile(/*turbopackIgnore: true*/ path.join(/*turbopackIgnore: true*/ dataDirectory(), "trip.json"), "utf8")) as Trip;
-    } catch (error) {
-        if (error instanceof SyntaxError || (error && typeof error === "object" && "code" in error &&
-            ["ENOENT", "EACCES", "EPERM"].includes(String(error.code)))) {
-            throw new TripDataUnavailableError();
-        }
-        throw error;
-    }
+function backendHeaders() {
+    const secret = process.env.AUTH_BRIDGE_SECRET;
+    if (!secret || secret.length < 32) throw new TripDataUnavailableError();
+    return {"X-Auth-Bridge": secret};
 }
+
+async function privateFile(filename: string, userId: string) {
+    try {
+        const response = await fetch(`${process.env.AUTH_BACKEND_URL ?? "http://localhost:10081"}/internal/storage/legacy/thailand/${encodeURIComponent(filename)}`, {
+            headers: {...backendHeaders(), "X-User-Id": userId}, cache: "no-store", signal: AbortSignal.timeout(15000),
+        });
+        if (!response.ok) throw new TripDataUnavailableError();
+        return response;
+    } catch { throw new TripDataUnavailableError(); }
+}
+
+async function loadTrip(userId: string): Promise<Trip> {
+    try {
+        const value: unknown = await (await privateFile("trip.json", userId)).json();
+        if (!isTrip(value)) throw new TripDataUnavailableError();
+        return value;
+    } catch { throw new TripDataUnavailableError(); }
+}
+
+/** Authorizes before loading the migrated private index; no local-file fallback exists. */
+export async function readTrip(): Promise<Trip | null> {
+    const user = await authorizedUser();
+    return user ? loadTrip(user.id) : null;
+}
+
+/** Resolves an approved document through its private index before accessing OrbitStorage. */
 export async function readDocument(id: string) {
-    const trip = await readTrip();
-    const document = trip?.documents.find(document => document.id === id);
-    if (!document || path.basename(document.filename) !== document.filename) return null;
-    return {document, bytes: await readFile(/*turbopackIgnore: true*/ path.join(/*turbopackIgnore: true*/ dataDirectory(), document.filename))};
+    const user = await authorizedUser();
+    if (!user) return null;
+    const trip = await loadTrip(user.id);
+    const document = trip.documents.find(document => document.id === id);
+    if (!document || /[/\\]|\.\./.test(document.filename)) return null;
+    const response = await privateFile(document.filename, user.id);
+    return {document, bytes: new Uint8Array(await response.arrayBuffer())};
+}
+
+/** Checks migrated-index readiness without requesting private booking content. */
+export async function tripDataReady(): Promise<boolean> {
+    try {
+        const response = await fetch(`${process.env.AUTH_BACKEND_URL ?? "http://localhost:10081"}/internal/storage/legacy/thailand-ready`, {
+            headers: backendHeaders(), cache: "no-store", signal: AbortSignal.timeout(5000),
+        });
+        return response.ok && (await response.json()).ready === true;
+    } catch { return false; }
 }

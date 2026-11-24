@@ -1,32 +1,23 @@
-import {afterEach, beforeEach, expect, it, vi} from "vitest";
-import {mkdtemp, rm, writeFile} from "node:fs/promises";
-import {tmpdir} from "node:os";
-import path from "node:path";
-
+import {beforeEach, expect, it, vi} from "vitest";
 vi.mock("server-only", () => ({}));
+const state = vi.hoisted(() => ({ready: vi.fn()}));
+vi.mock("../src/lib/data", () => ({tripDataReady: state.ready}));
 import {GET} from "../src/app/health/route";
-
-let directory: string;
-beforeEach(async () => {
-    directory = await mkdtemp(path.join(tmpdir(), "thailand-health-"));
-    vi.stubEnv("THAILAND_DATA_DIR", directory);
-});
-afterEach(async () => {
-    vi.unstubAllEnvs();
-    await rm(directory, {recursive: true, force: true});
-});
-
-it("reports readiness when the private index is readable", async () => {
-    await writeFile(path.join(directory, "trip.json"), "{}");
+beforeEach(() => state.ready.mockReset());
+it("reports readiness only when the migrated private index is present", async () => {
+    state.ready.mockResolvedValue(true);
     const response = await GET();
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(await response.text()).toBe("ok");
 });
-
-it("reports a missing index without leaking filesystem details", async () => {
+it("reports a missing migrated index without disclosing private details", async () => {
+    state.ready.mockResolvedValue(false);
     const response = await GET();
     expect(response.status).toBe(503);
-    expect(response.headers.get("cache-control")).toBe("no-store");
     expect(await response.text()).toBe("unavailable");
+});
+it("keeps liveness separate from optional travel-data readiness", async () => {
+    expect((await GET(new Request("http://localhost/health?probe=liveness"))).status).toBe(200);
+    expect(state.ready).not.toHaveBeenCalled();
 });

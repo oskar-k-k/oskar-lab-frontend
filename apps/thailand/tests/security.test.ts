@@ -7,7 +7,7 @@ import React from "react";
 const state = vi.hoisted(()=>({user:vi.fn(), read:vi.fn()}));
 vi.mock("server-only", ()=>({}));
 vi.mock("@oskar-lab/auth/platformUser", ()=>({getCurrentUser:state.user}));
-vi.mock("node:fs/promises", ()=>({readFile:state.read}));
+
 vi.mock("next/navigation", ()=>({notFound:()=>{throw new Error("404");}}));
 import {readTrip, TripDataUnavailableError} from "../src/lib/data";
 import {GET} from "../src/app/documents/[id]/route";
@@ -16,7 +16,11 @@ import Page from "../src/app/page";
 import DataUnavailable from "../src/app/DataUnavailable";
 const allowed = {id:"u",provider:"google",email:"traveler@example.invalid"};
 const document = {id:"ticket", filename:"ticket.pdf",mime:"application/pdf",title:"Private"};
-beforeEach(()=>{vi.stubGlobal("React", React);state.user.mockReset();state.read.mockReset();});
+beforeEach(()=>{
+    vi.stubGlobal("React", React); state.user.mockReset(); state.read.mockReset();
+    vi.stubEnv("AUTH_BRIDGE_SECRET", "synthetic-travel-bridge-at-least-32-characters");
+    vi.stubGlobal("fetch", async () => new Response(await state.read()));
+});
 describe("private data boundary", ()=>{
     it.each([null,{...allowed,email:"someone@gmail.com"},{...allowed,provider:"credentials"}])("never reads private files for a denied identity", async user=>{
         state.user.mockResolvedValue(user);
@@ -51,15 +55,15 @@ describe("private data boundary", ()=>{
         state.read.mockResolvedValue("invalid private content");
         await expect(readTrip()).rejects.toThrow("Private travel data is unavailable");
     });
-    it("does not hide unexpected data failures", async () => {
+    it("renders recovery when the storage connection fails", async () => {
         state.user.mockResolvedValue(allowed);
         const error = Object.assign(new Error("unexpected I/O failure"), {code: "EIO"});
         state.read.mockRejectedValue(error);
-        await expect(Page()).rejects.toBe(error);
+        expect((await Page()).type).toBe(DataUnavailable);
     });
     it("serves a document only after authorization and without cacheable headers",async()=>{
         state.user.mockResolvedValue(allowed);
-        state.read.mockResolvedValueOnce(JSON.stringify({documents:[document]})).mockResolvedValueOnce(Buffer.from("%PDF-private"));
+        state.read.mockResolvedValueOnce(JSON.stringify({start:"2030-12-01",end:"2030-12-10",updated:"2030-11-01",events:[],missing:[],documents:[document]})).mockResolvedValueOnce(Buffer.from("%PDF-private"));
         const response=await GET(new Request("http://localhost/documents/ticket"),{params:Promise.resolve({id:"ticket"})});
         expect(response.status).toBe(200);
         expect(response.headers.get("cache-control")).toContain("private, no-store");
@@ -68,7 +72,7 @@ describe("private data boundary", ()=>{
     });
     it("does not turn arbitrary IDs into file paths",async()=>{
         state.user.mockResolvedValue(allowed);
-        state.read.mockResolvedValue(JSON.stringify({documents:[document]}));
+        state.read.mockResolvedValue(JSON.stringify({start:"2030-12-01",end:"2030-12-10",updated:"2030-11-01",events:[],missing:[],documents:[document]}));
         expect((await GET(new Request("http://localhost"),{params:Promise.resolve({id:"../../.env"})})).status).toBe(404);
         expect(state.read).toHaveBeenCalledTimes(1);
     });

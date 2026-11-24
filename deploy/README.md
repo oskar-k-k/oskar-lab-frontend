@@ -83,3 +83,34 @@ OAuth client with redirect URI `https://oskarlab.dev/api/auth/callback/google`,
 then set `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` in the server-only env file and
 recreate only `platform`. `AUTH_SECRET`, `AUTH_BRIDGE_SECRET` and database password
 are independently generated production credentials. Never commit this file.
+
+## OrbitStorage file delivery
+
+The backend now uses the existing OrbitStorage service through the dedicated
+`oskar-lab-storage` network. `compose.orbit.yml` supplies the read-only configuration
+directory and scoped app credentials; it does not expose the service or its database.
+Keep this overlay, `bin/orbit_storage.py` and the installed deployment script in sync.
+
+Run `python3 /opt/oskar-lab/bin/orbit_storage.py --configure` as the operator for initial
+provisioning/migration. It creates one `oskar-lab/<app>` project per app using the existing
+S3 provider, records keys only under UID-10001-readable `storage-config`, copies source
+assets from the live image and verifies every object by round-trip SHA-256. Original files
+and unrelated projects are retained. Configured cloud region was nbg1.
+
+Frontend deployment automatically runs the script with `--image <exact-revision-image>`
+after loading the image and before replacing any app. A temporary networkless, read-only
+source container supplies candidate assets, so newly added images do not get omitted.
+Failed migration stops rollout. Unchanged objects are verified/reused, not duplicated.
+
+Production rewrites retain existing public image/favicon URLs and route them to the
+backend's explicit public allowlist. Private legacy files use a separate authenticated
+adapter; they are never anonymously exposed. Browser drafts, temporary try-on uploads,
+compiled code/fonts and database backups are not silently copied to app object storage.
+
+The default Thailand health endpoint reports migrated trip-index readiness; rolling
+deployment uses its separate liveness probe. Its original private files are still missing
+on this server, so its process can be live while the real trip remains unavailable.
+
+See the backend `docs/orbit-storage.md` for bytea migration, retry/deletion behavior,
+backup coordination and remaining per-user quota/retention work. Never commit or print
+`storage-config/orbit-projects.json`.

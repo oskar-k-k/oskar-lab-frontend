@@ -17,3 +17,18 @@ The `/apps/thailand/health` readiness endpoint returns 503 until the mounted `tr
 Restore the original `trip.json` and referenced documents into `/opt/oskar-lab/private/thailand` using a secure transfer, with directory permissions 0700, file permissions 0600 and ownership UID/GID 1000. Preserve any existing files; do not create example bookings as a replacement. Verify the health endpoint, then open the timeline and a document using an authorized Google account. No authentication rules, data recipients, retention, analytics, third-party requests or asset licenses change in this fix.
 
 Production diagnosis on 2026-11-24 confirmed `ENOENT` for the mounted trip index. The original private files were not present in this checkout. Restoring them is required before the real timeline can be considered operational.
+
+## OrbitStorage cutover
+
+Runtime file reads now go exclusively through the protected backend storage adapter.
+`AUTH_BACKEND_URL` and the server-only `AUTH_BRIDGE_SECRET` are required. The app never
+receives an OrbitStorage project/admin key. The existing Google-account guard runs before
+requesting the index or documents; the backend additionally verifies the legacy allowlist
+and centrally verified email proof. Existing users must sign in through Google again after
+the backend upgrade. Private JSON is validated before rendering. There is no local-file fallback.
+
+Use the operator migration script `deploy/orbit_storage.py` to migrate the original files
+when they are available. Original source files are retained for recovery, not read at runtime.
+The default health endpoint reports migrated-index readiness; `?probe=liveness` reports
+process liveness only and is used for rolling app deployment. A live process without travel
+data is not an operational travel timeline. The original Thailand files remain missing.

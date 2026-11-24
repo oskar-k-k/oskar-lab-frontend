@@ -1,0 +1,18 @@
+services:
+  backend:
+    environment:
+      ORBIT_BASE_URL: http://orbit-storage-oskar:8080
+      ORBIT_PROJECT_KEYS_FILE: /run/oskar-lab/orbit-projects.json
+      ORBIT_ASSET_MANIFEST: /run/oskar-lab/orbit-assets.json
+    volumes:
+      - ./storage-config:/run/oskar-lab:ro
+    networks: [app, data, storage]
+  thailand:
+    environment:
+      AUTH_BRIDGE_SECRET: ${AUTH_BRIDGE_SECRET}
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/apps/thailand/health?probe=liveness').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+networks:
+  storage:
+    external: true
+    name: oskar-lab-storage

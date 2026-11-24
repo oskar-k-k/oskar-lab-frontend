@@ -48,11 +48,16 @@ Generated types provide compile-time checks, not runtime validation. Keep the ex
 
 ## Security, privacy and dependencies
 
-No new external runtime service, tracking, storage, browser permissions or data recipients are introduced. Requests still go to the configured platform/backend or self-hosted image worker. Existing identity and image data, retention and deletion behavior remain unchanged. Bridge credentials are read only in server modules and are never included in browser client configuration. Schema snapshots contain shapes, not real accounts, cookies, tokens or images. Swagger UI assets are bundled by the backend; its remote validator is disabled and authorization is not persisted.
+The typed clients themselves add no tracking or browser permissions. Durable app files now use the existing OrbitStorage service and Hetzner Object Storage; the backend storage documentation and central privacy notice describe those data flows. Requests still go to the configured platform/backend or self-hosted image worker. Existing identity and image data, retention and deletion behavior remain unchanged. Bridge credentials are read only in server modules and are never included in browser client configuration. Schema snapshots contain shapes, not real accounts, cookies, tokens or images. Swagger UI assets are bundled by the backend; its remote validator is disabled and authorization is not persisted.
 
 `openapi-fetch` and `openapi-typescript` use the MIT license; springdoc and Swagger UI use Apache-2.0. Their package license notices remain in the installed distributions. No new branding or visual assets are introduced.
 
-The npm audit on 2026-10-19 reported eight dependency findings (seven high, one critical) in the existing Next.js/ESLint/image/source-map dependency tree, not in the added OpenAPI packages. The critical advisory concerns `next/og` ImageResponse; the installed Next.js is 16.3.5. This is an unresolved platform release risk: update the affected framework/tooling dependencies and rerun audit and application checks before release. This change does not claim a security-clean production release or a full dependency audit of the Java/Python stacks.
+The storage-proxy rollout on 2026-11-24 updates Next.js and eslint-config-next to 16.4.6,
+with compatible dependency fixes. The resulting npm audit reported zero known findings.
+This replaces the earlier unresolved Next.js/image dependency findings; it is not an assurance
+that the Java/Python stacks or future advisories are vulnerability-free. Relevant upstream
+advisories: [SVG image optimization](https://github.com/advisories/GHSA-2464-fhr4-w9xw) and
+[self-hosted response forwarding](https://github.com/advisories/GHSA-pc58-hwjq-p385).
 
 ## Local Windows test environment
 

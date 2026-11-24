@@ -17,7 +17,7 @@ image="oskar-lab-$component:$revision"
 variable=FRONTEND_IMAGE
 [[ "$component" != backend ]] || variable=BACKEND_IMAGE
 sed -i "s|^$variable=.*|$variable=$image|" "$candidate"
-compose=(docker compose --project-name oskar-lab-production --env-file production.env --env-file "$candidate" -f compose.yml)
+compose=(docker compose --project-name oskar-lab-production --env-file production.env --env-file "$candidate" -f compose.yml -f compose.orbit.yml)
 "${compose[@]}" config --quiet
 # Validate and load before changing any running service; never prune shared Docker state.
 gzip -dc | docker image load
@@ -30,6 +30,7 @@ if [[ "$component" == backend ]]; then
     fi
     "${compose[@]}" up -d --wait --wait-timeout 180 postgres backend
 else
+    python3 "$root/bin/orbit_storage.py" --image "$image"
     # Start the platform first so product authentication calls resolve during health checks.
     "${compose[@]}" up -d --no-deps --wait --wait-timeout 120 platform
     for service in thailand tierlist-matcher inside-llm 2d-lab room-studio workout chess cloth-lab neon-vault portfolio core-design; do
