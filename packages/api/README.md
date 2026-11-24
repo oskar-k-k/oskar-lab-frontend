@@ -11,6 +11,29 @@
 
 `openapi/backend.json` and `openapi/worker.json` are snapshots of the respective servers. `openapi/browser-base.json` describes the Next.js-owned session, registration and try-on proxy endpoints. `openapi/browser.json` additionally derives Workout operations from the backend contract, removes trusted identity headers, and describes browser cookie authentication. Browser paths are relative to the owning app's base URL, not a combined deployment server. Do not hand-edit `src/generated`.
 
+## Travel backend contract
+
+The generated backend types include `/internal/travel/trips` and its entries, viewers and
+attachment endpoints. Use `createBackendClient` only from authenticated server code, with
+`X-User-Id` derived from the platform session and `X-Auth-Bridge` from server configuration.
+Never let browser JSON/headers choose the acting user or include the secret in browser code.
+The owner is the authenticated account; sharing email addresses grant read-only access only
+after central auth has proved their ownership. Existing accounts must sign in through Google
+again after the backend upgrade to establish this proof; password-only signup is insufficient.
+
+Entries contain typed points with local dates, nullable times, zone/offset and explicit
+time-window semantics. Keep parent entry IDs while flattening points for a timeline. The
+trip/entry version returned by GET is required for updates; handle 409 by reloading rather
+than silently overwriting. All lists must respect pagination. Multipart uploads use the
+existing `multipartBody`; PDF/PNG/JPEG are limited to 5 MiB. Downloads are binary and should
+use `parseAs: "blob"`, never JSON conversion. Runtime backend validation and access checks
+remain authoritative; generated TypeScript is not a runtime validator.
+
+Travel has no browser-facing adapter in this change, so its private paths are deliberately
+absent from `BrowserPaths`. The current Thailand UI remains on its legacy JSON source until
+explicitly migrated. No private booking content is embedded in the schema snapshots. See
+the backend's `docs/travel-api.md` for complete payloads, limits and storage/privacy details.
+
 ```ts
 import {createBrowserClient} from "@oskar-lab/api/client";
 

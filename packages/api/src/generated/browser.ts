@@ -121,7 +121,7 @@ export interface paths {
         };
         get: operations["list_2"];
         put?: never;
-        post: operations["create"];
+        post: operations["create_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -164,6 +164,13 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Action: {
+            action?: string;
+            /** Format: int32 */
+            round?: number;
+            /** Format: int32 */
+            row?: number;
+        };
         AppEntity: {
             /** Format: date-time */
             createdAt: string;
@@ -174,6 +181,14 @@ export interface components {
             title: string | null;
             /** Format: date-time */
             updatedAt: string;
+        };
+        Create: {
+            category?: string;
+            extraWords?: string[];
+            name?: string;
+            /** Format: int32 */
+            rounds?: number;
+            rows?: string[];
         };
         Entry: {
             /** Format: uuid */
@@ -206,6 +221,9 @@ export interface components {
         History: {
             entries: components["schemas"]["Log"][];
             hasMore: boolean;
+        };
+        Join: {
+            name?: string;
         };
         LinkRequired: {
             linkRequired: boolean;
@@ -313,6 +331,99 @@ export interface components {
             empty?: boolean;
             sorted?: boolean;
             unsorted?: boolean;
+        };
+        TravelAttachment: {
+            /** Format: uuid */
+            entryId: string;
+            filename: string;
+            /** Format: uuid */
+            id: string;
+            mediaType: string;
+            /** @enum {string|null} */
+            pointRole: "DEPARTURE" | "ARRIVAL" | "CHECK_IN" | "CHECK_OUT" | "START" | "END" | null;
+            /** Format: int64 */
+            size: number;
+        };
+        TravelEntry: {
+            /** Format: int64 */
+            durationMinutes: number | null;
+            /** Format: uuid */
+            id: string;
+            notes: string;
+            points: components["schemas"]["TravelPoint"][];
+            reference: string;
+            title: string;
+            /** Format: uuid */
+            tripId: string;
+            /** @enum {string} */
+            type: "FLIGHT" | "BOAT" | "TRAIN" | "BUS" | "TRANSFER" | "HOTEL" | "APARTMENT" | "ACTIVITY" | "RESTAURANT" | "TOUR";
+            /** Format: int64 */
+            version: number;
+        };
+        TravelEntryPage: {
+            entries: components["schemas"]["TravelEntry"][];
+            hasMore: boolean;
+        };
+        TravelInviteViewer: {
+            email: string;
+        };
+        TravelPoint: {
+            address: string;
+            /** Format: date */
+            date: string;
+            placeName: string;
+            /** @enum {string} */
+            role: "DEPARTURE" | "ARRIVAL" | "CHECK_IN" | "CHECK_OUT" | "START" | "END";
+            /** Format: time-local */
+            time: string | null;
+            /** @enum {string} */
+            timeMeaning: "EXACT" | "NOT_BEFORE" | "NOT_AFTER" | "UNSPECIFIED";
+            timeZone: string;
+            utcOffset: string | null;
+        };
+        TravelSaveEntry: {
+            notes?: string;
+            points: components["schemas"]["TravelPoint"][];
+            reference?: string;
+            title: string;
+            /** @enum {string} */
+            type: "FLIGHT" | "BOAT" | "TRAIN" | "BUS" | "TRANSFER" | "HOTEL" | "APARTMENT" | "ACTIVITY" | "RESTAURANT" | "TOUR";
+            /** Format: int64 */
+            version: number;
+        };
+        TravelSaveTrip: {
+            /** Format: date */
+            endDate: string;
+            notes?: string;
+            /** Format: date */
+            startDate: string;
+            title: string;
+            /** Format: int64 */
+            version: number;
+        };
+        TravelTrip: {
+            canEdit: boolean;
+            /** Format: date */
+            endDate: string;
+            /** Format: uuid */
+            id: string;
+            notes: string;
+            /** Format: uuid */
+            ownerId: string;
+            /** Format: date */
+            startDate: string;
+            title: string;
+            /** Format: int64 */
+            version: number;
+        };
+        TravelTripPage: {
+            hasMore: boolean;
+            trips: components["schemas"]["TravelTrip"][];
+        };
+        TravelViewer: {
+            email: string;
+            /** Format: uuid */
+            id: string;
         };
     };
     responses: never;
@@ -556,6 +667,28 @@ export interface operations {
                 };
             };
             /** @description Request rejected; code is safe for localized feedback */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
             429: {
                 headers: {
                     [name: string]: unknown;
@@ -636,6 +769,28 @@ export interface operations {
             };
             /** @description Request rejected; code is safe for localized feedback */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
+            415: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -736,6 +891,28 @@ export interface operations {
                 };
             };
             /** @description Request rejected; code is safe for localized feedback */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
             429: {
                 headers: {
                     [name: string]: unknown;
@@ -824,6 +1001,28 @@ export interface operations {
                 };
             };
             /** @description Request rejected; code is safe for localized feedback */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
             429: {
                 headers: {
                     [name: string]: unknown;
@@ -836,7 +1035,7 @@ export interface operations {
             };
         };
     };
-    create: {
+    create_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -904,6 +1103,28 @@ export interface operations {
             };
             /** @description Request rejected; code is safe for localized feedback */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
+            415: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -992,6 +1213,28 @@ export interface operations {
             };
             /** @description Request rejected; code is safe for localized feedback */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
+            415: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1094,6 +1337,28 @@ export interface operations {
                 };
             };
             /** @description Request rejected; code is safe for localized feedback */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
             429: {
                 headers: {
                     [name: string]: unknown;
@@ -1170,6 +1435,28 @@ export interface operations {
             };
             /** @description Request rejected; code is safe for localized feedback */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            /** @description Request rejected; code is safe for localized feedback */
+            415: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -3,6 +3,20 @@ import {createBackendClient, createBrowserClient, multipartBody} from "../src/cl
 
 afterEach(() => vi.unstubAllGlobals());
 
+it("uses generated travel contracts for trip creation without accepting an owner email", async () => {
+    const fetcher = vi.fn().mockResolvedValue(Response.json({id: "trip", canEdit: true}, {status: 201}));
+    vi.stubGlobal("fetch", fetcher);
+    await createBackendClient({baseUrl: "http://backend.invalid", headers: {"X-Auth-Bridge": "test-only"}})
+        .POST("/internal/travel/trips", {
+            params: {header: {"X-User-Id": "verified-account"}},
+            body: {title: "Example journey", startDate: "2030-12-01", endDate: "2030-12-10", version: 0},
+        });
+    const request = fetcher.mock.calls[0][0] as Request;
+    expect(request.url).toBe("http://backend.invalid/internal/travel/trips");
+    expect(request.headers.get("X-User-Id")).toBe("verified-account");
+    expect(await request.json()).toEqual({title: "Example journey", startDate: "2030-12-01", endDate: "2030-12-10", version: 0});
+});
+
 it("serializes generated paths, query parameters and server identity headers", async () => {
     const fetcher = vi.fn().mockResolvedValue(Response.json({entries: [], hasMore: false}));
     vi.stubGlobal("fetch", fetcher);
