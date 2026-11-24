@@ -4,6 +4,10 @@ export const locales = ["en", "de"] as const;
 export type Locale = typeof locales[number];
 
 const en = {
+    "thailand.unavailable.title": "The travel timeline is not available yet",
+    "thailand.unavailable.description": "Your access was verified, but the private travel data could not be loaded.",
+    "thailand.unavailable.action": "The site operator needs to restore the travel data on the server. Please try again once it is available.",
+    "thailand.unavailable.retry": "Try again",
     "legal.navigation": "Legal information", "legal.imprint": "Legal notice", "legal.privacy": "Privacy notice", "legal.terms": "Terms of use", "legal.preview": "Accessible links to the central legal pages, also available in standalone apps.",
     ...llmEn,
     "scene2d.pan": "Pan view",
@@ -494,6 +498,10 @@ const en = {
 } as const;
 
 const de: Record<keyof typeof en, string> = {
+    "thailand.unavailable.title": "Die Reise-Timeline ist noch nicht verfügbar",
+    "thailand.unavailable.description": "Dein Zugriff wurde bestätigt, aber die privaten Reisedaten konnten nicht geladen werden.",
+    "thailand.unavailable.action": "Der Betreiber muss die Reisedaten auf dem Server wiederherstellen. Bitte versuche es erneut, sobald sie verfügbar sind.",
+    "thailand.unavailable.retry": "Erneut versuchen",
     "legal.navigation": "Rechtliche Informationen", "legal.imprint": "Impressum", "legal.privacy": "Datenschutzerklärung", "legal.terms": "Nutzungsbedingungen", "legal.preview": "Zugängliche Links zu den zentralen Rechtstexten, auch in eigenständigen Apps.",
     ...llmDe,
     "scene2d.pan": "Ansicht verschieben",
