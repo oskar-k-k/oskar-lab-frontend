@@ -37,6 +37,7 @@ function TravelWorkspaceContent() {
   const requestGeneration = useRef(0);
   const documentGeneration = useRef(0);
   const [editingTimeline, setEditingTimeline] = useState(false);
+  const [ambientMotion, setAmbientMotion] = useState(true);
   const [success, setSuccess] = useState(false);
   const [now, setNow] = useState(0);
   const [loading, setLoading] = useState(true),
@@ -192,7 +193,7 @@ function TravelWorkspaceContent() {
       timeZone: "UTC",
     }).format(new Date(value + "T12:00:00Z"));
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} ${trip && !editingTimeline && ambientMotion ? styles.ambientMotion : ""}`}>
       <header className={styles.header}>
         <a href="/">OSKAR LAB</a>
         <strong>TravelTime</strong>
@@ -288,6 +289,18 @@ function TravelWorkspaceContent() {
                 </button>
               </>
             )}
+            <button
+              className={styles.motionControl}
+              aria-label={label(ambientMotion ? "pauseAtmosphere" : "resumeAtmosphere")}
+              title={label(ambientMotion ? "pauseAtmosphere" : "resumeAtmosphere")}
+              aria-pressed={!ambientMotion}
+              onClick={() => setAmbientMotion(!ambientMotion)}
+            >
+              <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+                {ambientMotion ? <path d="M7 5v10M13 5v10" /> : <path d="m7 4 8 6-8 6Z" />}
+              </svg>
+              <span className={styles.motionLabel}>{label(ambientMotion ? "pauseAtmosphere" : "resumeAtmosphere")}</span>
+            </button>
           </nav>
         )}
       </header>

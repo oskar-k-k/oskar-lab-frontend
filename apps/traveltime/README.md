@@ -96,3 +96,14 @@ Station artwork is decorative local SVG. Trips with Thailand in their saved titl
 an original, locally served AI-generated destination cover; other trips keep the neutral
 opening bubble. Asset provenance and the full generation prompt are in [ARTWORK.md](ARTWORK.md).
 No private trip data is sent to image generation or third-party image hosts.
+
+
+## Ambient atmosphere
+
+Two decorative CSS layers add slow coastal light and static contour lines behind the page.
+Only the light layer's transform animates (32-second alternating cycle); no canvas, animation
+library, scroll/pointer listener or external request is used. Animation runs only in the trip
+reading view, respects `prefers-reduced-motion`, and can be paused from the header. The choice
+is in-memory only, with no account settings or storage changes. Decorative layers cannot
+intercept clicks. Rail gradients and station shadows use optional shared Timeline tokens,
+with existing defaults preserved for other callers and a preview in Core & Design.

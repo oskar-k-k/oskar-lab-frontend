@@ -8,6 +8,8 @@
   --travel-sea: #3a8b93;
   --travel-surface: #151e2c;
   --travel-focus: #9cddd7;
+  position: relative;
+  isolation: isolate;
   color-scheme: dark;
   min-height: 100vh;
   background: var(--travel-bg);
@@ -28,7 +30,7 @@
   z-index: 20;
   background: rgb(12 17 27 / 94%);
   backdrop-filter: blur(18px);
-  border-bottom: 1px solid var(--travel-line);
+  border-bottom: 1px solid rgb(191 219 235 / 12%);
   padding: 16px max(16px, calc((100% - 1152px) / 2));
   display: flex;
   flex-wrap: wrap;
@@ -417,4 +419,71 @@
 .destinationTimeline .tripDates {
   color: #f4f7fa;
   text-shadow: 0 1px 8px #000;
+}
+
+/* Decorative layers stay separate from content and never intercept input. */
+.page::before,
+.page::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+.page::before {
+  inset: -8%;
+  background:
+    radial-gradient(ellipse at 18% 25%, rgb(41 116 133 / 15%), transparent 48%),
+    radial-gradient(ellipse at 84% 63%, rgb(83 76 143 / 12%), transparent 43%),
+    radial-gradient(ellipse at 50% 94%, rgb(38 109 111 / 8%), transparent 45%);
+}
+.page::after {
+  opacity: 0.35;
+  background:
+    radial-gradient(circle at 18% 22%, rgb(210 233 240 / 45%) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 82% 41%, rgb(210 233 240 / 35%) 0 1px, transparent 1.5px),
+    repeating-radial-gradient(ellipse at 115% 78%, transparent 0 72px, rgb(173 211 223 / 6%) 73px 74px, transparent 75px 128px);
+  mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent);
+}
+.timeline {
+  --timeline-rail-background: linear-gradient(180deg, #a8d9dc, rgb(195 222 232 / 36%) 25%, rgb(195 222 232 / 18%) 85%, transparent);
+  --timeline-branch-background: linear-gradient(90deg, rgb(195 222 232 / 15%), rgb(210 230 237 / 70%) 50%, rgb(195 222 232 / 15%));
+  --timeline-bubble-shadow: 0 0 0 1px rgb(197 224 234 / 45%), 0 0 0 7px rgb(157 210 218 / 3%), 0 12px 35px rgb(0 0 0 / 28%);
+  --timeline-active-shadow: 0 0 0 1px #b9efea, 0 0 0 7px rgb(157 210 218 / 7%), 0 0 35px rgb(91 183 190 / 13%);
+  --timeline-start-shadow: 0 0 0 6px rgb(157 210 218 / 3%), 0 20px 65px rgb(0 0 0 / 35%);
+}
+.page .motionControl {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  color: var(--travel-muted);
+  background: transparent;
+  border-color: transparent;
+}
+.motionControl svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .page::before {
+    animation: ambientDrift 32s ease-in-out infinite alternate;
+    animation-play-state: paused;
+  }
+  .ambientMotion::before {
+    animation-play-state: running;
+  }
+}
+@keyframes ambientDrift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to { transform: translate3d(2%, 2%, 0) scale(1.04); }
+}
+
+@media (max-width: 640px) {
+  .motionLabel {
+    display: none;
+  }
 }

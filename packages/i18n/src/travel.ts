@@ -1,5 +1,7 @@
 export const travelEn = {
   "travel.accountLink": "Account",
+  "travel.pauseAtmosphere": "Pause atmosphere",
+  "travel.resumeAtmosphere": "Resume atmosphere",
   "travel.editTrip": "Edit trip",
   "travel.reload": "Reload data",
   "travel.invalid":
@@ -103,6 +105,8 @@ export const travelEn = {
   "travel.dateOnly": "Day only",
 } as const;
 export const travelDe: Record<keyof typeof travelEn, string> = {
+  "travel.pauseAtmosphere": "Atmosphäre pausieren",
+  "travel.resumeAtmosphere": "Atmosphäre fortsetzen",
   "travel.accountLink": "Konto",
   "travel.editTrip": "Reise bearbeiten",
   "travel.reload": "Daten neu laden",

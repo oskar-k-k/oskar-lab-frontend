@@ -112,3 +112,9 @@
   --timeline-start-width: 18rem;
   --timeline-start-padding: 2rem 1.5rem;
 }
+
+.timelineDemo {
+  --timeline-rail-background: linear-gradient(var(--color-primary), var(--color-border), transparent);
+  --timeline-branch-background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+  --timeline-start-shadow: 0 12px 32px rgb(0 0 0 / 15%);
+}
