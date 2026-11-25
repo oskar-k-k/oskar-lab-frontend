@@ -568,6 +568,7 @@ function TravelWorkspaceContent() {
             )}
             {trip && (
               <TravelTimeline
+                trip={trip}
                 entries={entries}
                 now={now}
                 loading={loading}

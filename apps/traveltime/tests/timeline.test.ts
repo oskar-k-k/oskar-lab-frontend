@@ -111,3 +111,11 @@ it("uses each station's validated seasonal offset and leaves unknown times ungue
   expect(pointUtcOffset({ ...point, utcOffset: "Z" })).toBe("UTC+00:00");
   expect(pointUtcOffset({ ...point, time: null, utcOffset: null })).toBeNull();
 });
+
+it("keeps compact offsets precise for whole, half and quarter hours", () => {
+  const point = { time: "10:00:00", utcOffset: "+04:00" } as Entry["points"][number];
+  expect(pointUtcOffset(point, true)).toBe("UTC+4");
+  expect(pointUtcOffset({ ...point, utcOffset: "-03:30" }, true)).toBe("UTC-3:30");
+  expect(pointUtcOffset({ ...point, utcOffset: "+05:45" }, true)).toBe("UTC+5:45");
+  expect(pointUtcOffset({ ...point, utcOffset: "Z" }, true)).toBe("UTC+0");
+});

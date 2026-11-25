@@ -58,6 +58,8 @@ export type TimelineProps = Readonly<{
   items: readonly TimelineItem[];
   /** Localized accessible name for the ordered list. */
   label: string;
+  /** Optional centered opening bubble; shown before stations in bubble view. */
+  start?: ReactNode;
   /** Optional current milestone; exposes aria-current and a highlighted marker. */
   currentItemId?: string;
   /** Optional scoped theme or layout class; see the Timeline CSS variables. */
@@ -71,6 +73,7 @@ export default function Timeline({
   items,
   label,
   currentItemId,
+  start,
   className = "",
   variant = "cards",
 }: TimelineProps) {
@@ -81,9 +84,12 @@ export default function Timeline({
       className={`${styles.timeline} ${variant === "bubbles" ? styles.bubbles : ""} ${className}`}
       aria-label={label}
     >
-      {items.map((item) => (
+      {variant === "bubbles" && start != null && (
+        <li className={styles.start}>{start}</li>
+      )}
+      {items.map((item, index) => (
         <li
-          className={styles.item}
+          className={`${styles.item} ${index % 2 === 1 ? styles.alternate : ""}`}
           key={item.id}
           id={item.id}
           aria-current={item.id === currentItemId ? "step" : undefined}

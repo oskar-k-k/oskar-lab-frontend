@@ -15,6 +15,7 @@ import styles from "./Travel.module.css";
 /** Renders connected transports and interleaved stay points without owning API state. */
 export default function TravelTimeline({
   entries,
+  trip,
   now,
   loading,
   editable,
@@ -25,6 +26,7 @@ export default function TravelTimeline({
   onDelete,
 }: {
   entries: Entry[];
+  trip?: { title: string; startDate: string; endDate: string };
   now: number;
   loading: boolean;
   editable: boolean;
@@ -38,6 +40,13 @@ export default function TravelTimeline({
   const label = (key: string) => t(("travel." + key) as TranslationKey);
   const rows = timelineRows(entries);
   const next = nextTimelineRow(rows, now);
+  const tripDate = (value: string) =>
+    new Intl.DateTimeFormat(locale, {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    }).format(new Date(value + "T12:00:00Z"));
   return (
     <>
       {editing && next && (
@@ -50,6 +59,14 @@ export default function TravelTimeline({
         </a>
       )}
       <Timeline
+        start={trip && (
+          <>
+            <strong className={styles.tripTitle}>{trip.title}</strong>
+            <span className={styles.tripDates}>
+              {tripDate(trip.startDate)} — {tripDate(trip.endDate)}
+            </span>
+          </>
+        )}
         variant={editing ? "cards" : "bubbles"}
         className={styles.timeline}
         label={label("timeline")}
@@ -59,34 +76,27 @@ export default function TravelTimeline({
         items={rows.map((row, index) => {
           const point = row.points[0];
           const paired =
-            !editing && row.entry.type === "FLIGHT" && row.points.length === 2;
+            !editing &&
+            (row.entry.type === "FLIGHT" || row.entry.type === "BOAT") &&
+            row.points.length === 2;
           const stationLabel = (p: Entry["points"][number]) => (
-            <>
+            <span className={styles.stationTime} title={p.timeZone}>
               <time
                 dateTime={
                   p.date + (p.time ? "T" + p.time + (p.utcOffset ?? "") : "")
                 }
               >
-                {new Intl.DateTimeFormat(locale, {
-                  day: "numeric",
-                  month: "short",
-                  timeZone: "UTC",
-                }).format(new Date(p.date + "T12:00:00Z"))}
+                {p.date.slice(8, 10) + "." + p.date.slice(5, 7)}
                 {p.time
-                  ? " · " +
+                  ? " - " +
                     (p.timeMeaning !== "EXACT"
                       ? label(p.timeMeaning) + " "
                       : "") +
                     p.time.slice(0, 5)
                   : ""}
               </time>
-              <small className={styles.stationZone}>{p.timeZone}</small>
-              {pointUtcOffset(p) && (
-                <small className={styles.stationZone}>
-                  {pointUtcOffset(p)}
-                </small>
-              )}
-            </>
+              {pointUtcOffset(p, true) && ` (${pointUtcOffset(p, true)})`}
+            </span>
           );
           const item = {
             id: `booking-${row.entry.id}-${point.role}`,

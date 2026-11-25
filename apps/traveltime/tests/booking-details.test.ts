@@ -4,6 +4,7 @@ import { expect, it, vi } from "vitest";
 vi.mock("@oskar-lab/i18n/I18nProvider", () => ({
   useI18n: () => ({ locale: "en", t: (key: string) => key }),
 }));
+import TravelTimeline from "../src/app/TravelTimeline";
 import BookingDetails from "../src/app/BookingDetails";
 import type { Entry } from "../src/app/TravelWorkspace";
 const departure = {
@@ -63,4 +64,16 @@ it("keeps both endpoints in the combined edit card", () => {
   const html = render([departure, arrival], true);
   expect(html).toContain("Departure address");
   expect(html).toContain("Arrival address");
+});
+
+it.each(["FLIGHT", "BOAT"] as const)("renders %s as connected endpoints with compact rail labels", (type) => {
+  const html = renderToStaticMarkup(createElement(TravelTimeline, {
+    entries: [{ ...entry, type }], now: 0, loading: false, editable: true,
+    disabled: false, onDocuments: vi.fn(), onEdit: vi.fn(), onDelete: vi.fn(),
+  }));
+  expect((html.match(/<details /g) ?? [])).toHaveLength(2);
+  expect(html).toContain("01.12 - 10:00");
+  expect(html).toContain("(UTC+1)");
+  expect(html).toContain("(UTC+4)");
+  expect(html).toContain("6 hr 20 min");
 });

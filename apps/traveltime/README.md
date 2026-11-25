@@ -65,16 +65,20 @@ images) without fetching media itself. TravelTime uses locally authored SVG scen
 external stock photos, maps or automatic document thumbnails. No personal data, API, storage,
 sharing or authorization behavior changes with this presentation update.
 
-Flights in reading view have separate departure and arrival bubbles on the same side, linked
+Flights and boats in reading view have separate departure and arrival bubbles on the same side, linked
 by a dashed downward arrow with backend-computed elapsed duration. Both display their own
-local date, time and place and open the same booking details. The domain keeps one atomic
-flight entry; edit mode keeps its combined card. Unknown durations are labeled, never
+local date, time and place and open only their respective station details. The domain keeps one atomic
+transport entry; edit mode keeps its combined card. Unknown durations are labeled, never
 inferred by subtracting local clock hours. The shared Timeline exposes neutral `end` and
 `connectionLabel` slots for the same pattern in other apps; no data/storage changes occur.
 
-Station date/time labels sit on the horizontal rail connection. Each includes its IANA zone
-and the backend-validated UTC offset at that instant; unknown times do not invent an offset.
-Flight departure and arrival disclosures render only the selected endpoint, with shared
+Station date/time labels sit on the horizontal rail connection. Each uses one compact line, e.g. `17.12 - 10:00 (UTC+4)`, with the backend-validated
+UTC offset at that instant. The full IANA zone remains in the expanded details and label tooltip;
+unknown times do not invent an offset.
+Flight and boat departure and arrival disclosures render only the selected endpoint, with shared
 booking notes/documents; edit mode retains both endpoints. The shared bubble layout keeps
 rail labels readable at mobile widths and moves them above the circle while expanded.
 No additional processing, external requests, storage or permissions are introduced.
+
+The shared `start` slot introduces the reading timeline with a centered bubble containing
+the trip title and localized date range. It is not an interactive booking station.

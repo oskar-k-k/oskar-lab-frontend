@@ -112,3 +112,11 @@ it("keeps paired endpoints inside one timeline position with an accessible conne
   expect(html.indexOf("Arrival")).toBeLessThan(html.indexOf('id="hotel"'));
   expect(html).not.toMatch(/<details[^>]* open/);
 });
+
+it("shows the caller's opening bubble only in bubble view", () => {
+  const props = { label: "Example", items: [], start: "Example date range" };
+  const html = renderToStaticMarkup(createElement(Timeline, { ...props, variant: "bubbles" }));
+  expect(html).toContain("Example date range");
+  expect(html).not.toContain("<summary");
+  expect(renderToStaticMarkup(createElement(Timeline, props))).not.toContain("Example date range");
+});
