@@ -20,10 +20,14 @@
   color: inherit;
 }
 .header {
-  max-width: 1200px;
-  margin: auto;
-  padding: 24px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--travel-bg);
+  border-bottom: 1px solid var(--travel-line);
+  padding: 16px max(16px, calc((100% - 1152px) / 2));
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
@@ -332,23 +336,6 @@
   }
 }
 
-.tripHero {
-  text-align: center;
-  padding: 44px 16px 24px;
-}
-.tripHero h1 {
-  font:
-    clamp(2.25rem, 5vw, 3.75rem) / 1.15 Georgia,
-    serif;
-  margin: 12px auto 20px;
-  max-width: 760px;
-  overflow-wrap: anywhere;
-  letter-spacing: -0.035em;
-}
-.tripHero p {
-  color: var(--travel-muted);
-  font-size: 14px;
-}
 .stationRole {
   display: block;
   margin-top: 6px;
@@ -380,6 +367,7 @@
 
 .tripTitle {
   display: block;
+  margin: 0;
   font: 1.5rem/1.4 Georgia, serif;
 }
 .tripDates {
@@ -387,4 +375,16 @@
   margin-top: 0.5rem;
   font-size: 0.8125rem;
   color: var(--travel-muted);
+}
+
+.headerActions {
+  display: flex;
+  flex: 0 0 100%;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px;
+  white-space: nowrap;
+}
+.headerActions > button {
+  flex: none;
 }

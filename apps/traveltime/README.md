@@ -82,3 +82,7 @@ No additional processing, external requests, storage or permissions are introduc
 
 The shared `start` slot introduces the reading timeline with a centered bubble containing
 the trip title and localized date range. It is not an interactive booking station.
+
+The trip reading view starts directly at the opening bubble with numeric dates. Navigation
+and editing actions live in the sticky header, including a horizontally scrollable action row
+on narrow screens. The trip title is supplied by the saved trip, never inferred from bookings.

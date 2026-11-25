@@ -41,12 +41,7 @@ export default function TravelTimeline({
   const rows = timelineRows(entries);
   const next = nextTimelineRow(rows, now);
   const tripDate = (value: string) =>
-    new Intl.DateTimeFormat(locale, {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-      timeZone: "UTC",
-    }).format(new Date(value + "T12:00:00Z"));
+    `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)}`;
   return (
     <>
       {editing && next && (
@@ -61,7 +56,7 @@ export default function TravelTimeline({
       <Timeline
         start={trip && (
           <>
-            <strong className={styles.tripTitle}>{trip.title}</strong>
+            <h1 className={styles.tripTitle}>{trip.title}</h1>
             <span className={styles.tripDates}>
               {tripDate(trip.startDate)} — {tripDate(trip.endDate)}
             </span>

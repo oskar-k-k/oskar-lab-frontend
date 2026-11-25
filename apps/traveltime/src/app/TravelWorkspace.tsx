@@ -197,22 +197,108 @@ function TravelWorkspaceContent() {
         <a href="/">OSKAR LAB</a>
         <strong>TravelTime</strong>
         <a href="/account">{label("accountLink")}</a>
+        {trip && !auth && (
+          <nav className={styles.headerActions} aria-label={label("timeline")}>
+            <button
+              onClick={() => {
+                ++requestGeneration.current;
+                ++documentGeneration.current;
+                window.history.replaceState(null, "", appPath("/"));
+                setNewTrip(false);
+                setTrip(null);
+                setEditingTimeline(false);
+                setSelected(null);
+                setEdit(undefined);
+                void loadTrips();
+              }}
+            >
+              {label("back")}
+            </button>
+            {trip.canEdit && (
+              <button
+                aria-pressed={editingTimeline}
+                onClick={() => {
+                  setEditingTimeline(!editingTimeline);
+                  setNewTrip(false);
+                  setEdit(undefined);
+                  setShare(false);
+                  setSelected(null);
+                }}
+              >
+                {label(editingTimeline ? "doneEditing" : "editTimeline")}
+              </button>
+            )}
+            {trip.canEdit && editingTimeline && (
+              <>
+                <button
+                  className={styles.primary}
+                  disabled={writeDisabled}
+                  onClick={() => {
+                    setEdit(null);
+                    setNewTrip(false);
+                  }}
+                >
+                  ＋ {label("add")}
+                </button>
+                <button
+                  disabled={writeDisabled}
+                  onClick={() => {
+                    setNewTrip(true);
+                    setEdit(undefined);
+                  }}
+                >
+                  {label("editTrip")}
+                </button>
+                <button
+                  disabled={writeDisabled}
+                  onClick={() =>
+                    void mutate(async () => {
+                      setViewers(
+                        await travelRequest<Viewer[]>(
+                          `/${trip.id}/viewers`,
+                        ),
+                      );
+                      setShare(!share);
+                    })
+                  }
+                >
+                  {label("share")}
+                </button>
+                <button
+                  disabled={writeDisabled}
+                  onClick={() => {
+                    if (window.confirm(label("confirmDelete")))
+                      void mutate(async () => {
+                        await travelRequest(
+                          `/${trip.id}?version=${trip.version}`,
+                          "DELETE",
+                        );
+                        setTrip(null);
+                        setNewTrip(false);
+                        window.history.replaceState(
+                          null,
+                          "",
+                          appPath("/"),
+                        );
+                        await loadTrips();
+                      });
+                  }}
+                >
+                  {label("deleteTrip")}
+                </button>
+              </>
+            )}
+          </nav>
+        )}
       </header>
       <main className={styles.main}>
-        <section
-          className={trip && !editingTimeline ? styles.tripHero : styles.hero}
-        >
-          <p className={styles.eyebrow}>TRAVELTIME</p>
-          <h1>{trip ? trip.title : label("title")}</h1>
-          <p>
-            {trip
-              ? `${date(trip.startDate)} — ${date(trip.endDate)}`
-              : label("intro")}
-          </p>
-          {trip && (
-            <p>{trip.canEdit ? label("localTimes") : label("viewOnly")}</p>
-          )}
-        </section>
+        {!trip && (
+          <section className={styles.hero}>
+            <p className={styles.eyebrow}>TRAVELTIME</p>
+            <h1>{label("title")}</h1>
+            <p>{label("intro")}</p>
+          </section>
+        )}
         {offline && (
           <p role="status" className={styles.notice}>
             {label("offline")}
@@ -251,112 +337,18 @@ function TravelWorkspaceContent() {
               </div>
             )}
             {loading && <p role="status">{label("loading")}</p>}
-            <div className={styles.toolbar}>
-              {trip ? (
-                <>
-                  <button
-                    onClick={() => {
-                      ++requestGeneration.current;
-                      ++documentGeneration.current;
-                      window.history.replaceState(null, "", appPath("/"));
-                      setNewTrip(false);
-                      setTrip(null);
-                      setEditingTimeline(false);
-                      setSelected(null);
-                      setEdit(undefined);
-                      void loadTrips();
-                    }}
-                  >
-                    {label("back")}
-                  </button>
-                  {trip.canEdit && (
-                    <button
-                      aria-pressed={editingTimeline}
-                      onClick={() => {
-                        setEditingTimeline(!editingTimeline);
-                        setNewTrip(false);
-                        setEdit(undefined);
-                        setShare(false);
-                        setSelected(null);
-                      }}
-                    >
-                      {label(editingTimeline ? "doneEditing" : "editTimeline")}
-                    </button>
-                  )}
-                  {trip.canEdit && editingTimeline && (
-                    <>
-                      <button
-                        className={styles.primary}
-                        disabled={writeDisabled}
-                        onClick={() => {
-                          setEdit(null);
-                          setNewTrip(false);
-                        }}
-                      >
-                        ＋ {label("add")}
-                      </button>
-                      <button
-                        disabled={writeDisabled}
-                        onClick={() => {
-                          setNewTrip(true);
-                          setEdit(undefined);
-                        }}
-                      >
-                        {label("editTrip")}
-                      </button>
-                      <button
-                        disabled={writeDisabled}
-                        onClick={() =>
-                          void mutate(async () => {
-                            setViewers(
-                              await travelRequest<Viewer[]>(
-                                `/${trip.id}/viewers`,
-                              ),
-                            );
-                            setShare(!share);
-                          })
-                        }
-                      >
-                        {label("share")}
-                      </button>
-                      <button
-                        disabled={writeDisabled}
-                        onClick={() => {
-                          if (window.confirm(label("confirmDelete")))
-                            void mutate(async () => {
-                              await travelRequest(
-                                `/${trip.id}?version=${trip.version}`,
-                                "DELETE",
-                              );
-                              setTrip(null);
-                              setNewTrip(false);
-                              window.history.replaceState(
-                                null,
-                                "",
-                                appPath("/"),
-                              );
-                              await loadTrips();
-                            });
-                        }}
-                      >
-                        {label("deleteTrip")}
-                      </button>
-                    </>
-                  )}
-                </>
-              ) : (
-                <>
-                  <h2>{label("trips")}</h2>
-                  <button
-                    className={styles.primary}
-                    disabled={writeDisabled}
-                    onClick={() => setNewTrip(!newTrip)}
-                  >
-                    ＋ {label("newTrip")}
-                  </button>
-                </>
-              )}
-            </div>
+            {!trip && (
+              <div className={styles.toolbar}>
+                <h2>{label("trips")}</h2>
+                <button
+                  className={styles.primary}
+                  disabled={writeDisabled}
+                  onClick={() => setNewTrip(!newTrip)}
+                >
+                  ＋ {label("newTrip")}
+                </button>
+              </div>
+            )}
             {newTrip && (
               <TripForm
                 key={trip?.id ?? "new-trip"}
