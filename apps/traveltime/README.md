@@ -22,7 +22,8 @@ in the sibling backend repository. Owners edit; verified-email viewers only read
 send no mail. Stale versions require reloading. Unknown write outcomes are never automatically
 replayed; reload before another write. Session identity changes remount the workspace and
 clear in-memory private data. Private responses disable caching and referrers; no service worker,
-localStorage, analytics, mailbox synchronization, geocoding, map embed or external asset is added.
+localStorage, analytics, mailbox synchronization or server-side geocoding is added. Optional
+Google map embeds are described below.
 Documents are downloaded with attachment disposition and never rendered as active HTML.
 
 ## Data and privacy
@@ -62,7 +63,7 @@ Native summary/disclosure controls reveal one booking at a time and support keyb
 Owners switch to Edit timeline for the existing expanded card layout and management actions.
 The shared component accepts caller-owned React visuals (including approved local/private
 images) without fetching media itself. TravelTime uses locally authored SVG scenes, never
-external stock photos, maps or automatic document thumbnails. No personal data, API, storage,
+external stock photos or automatic document thumbnails. Optional maps are a separate explicit action. No personal data, API, storage,
 sharing or authorization behavior changes with this presentation update.
 
 Flights and boats in reading view have separate departure and arrival bubbles on the same side, linked
@@ -107,3 +108,43 @@ reading view, respects `prefers-reduced-motion`, and can be paused from the head
 is in-memory only, with no account settings or storage changes. Decorative layers cannot
 intercept clicks. Rail gradients and station shadows use optional shared Timeline tokens,
 with existing defaults preserved for other callers and a preview in Core & Design.
+
+
+## Optional location maps
+
+Each station includes a local consent placeholder and an official Google Maps search link.
+Nothing is fetched from Google until the person loads that station's preview or opens the link.
+The embed receives only saved place/address, IP/browser information and the site origin;
+`strict-origin-when-cross-origin` prevents the private trip query from being a referrer.
+No dates, booking references, notes, documents, coordinates or account identifiers are sent.
+Google may use cookies and process data outside the EEA under its own privacy policy. Central
+privacy disclosures and the per-map notice describe this. Provider retention/transfer details
+still need operator review before a broad public launch. Hiding the map unmounts its iframe;
+account changes clear components. Consent is neither persistent nor shared between stations.
+Google attribution at the bottom remains visible and interactive. The preview surface links
+out to Maps; a separate accessible link is always available, including on failure.
+
+The configured key is deliberately public, limited to the Maps Embed API and exact production
+HTTP referrers. It is delivered only to authenticated browsers after the load action using
+`/api/maps` with private/no-store responses. It is never a general Google credential.
+The adapter performs no external requests and does not accept or log place data.
+Map matching uses the saved name/address; ambiguous or incomplete text is not a verified
+coordinate. A future persisted Google Place ID would be needed for an unambiguous identity.
+
+### Operator setup (pending)
+
+1. Create/select a Google Cloud project and enable **Maps Embed API**.
+2. Create a browser key. Restrict applications to HTTP referrers `https://oskarlab.dev/*`
+   and APIs to **Maps Embed API** only. Add a separate restricted development key if needed.
+3. Set `GOOGLE_MAPS_EMBED_PUBLIC_KEY` in the production compose environment; do not commit it.
+4. Recreate the TravelTime service. Verify one public landmark before trying private addresses.
+
+No key is currently configured. Until this setup is completed, map-load attempts show an
+unavailable notice and the official outbound Maps link remains usable. This does not certify
+the preview as production-verified. Google account setup, provider terms and any billing-account
+steps are for the operator to complete.
+
+Official references:
+- https://developers.google.com/maps/documentation/embed/get-api-key
+- https://developers.google.com/maps/documentation/embed/embedding-map
+- https://developers.google.com/maps/documentation/urls/get-started

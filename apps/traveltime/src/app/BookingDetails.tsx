@@ -3,6 +3,7 @@ import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import type { TranslationKey } from "@oskar-lab/i18n/messages";
 import type { Entry } from "./TravelWorkspace";
 import { pointUtcOffset } from "../model/timeline";
+import PlaceMap from "./PlaceMap";
 import styles from "./Travel.module.css";
 
 /** Shows only the supplied station points while keeping shared booking actions together. */
@@ -61,6 +62,7 @@ export default function BookingDetails({
               {p.timeZone}
               {pointUtcOffset(p) ? " · " + pointUtcOffset(p) : ""}
             </small>
+            <PlaceMap key={p.placeName + p.address} placeName={p.placeName} address={p.address} />
           </div>
         ))}
       </div>

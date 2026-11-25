@@ -1,4 +1,12 @@
 export const travelEn = {
+  "travel.map": "Location map",
+  "travel.loadMap": "Load Google Maps preview",
+  "travel.loadingMap": "Loading map…",
+  "travel.openMaps": "Open in Google Maps",
+  "travel.hideMap": "Hide map",
+  "travel.mapConsent": "Loading sends this place/address and your IP address to Google. Google may process device data and use cookies. No booking notes, documents or travel dates are sent.",
+  "travel.mapUnavailable": "The preview is currently unavailable. You can still open the saved location directly in Google Maps.",
+
   "travel.accountLink": "Account",
   "travel.pauseAtmosphere": "Pause atmosphere",
   "travel.resumeAtmosphere": "Resume atmosphere",
@@ -105,6 +113,14 @@ export const travelEn = {
   "travel.dateOnly": "Day only",
 } as const;
 export const travelDe: Record<keyof typeof travelEn, string> = {
+  "travel.map": "Standortkarte",
+  "travel.loadMap": "Google-Maps-Vorschau laden",
+  "travel.loadingMap": "Karte wird geladen…",
+  "travel.openMaps": "In Google Maps öffnen",
+  "travel.hideMap": "Karte ausblenden",
+  "travel.mapConsent": "Beim Laden werden dieser Ort/diese Adresse und deine IP-Adresse an Google übermittelt. Google kann Gerätedaten verarbeiten und Cookies nutzen. Buchungsnotizen, Dokumente und Reisedaten werden nicht übertragen.",
+  "travel.mapUnavailable": "Die Vorschau ist derzeit nicht verfügbar. Du kannst den gespeicherten Ort weiterhin direkt in Google Maps öffnen.",
+
   "travel.pauseAtmosphere": "Atmosphäre pausieren",
   "travel.resumeAtmosphere": "Atmosphäre fortsetzen",
   "travel.accountLink": "Konto",

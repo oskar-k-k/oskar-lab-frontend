@@ -74,7 +74,7 @@ services:
     environment: {<<: *web-env, APP_NAME: inside-llm}
   traveltime:
     <<: *web
-    environment: {<<: *web-env, APP_NAME: traveltime, AUTH_BRIDGE_SECRET: "${AUTH_BRIDGE_SECRET}"}
+    environment: {<<: *web-env, APP_NAME: traveltime, AUTH_BRIDGE_SECRET: "${AUTH_BRIDGE_SECRET}", GOOGLE_MAPS_EMBED_PUBLIC_KEY: "${GOOGLE_MAPS_EMBED_PUBLIC_KEY:-}"}
     healthcheck:
       test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/apps/traveltime').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
   thailand:

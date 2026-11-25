@@ -487,3 +487,35 @@
     display: none;
   }
 }
+
+.placeMap {
+  margin-top: 16px;
+  width: 100%;
+  min-width: min(200px, 100%);
+  border: 1px solid rgb(195 222 232 / 22%);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--travel-bg);
+}
+.mapConsent {
+  display: grid;
+  justify-items: center;
+  padding: 22px 16px;
+  text-align: center;
+  background: radial-gradient(ellipse at top, rgb(41 116 133 / 18%), transparent);
+}
+.mapConsent svg {
+  fill: var(--travel-bg);
+  stroke: var(--travel-focus);
+  stroke-width: 1.5;
+}
+.mapConsent p {
+  color: var(--travel-muted);
+  font-size: 12px;
+  max-width: 30rem;
+}
+.mapFrame { position: relative; }
+.mapFrame iframe { display: block; width: 100%; height: 230px; border: 0; }
+.mapOverlay { position: absolute; inset: 0 0 48px; }
+.mapLink { display: block; padding: 12px 14px; font-size: 12px; text-align: center; }
+.page .mapHide { display: block; margin: 10px auto 0; font-size: 12px; }
