@@ -1,11 +1,14 @@
 .page {
-  --travel-ink: #193e3d;
-  --travel-muted: #60736c;
-  --travel-bg: #f6f6ee;
-  --travel-line: #dce3d9;
-  --travel-accent: #e5c28a;
-  --travel-sky: #e6ede6;
-  --travel-sea: #8eaead;
+  --travel-ink: #f4f7fa;
+  --travel-muted: #abb8c9;
+  --travel-bg: #0c111b;
+  --travel-line: #9aa7b8;
+  --travel-accent: #e8c58c;
+  --travel-sky: #182a42;
+  --travel-sea: #3a8b93;
+  --travel-surface: #151e2c;
+  --travel-focus: #9cddd7;
+  color-scheme: dark;
   min-height: 100vh;
   background: var(--travel-bg);
   color: var(--travel-ink);
@@ -23,7 +26,8 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  background: var(--travel-bg);
+  background: rgb(12 17 27 / 94%);
+  backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--travel-line);
   padding: 16px max(16px, calc((100% - 1152px) / 2));
   display: flex;
@@ -49,8 +53,8 @@
 }
 .hero {
   border-radius: 28px;
-  background: var(--travel-ink);
-  color: var(--travel-bg);
+  background: var(--travel-surface);
+  color: var(--travel-ink);
   padding: 48px clamp(24px, 5vw, 64px);
   position: relative;
   overflow: hidden;
@@ -104,15 +108,15 @@
   padding: 11px 18px;
   border: 1px solid var(--travel-line);
   border-radius: 12px;
-  background: white;
+  background: var(--travel-surface);
   color: var(--travel-ink);
   cursor: pointer;
   min-height: 44px;
 }
 .page .primary {
-  background: var(--travel-ink);
-  color: white;
-  border-color: var(--travel-ink);
+  background: #d7efed;
+  color: #102329;
+  border-color: #d7efed;
   text-decoration: none;
   display: inline-block;
 }
@@ -121,7 +125,7 @@
   cursor: wait;
 }
 .page :focus-visible {
-  outline: 3px solid #b27626;
+  outline: 2px solid var(--travel-focus);
   outline-offset: 4px;
 }
 .tripGrid {
@@ -133,7 +137,7 @@
   text-align: left;
   padding: 28px;
   min-height: 200px;
-  background: linear-gradient(140deg, #fff, #edf0e5);
+  background: linear-gradient(140deg, #1b2a3b, #111c2b);
   border-radius: 20px;
 }
 .tripCard > span {
@@ -154,12 +158,12 @@
   color: var(--travel-muted);
 }
 .panel {
-  background: #fff;
+  background: var(--travel-surface);
   border: 1px solid var(--travel-line);
   border-radius: 20px;
   padding: 28px;
   margin: 24px 0;
-  scroll-margin-top: 20px;
+  scroll-margin-top: 10rem;
 }
 .page label {
   display: flex;
@@ -175,7 +179,7 @@
   border-radius: 9px;
   padding: 11px;
   font: inherit;
-  background: #fff;
+  background: var(--travel-surface);
   color: var(--travel-ink);
   min-width: 0;
   max-width: 100%;
@@ -206,7 +210,7 @@
   display: flex;
   flex-direction: column;
   padding: 22px 26px;
-  background: #e9eddc;
+  background: var(--travel-surface);
   border-radius: 16px;
   margin: 28px 0;
   text-decoration: none;
@@ -221,15 +225,15 @@
 }
 .timeline {
   --timeline-background: var(--travel-bg);
-  --timeline-bubble: white;
+  --timeline-bubble: var(--travel-surface);
   --timeline-text: var(--travel-ink);
   --timeline-muted: var(--travel-muted);
   --timeline-line: var(--travel-line);
-  --timeline-current: var(--travel-ink);
+  --timeline-current: var(--travel-focus);
   margin-top: 24px;
 }
 .card {
-  background: #fff;
+  background: var(--travel-surface);
   border: 1px solid var(--travel-line);
   border-radius: 18px;
   padding: 26px;
@@ -269,7 +273,8 @@
   white-space: pre-wrap;
 }
 .notice {
-  background: #fff0d5;
+  background: #30291c;
+  border: 1px solid #7b6842;
   padding: 18px 24px;
   border-radius: 12px;
   margin: 24px 0;
@@ -387,4 +392,29 @@
 }
 .headerActions > button {
   flex: none;
+}
+
+.page button:hover:not(:disabled) {
+  background: #223247;
+  border-color: #9aaaba;
+}
+.page .primary:hover:not(:disabled) {
+  background: #efffff;
+  color: #102329;
+}
+.timeline > li {
+  scroll-margin-top: 10rem;
+}
+.destinationTimeline {
+  --timeline-start-background: linear-gradient(rgb(4 10 18 / 28%), rgb(4 10 18 / 58%)), url("../../public/art/thailand-night.webp");
+  --timeline-start-padding: 3rem 2rem;
+  --timeline-start-width: 24rem;
+}
+.destinationTimeline .tripTitle {
+  font-size: clamp(2rem, 6vw, 2.75rem);
+  text-shadow: 0 2px 18px #000;
+}
+.destinationTimeline .tripDates {
+  color: #f4f7fa;
+  text-shadow: 0 1px 8px #000;
 }

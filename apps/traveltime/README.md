@@ -86,3 +86,13 @@ the trip title and localized date range. It is not an interactive booking statio
 The trip reading view starts directly at the opening bubble with numeric dates. Navigation
 and editing actions live in the sticky header, including a horizontally scrollable action row
 on narrow screens. The trip title is supplied by the saved trip, never inferred from bookings.
+
+
+## Night theme
+
+TravelTime uses a scoped midnight palette with white text and light timeline rails. Forms,
+notices, header actions and expanded booking details share the same accessible dark surfaces.
+Station artwork is decorative local SVG. Trips with Thailand in their saved title receive
+an original, locally served AI-generated destination cover; other trips keep the neutral
+opening bubble. Asset provenance and the full generation prompt are in [ARTWORK.md](ARTWORK.md).
+No private trip data is sent to image generation or third-party image hosts.

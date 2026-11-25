@@ -106,3 +106,9 @@
 .members code { overflow-wrap: anywhere; color: var(--color-accent-cyan); font-size: .73rem; }
 .members p { margin-top: 5px; color: var(--color-text-subtle); font-size: .78rem; }
 @media (max-width: 700px) { .tabs { top: 118px; grid-template-columns: 1fr; } .tabs button { display: flex; justify-content: space-between; } .formGrid, .contentGrid, .previewGrid { grid-template-columns: 1fr; } .widePreview { grid-column: auto; } }
+
+.timelineDemo {
+  --timeline-start-background: linear-gradient(135deg, var(--color-surface), var(--color-primary-soft));
+  --timeline-start-width: 18rem;
+  --timeline-start-padding: 2rem 1.5rem;
+}

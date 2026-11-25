@@ -11,7 +11,7 @@ export const timelineEn = {
   "core.timelineContent":
     "Each milestone can contain headings, notes and actions.",
   "core.timelineTokens":
-    "Theme with --timeline-text, --timeline-muted, --timeline-line, --timeline-current, --timeline-label-width, --timeline-background and --timeline-bubble. Defaults use global design tokens.",
+    "Theme with --timeline-text, --timeline-muted, --timeline-line, --timeline-current, --timeline-label-width, --timeline-background, --timeline-bubble, --timeline-start-background, --timeline-start-width and --timeline-start-padding. Defaults use global design tokens.",
 } as const;
 export const timelineDe: Record<keyof typeof timelineEn, string> = {
   "core.timelineDescription":
@@ -26,5 +26,5 @@ export const timelineDe: Record<keyof typeof timelineEn, string> = {
   "core.timelineContent":
     "Jeder Meilenstein kann Überschriften, Notizen und Aktionen enthalten.",
   "core.timelineTokens":
-    "Anpassbar mit --timeline-text, --timeline-muted, --timeline-line, --timeline-current, --timeline-label-width, --timeline-background und --timeline-bubble. Standardwerte nutzen globale Design-Tokens.",
+    "Anpassbar mit --timeline-text, --timeline-muted, --timeline-line, --timeline-current, --timeline-label-width, --timeline-background, --timeline-bubble, --timeline-start-background, --timeline-start-width und --timeline-start-padding. Standardwerte nutzen globale Design-Tokens.",
 };

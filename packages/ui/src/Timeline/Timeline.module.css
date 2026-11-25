@@ -315,13 +315,15 @@
 
 .start {
   position: relative;
-  width: fit-content;
+  width: var(--timeline-start-width, fit-content);
   max-width: 100%;
   margin: 0 auto 3rem;
-  padding: 1.5rem 2rem;
+  padding: var(--timeline-start-padding, 1.5rem 2rem);
   border: 1px solid var(--timeline-line, var(--color-border));
   border-radius: 999px;
-  background: var(--timeline-background, var(--color-background));
+  background: var(--timeline-start-background, var(--timeline-background, var(--color-background)));
+  background-size: cover;
+  background-position: center;
   text-align: center;
   overflow-wrap: anywhere;
 }

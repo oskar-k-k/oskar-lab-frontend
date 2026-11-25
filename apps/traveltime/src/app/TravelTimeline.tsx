@@ -63,7 +63,7 @@ export default function TravelTimeline({
           </>
         )}
         variant={editing ? "cards" : "bubbles"}
-        className={styles.timeline}
+        className={`${styles.timeline} ${trip && /\bthailand\b/i.test(trip.title) ? styles.destinationTimeline : ""}`}
         label={label("timeline")}
         currentItemId={
           next ? `booking-${next.entry.id}-${next.points[0].role}` : undefined
