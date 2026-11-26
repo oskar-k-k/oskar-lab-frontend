@@ -167,10 +167,14 @@
   font-size: 0.75rem;
   line-height: 1.5;
   letter-spacing: 0.025em;
-  border-radius: 0.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--timeline-line, var(--color-border));
+  border-radius: 0.75rem;
   color: var(--timeline-muted, var(--color-text-muted));
   background: var(--timeline-background, var(--color-background));
-  padding: 0.15rem 0.35rem;
+  padding: 0.4rem 0.65rem;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
   overflow-wrap: anywhere;
 }
 .alternate .bubbleLabel {
@@ -187,6 +191,19 @@
 .item[aria-current] .bubble,
 .disclosure[open] .bubble {
   box-shadow: var(--timeline-active-shadow, 0 0 0 2px var(--timeline-current, var(--color-primary)));
+}
+.bubble.illustration {
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  background: none;
+  box-shadow: none;
+  filter: drop-shadow(0 8px 14px rgb(0 0 0 / 20%));
+}
+.item[aria-current] .illustration,
+.disclosure[open] .illustration {
+  box-shadow: none;
+  filter: drop-shadow(0 0 10px var(--timeline-current, var(--color-primary)));
 }
 .revealed {
   margin-top: 1rem;

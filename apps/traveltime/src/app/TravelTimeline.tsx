@@ -70,6 +70,9 @@ export default function TravelTimeline({
         }
         items={rows.map((row, index) => {
           const point = row.points[0];
+          const visualStyle: "illustration" | "circle" =
+            ["FLIGHT", "BOAT", "HOTEL", "APARTMENT"].includes(row.entry.type)
+              ? "illustration" : "circle";
           const paired =
             !editing &&
             (row.entry.type === "FLIGHT" || row.entry.type === "BOAT") &&
@@ -81,16 +84,14 @@ export default function TravelTimeline({
                   p.date + (p.time ? "T" + p.time + (p.utcOffset ?? "") : "")
                 }
               >
-                {p.date.slice(8, 10) + "." + p.date.slice(5, 7)}
-                {p.time
-                  ? " - " +
-                    (p.timeMeaning !== "EXACT"
+                <span className={styles.stationDate}>{p.date.slice(8, 10) + "." + p.date.slice(5, 7)}</span>
+                {p.time && <span className={styles.stationClock}>
+                  {(p.timeMeaning !== "EXACT"
                       ? label(p.timeMeaning) + " "
-                      : "") +
-                    p.time.slice(0, 5)
-                  : ""}
+                      : "") + p.time.slice(0, 5)}
+                  {pointUtcOffset(p, true) && ` (${pointUtcOffset(p, true)})`}
+                </span>}
               </time>
-              {pointUtcOffset(p, true) && ` (${pointUtcOffset(p, true)})`}
             </span>
           );
           const item = {
@@ -106,6 +107,7 @@ export default function TravelTimeline({
               </>
             ),
             visual: <BookingVisual type={row.entry.type} />,
+            visualStyle,
             label:
               !editing ||
               index === 0 ||
@@ -144,6 +146,7 @@ export default function TravelTimeline({
               ),
               label: stationLabel(arrival),
               visual: <BookingVisual type={row.entry.type} />,
+              visualStyle,
               content: (
                 <BookingDetails
                   entry={row.entry}

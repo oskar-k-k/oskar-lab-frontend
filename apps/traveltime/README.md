@@ -73,7 +73,7 @@ transport entry; edit mode keeps its combined card. Unknown durations are labele
 inferred by subtracting local clock hours. The shared Timeline exposes neutral `end` and
 `connectionLabel` slots for the same pattern in other apps; no data/storage changes occur.
 
-Station date/time labels are centered on the vertical main rail, level with each bubble. Each uses one compact line, e.g. `17.12 - 10:00 (UTC+4)`, with the backend-validated
+Station date/time labels are centered on the vertical main rail, level with each bubble. Each shows the date above a centered second line with time and zone, e.g. `17.12` / `10:00 (UTC+4)`, with the backend-validated
 UTC offset at that instant. The full IANA zone remains in the expanded details and label tooltip;
 unknown times do not invent an offset.
 Flight and boat departure and arrival disclosures render only the selected endpoint, with shared
@@ -138,3 +138,5 @@ configuration endpoint and key environment setting are removed. No Google key wa
 no payment details were entered, and Google's billing onboarding was not completed.
 
 Official help: https://support.google.com/maps/answer/144361
+
+Station artwork uses local, transparent SVG illustrations for flights, boats and stays. Activities keep their circular artwork. The shared Timeline exposes a neutral `visualStyle` option; booking types remain app-owned. No new data flow, permissions or external assets are introduced.

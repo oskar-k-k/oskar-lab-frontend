@@ -13,6 +13,8 @@ export type TimelineStation = Readonly<{
   title?: ReactNode;
   /** Decorative image or illustration; callers own its media source and access policy. */
   visual?: ReactNode;
+  /** Circle crops photos; illustration keeps freestanding artwork transparent and uncropped. */
+  visualStyle?: "circle" | "illustration";
 }>;
 
 /** One timeline position, optionally with a connected second bubble on the same side. */
@@ -37,7 +39,7 @@ function BubbleStation({
   return (
     <details id={anchor} className={styles.disclosure} name={group}>
       <summary className={styles.summary}>
-        <span className={styles.bubble} aria-hidden="true">
+        <span className={`${styles.bubble} ${station.visualStyle === "illustration" ? styles.illustration : ""}`} aria-hidden="true">
           {station.visual ?? <span className={styles.fallback} />}
         </span>
         {station.label != null && (

@@ -66,13 +66,13 @@ it("keeps both endpoints in the combined edit card", () => {
   expect(html).toContain("Arrival address");
 });
 
-it.each(["FLIGHT", "BOAT"] as const)("renders %s as connected endpoints with compact rail labels", (type) => {
+it.each(["FLIGHT", "BOAT"] as const)("renders %s as connected endpoints with stacked date and local time", (type) => {
   const html = renderToStaticMarkup(createElement(TravelTimeline, {
     entries: [{ ...entry, type }], now: 0, loading: false, editable: true,
     disabled: false, onDocuments: vi.fn(), onEdit: vi.fn(), onDelete: vi.fn(),
   }));
   expect((html.match(/<details /g) ?? [])).toHaveLength(2);
-  expect(html).toContain("01.12 - 10:00");
+  expect(html).toMatch(/<time[^>]*><span[^>]*>01\.12<\/span><span[^>]*>10:00 \(UTC\+1\)<\/span><\/time>/);
   expect(html).toContain("(UTC+1)");
   expect(html).toContain("(UTC+4)");
   expect(html).toContain("6 hr 20 min");
