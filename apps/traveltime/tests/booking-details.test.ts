@@ -31,6 +31,7 @@ const entry = {
   title: "Example flight",
   notes: "Shared booking note",
   reference: "EXAMPLE",
+  bookingSource: "Booking.com",
   durationMinutes: 380,
   points: [departure, arrival],
 } as Entry;
@@ -54,6 +55,9 @@ it("limits each flight disclosure to its own airport, address and time zone", ()
   expect(start).toContain("UTC+01:00");
   expect(start).not.toContain("Arrival address");
   expect(start).not.toContain("Asia/Dubai");
+  expect(start).toContain("travel.bookedVia");
+  expect(start).toContain("Booking.com");
+  expect(start).not.toContain("travel.documents");
   const end = render([arrival]);
   expect(end).toContain("Arrival address");
   expect(end).toContain("UTC+04:00");
@@ -64,6 +68,7 @@ it("keeps both endpoints in the combined edit card", () => {
   const html = render([departure, arrival], true);
   expect(html).toContain("Departure address");
   expect(html).toContain("Arrival address");
+  expect(html).toContain("travel.documents");
 });
 
 it.each(["FLIGHT", "BOAT"] as const)("renders %s as connected endpoints with stacked date and local time", (type) => {

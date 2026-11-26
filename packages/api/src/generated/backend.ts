@@ -617,6 +617,7 @@ export interface components {
             size: number;
         };
         TravelEntry: {
+            bookingSource: string;
             /** Format: int64 */
             durationMinutes: number | null;
             /** Format: uuid */
@@ -655,6 +656,7 @@ export interface components {
             utcOffset: string | null;
         };
         TravelSaveEntry: {
+            bookingSource?: string;
             notes?: string;
             points: components["schemas"]["TravelPoint"][];
             reference?: string;

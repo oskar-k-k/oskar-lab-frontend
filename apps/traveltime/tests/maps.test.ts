@@ -24,12 +24,13 @@ it.each([
 ])("rejects unsafe or billing/API-key embed source %s", (url) => {
   expect(parseMapEmbedUrl(url)).toBeNull();
 });
-it("does not create an external iframe until consent, even with a saved embed", () => {
+it("automatically embeds a saved station map without a loading prompt or referrer", () => {
   const html = renderToStaticMarkup(createElement(PlaceMap, { placeName: "Example pier", address: "Main St", mapEmbedUrl: embed }));
-  expect(html).not.toContain("<iframe");
+  expect(html).toContain("<iframe");
+  expect(html).toContain('loading="lazy"');
+  expect(html).toContain('referrerPolicy="no-referrer"');
   expect(html).not.toContain("<img");
-  expect(html).toContain("travel.loadMap");
-  expect(html).toContain("travel.mapConsent");
+  expect(html).not.toContain("<button");
   expect(html).toContain('rel="noopener noreferrer"');
   expect(html).toContain(embed);
 });

@@ -120,13 +120,16 @@ Only `https://www.google.com/maps/embed?pb=...` with optional `hl` is allowed. A
 userinfo, fragments, API-key paths/parameters and unknown/duplicate parameters are rejected
 on both boundaries. No Cloud API key, billing account or server-side geocoding is used.
 
-The preview begins as a local placeholder. Google is contacted only after the viewer chooses
-to load that station's map, or opens its external link. Google receives the saved embed location,
+Saved previews embed automatically with native `loading="lazy"`, without a separate loading
+confirmation. The browser controls fetch timing, including for maps inside collapsed details;
+no guarantee is made that a request waits for a particular disclosure action. Missing embeds
+keep a local empty state and an outbound location link. Google receives the saved embed location,
 IP address and browser/device information. Referrers are suppressed. No trip URL, dates, notes,
-booking references, documents or account identifiers are included. Google may use cookies and
-process data outside the EEA; its retention/transfer terms remain an operator review item.
-Hiding the map unmounts its iframe; account changes clear components. Consent is not persistent
-or shared between stations. Google attribution remains visible and interactive at the bottom.
+booking references, documents or account identifiers are included in the embed URL. Google may
+use cookies and process data outside the EEA; its retention/transfer terms and the legal basis
+for automatic third-party embeds remain operator review items. No consent preference is stored.
+Google attribution remains visible and interactive at the bottom. This automatic loading mode
+was explicitly requested by the owner; it is not a claim that consent is legally unnecessary.
 
 A saved preview links to the same Google embed so the selected pin is preserved. Without an
 embed, the outbound link searches the saved place/address and the UI explicitly says the preview
@@ -140,3 +143,5 @@ no payment details were entered, and Google's billing onboarding was not complet
 Official help: https://support.google.com/maps/answer/144361
 
 Station artwork uses local, transparent SVG illustrations for flights, boats and stays. Activities keep their circular artwork. The shared Timeline exposes a neutral `visualStyle` option; booking types remain app-owned. No new data flow, permissions or external assets are introduced.
+
+The normal detail view shows optional `bookingSource` as plain text (for example, “Booked via Booking.com”) instead of a document button. Owners can edit the source in the booking form; missing sources are omitted rather than inferred. Existing attachment management remains available in edit mode. Booking sources share the trip's authorization, storage and deletion rules and create no external request.

@@ -74,6 +74,7 @@ export default function BookingForm({
           title: String(data.get("title")),
           notes: String(data.get("notes") ?? ""),
           reference: String(data.get("reference") ?? ""),
+          bookingSource: String(data.get("bookingSource") ?? ""),
           points,
           version: entry?.version ?? 0,
         });
@@ -235,6 +236,10 @@ export default function BookingForm({
             );
           })}
         </div>
+        <label>
+          {label("bookingSource")}
+          <input name="bookingSource" maxLength={160} defaultValue={entry?.bookingSource ?? ""} />
+        </label>
         <label>
           {label("reference")}
           <input

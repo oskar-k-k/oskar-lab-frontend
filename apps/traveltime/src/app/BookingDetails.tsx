@@ -46,6 +46,7 @@ export default function BookingDetails({
             : ""}
       </div>
       <h2>{entry.title}</h2>
+      {entry.bookingSource && <p className={styles.bookingSource}>{label("bookedVia")} <strong>{entry.bookingSource}</strong></p>}
       <div className={styles.endpoints}>
         {points.map((p) => (
           <div key={p.role}>
@@ -76,7 +77,7 @@ export default function BookingDetails({
         <p className={styles.notes}>{entry.notes}</p>
       </details>
       <div className={styles.actions}>
-        <button onClick={() => onDocuments(entry)}>{label("documents")}</button>
+        {editing && <button onClick={() => onDocuments(entry)}>{label("documents")}</button>}
         {editable && (
           <>
             <button disabled={disabled} onClick={() => onEdit(entry)}>

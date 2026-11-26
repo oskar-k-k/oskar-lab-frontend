@@ -512,19 +512,27 @@
   overflow: hidden;
   background: var(--travel-bg);
 }
-.mapConsent {
+.bookingSource {
+  color: var(--travel-muted);
+  font-size: 0.8125rem;
+}
+.bookingSource strong {
+  color: var(--travel-ink);
+  font-weight: 500;
+}
+.mapEmpty {
   display: grid;
   justify-items: center;
   padding: 22px 16px;
   text-align: center;
   background: radial-gradient(ellipse at top, rgb(41 116 133 / 18%), transparent);
 }
-.mapConsent svg {
+.mapEmpty svg {
   fill: var(--travel-bg);
   stroke: var(--travel-focus);
   stroke-width: 1.5;
 }
-.mapConsent p {
+.mapEmpty p {
   color: var(--travel-muted);
   font-size: 12px;
   max-width: 30rem;
@@ -533,4 +541,3 @@
 .mapFrame iframe { display: block; width: 100%; height: 230px; border: 0; }
 .mapOverlay { position: absolute; inset: 0 0 48px; }
 .mapLink { display: block; padding: 12px 14px; font-size: 12px; text-align: center; }
-.page .mapHide { display: block; margin: 10px auto 0; font-size: 12px; }

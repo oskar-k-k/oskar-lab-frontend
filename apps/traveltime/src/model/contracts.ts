@@ -87,6 +87,7 @@ function point(value: unknown) {
 function entry(value: unknown) {
   return (
     record(value) &&
+    (value.bookingSource == null || (typeof value.bookingSource === "string" && value.bookingSource.length <= 160)) &&
     id(value.id) &&
     id(value.tripId) &&
     kinds.has(String(value.type)) &&

@@ -1,14 +1,13 @@
 export const travelEn = {
+  "travel.bookingSource": "Booking source (optional)",
+  "travel.bookedVia": "Booked via",
   "travel.mapMissing": "No map preview saved yet. Add the Google Maps embed link while editing this place.",
   "travel.mapEmbedLink": "Google Maps embed link (optional)",
   "travel.mapEmbedHelp": "Google Maps → Share → Embed a map → Copy HTML. Paste the HTML or embed URL here. Select the exact place first.",
   "travel.invalidMapEmbed": "Use a Google Maps share embed URL (https://www.google.com/maps/embed?pb=…) or its copied iframe HTML.",
   "travel.map": "Location map",
-  "travel.loadMap": "Load Google Maps preview",
   "travel.loadingMap": "Loading map…",
   "travel.openMaps": "Open in Google Maps",
-  "travel.hideMap": "Hide map",
-  "travel.mapConsent": "Loading sends this place/address and your IP address to Google. Google may process device data and use cookies. No booking notes, documents or travel dates are sent.",
   "travel.mapUnavailable": "The preview is currently unavailable. You can still open the saved location directly in Google Maps.",
 
   "travel.accountLink": "Account",
@@ -117,16 +116,15 @@ export const travelEn = {
   "travel.dateOnly": "Day only",
 } as const;
 export const travelDe: Record<keyof typeof travelEn, string> = {
+  "travel.bookingSource": "Buchungsquelle (optional)",
+  "travel.bookedVia": "Gebucht über",
   "travel.mapMissing": "Noch keine Kartenvorschau gespeichert. Ergänze beim Bearbeiten dieses Ortes den Google-Maps-Einbettungslink.",
   "travel.mapEmbedLink": "Google-Maps-Einbettungslink (optional)",
   "travel.mapEmbedHelp": "Google Maps → Teilen → Karte einbetten → HTML kopieren. Füge hier das HTML oder die Einbettungs-URL ein. Wähle vorher den exakten Ort aus.",
   "travel.invalidMapEmbed": "Verwende einen Google-Maps-Einbettungslink (https://www.google.com/maps/embed?pb=…) oder das kopierte iframe-HTML.",
   "travel.map": "Standortkarte",
-  "travel.loadMap": "Google-Maps-Vorschau laden",
   "travel.loadingMap": "Karte wird geladen…",
   "travel.openMaps": "In Google Maps öffnen",
-  "travel.hideMap": "Karte ausblenden",
-  "travel.mapConsent": "Beim Laden werden dieser Ort/diese Adresse und deine IP-Adresse an Google übermittelt. Google kann Gerätedaten verarbeiten und Cookies nutzen. Buchungsnotizen, Dokumente und Reisedaten werden nicht übertragen.",
   "travel.mapUnavailable": "Die Vorschau ist derzeit nicht verfügbar. Du kannst den gespeicherten Ort weiterhin direkt in Google Maps öffnen.",
 
   "travel.pauseAtmosphere": "Atmosphäre pausieren",

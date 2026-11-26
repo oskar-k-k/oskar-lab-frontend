@@ -642,6 +642,9 @@
       },
       "TravelEntry": {
         "properties": {
+          "bookingSource": {
+            "type": "string"
+          },
           "durationMinutes": {
             "format": "int64",
             "nullable": true,
@@ -691,6 +694,7 @@
           }
         },
         "required": [
+          "bookingSource",
           "durationMinutes",
           "id",
           "notes",
@@ -808,6 +812,11 @@
       },
       "TravelSaveEntry": {
         "properties": {
+          "bookingSource": {
+            "maxLength": 160,
+            "minLength": 0,
+            "type": "string"
+          },
           "notes": {
             "maxLength": 4000,
             "minLength": 0,
