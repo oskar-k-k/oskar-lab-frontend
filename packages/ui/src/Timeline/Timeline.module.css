@@ -161,9 +161,9 @@
 .bubbleLabel {
   position: absolute;
   top: 4rem;
-  right: calc(50% + 4.75rem);
+  left: -2rem;
   width: max-content;
-  transform: translateY(-50%);
+  transform: translate(-50%, -50%);
   font-size: 0.75rem;
   line-height: 1.5;
   letter-spacing: 0.025em;
@@ -174,8 +174,7 @@
   overflow-wrap: anywhere;
 }
 .alternate .bubbleLabel {
-  right: auto;
-  left: calc(50% + 4.75rem);
+  left: calc(100% + 2rem);
 }
 
 .bubbleTitle {
@@ -221,12 +220,10 @@
     font-size: 0.6875rem;
     width: max-content;
     top: 3rem;
-    right: calc(50% + 3.5rem);
-    left: auto;
+    left: -2.5rem;
   }
   .alternate .bubbleLabel {
-    right: auto;
-    left: calc(50% + 3.5rem);
+    left: calc(100% + 2.5rem);
   }
   .stationGroup:has(> .disclosure[open]) .bubbleLabel {
     position: static;
@@ -300,13 +297,6 @@
     width: 5rem;
     height: 5rem;
     margin-bottom: 1rem;
-  }
-  .bubbleLabel {
-    right: calc(50% + 3rem);
-  }
-  .alternate .bubbleLabel {
-    right: auto;
-    left: calc(50% + 3rem);
   }
   .summary::before,
   .bubbleLabel {

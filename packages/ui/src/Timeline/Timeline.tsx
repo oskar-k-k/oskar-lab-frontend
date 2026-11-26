@@ -5,7 +5,7 @@ import styles from "./Timeline.module.css";
 export type TimelineStation = Readonly<{
   /** Stable, document-unique ID, also usable as an anchor target. */
   id: string;
-  /** Date, time or milestone label; bubble view places it on the horizontal rail connection. */
+  /** Date, time or milestone label; bubble view centers it on the vertical rail beside its station. */
   label: ReactNode;
   /** Arbitrary content, including headings, connected endpoints and actions. */
   content: ReactNode;

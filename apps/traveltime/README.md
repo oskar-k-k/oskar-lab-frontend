@@ -73,7 +73,7 @@ transport entry; edit mode keeps its combined card. Unknown durations are labele
 inferred by subtracting local clock hours. The shared Timeline exposes neutral `end` and
 `connectionLabel` slots for the same pattern in other apps; no data/storage changes occur.
 
-Station date/time labels sit on the horizontal rail connection. Each uses one compact line, e.g. `17.12 - 10:00 (UTC+4)`, with the backend-validated
+Station date/time labels are centered on the vertical main rail, level with each bubble. Each uses one compact line, e.g. `17.12 - 10:00 (UTC+4)`, with the backend-validated
 UTC offset at that instant. The full IANA zone remains in the expanded details and label tooltip;
 unknown times do not invent an offset.
 Flight and boat departure and arrival disclosures render only the selected endpoint, with shared
