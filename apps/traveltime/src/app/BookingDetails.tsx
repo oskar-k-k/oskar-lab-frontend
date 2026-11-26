@@ -62,7 +62,7 @@ export default function BookingDetails({
               {p.timeZone}
               {pointUtcOffset(p) ? " · " + pointUtcOffset(p) : ""}
             </small>
-            <PlaceMap key={p.placeName + p.address} placeName={p.placeName} address={p.address} />
+            <PlaceMap key={p.placeName + p.address + p.mapEmbedUrl} placeName={p.placeName} address={p.address} mapEmbedUrl={p.mapEmbedUrl} />
           </div>
         ))}
       </div>

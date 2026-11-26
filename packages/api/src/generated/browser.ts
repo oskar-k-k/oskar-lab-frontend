@@ -499,6 +499,7 @@ export interface components {
             address: string;
             /** Format: date */
             date: string;
+            mapEmbedUrl: string | null;
             placeName: string;
             /** @enum {string} */
             role: "DEPARTURE" | "ARRIVAL" | "CHECK_IN" | "CHECK_OUT" | "START" | "END";

@@ -13,9 +13,23 @@ export function googleMapsLink(query: string): string {
   return url.toString();
 }
 
-/** Builds an official place-mode embed; the key must be restricted to this origin and Embed API. */
-export function googleMapsEmbed(query: string, publicKey: string, locale: string): string {
-  const url = new URL("https://www.google.com/maps/embed/v1/place");
-  url.search = new URLSearchParams({ key: publicKey, q: query, zoom: "16", language: locale }).toString();
-  return url.toString();
+/** Extracts a key-free Google share embed from its URL or the copied iframe HTML. */
+export function parseMapEmbedUrl(input: string): string | null {
+  const value = input.trim();
+  if (!value) return null;
+  const source = value.startsWith("<")
+    ? value.match(/<iframe\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/i)?.[1]?.replaceAll("&amp;", "&")
+    : value;
+  if (!source) return null;
+  try {
+    const url = new URL(source);
+    if (source.length > 16000 || url.protocol !== "https:" || url.hostname !== "www.google.com" ||
+      url.username || url.password || url.port || url.hash || url.pathname !== "/maps/embed") return null;
+    const seen = new Set<string>();
+    for (const [key, parameter] of url.searchParams) {
+      if (!["pb", "hl"].includes(key) || seen.has(key) || !parameter.trim()) return null;
+      seen.add(key);
+    }
+    return seen.has("pb") ? url.toString() : null;
+  } catch { return null; }
 }

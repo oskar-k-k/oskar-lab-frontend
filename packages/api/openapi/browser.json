@@ -745,6 +745,12 @@
             "format": "date",
             "type": "string"
           },
+          "mapEmbedUrl": {
+            "maxLength": 16000,
+            "minLength": 0,
+            "nullable": true,
+            "type": "string"
+          },
           "placeName": {
             "maxLength": 200,
             "minLength": 0,
@@ -790,6 +796,7 @@
         "required": [
           "address",
           "date",
+          "mapEmbedUrl",
           "placeName",
           "role",
           "time",

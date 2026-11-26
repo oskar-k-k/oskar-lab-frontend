@@ -4,6 +4,7 @@ import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import type { TranslationKey } from "@oskar-lab/i18n/messages";
 import type { components } from "@oskar-lab/api/backend";
 import type { Entry } from "./TravelWorkspace";
+import { parseMapEmbedUrl } from "../model/maps";
 import styles from "./Travel.module.css";
 type Point = components["schemas"]["TravelPoint"];
 type Input = components["schemas"]["TravelSaveEntry"];
@@ -65,6 +66,7 @@ export default function BookingForm({
               : "UNSPECIFIED",
             placeName: String(data.get(`place${index}`)),
             address: String(data.get(`address${index}`) ?? ""),
+            mapEmbedUrl: parseMapEmbedUrl(String(data.get(`map${index}`) ?? "")),
           };
         });
         void onSave({
@@ -211,6 +213,23 @@ export default function BookingForm({
                     maxLength={1000}
                     defaultValue={point?.address}
                   />
+                </label>
+                <label>
+                  {label("mapEmbedLink")}
+                  <input
+                    name={`map${index}`}
+                    maxLength={16000}
+                    defaultValue={point?.mapEmbedUrl ?? ""}
+                    onChange={(event) => event.currentTarget.setCustomValidity(
+                      event.currentTarget.value.trim() && !parseMapEmbedUrl(event.currentTarget.value)
+                        ? label("invalidMapEmbed") : "",
+                    )}
+                    onBlur={(event) => {
+                      const url = parseMapEmbedUrl(event.currentTarget.value);
+                      if (url) event.currentTarget.value = url;
+                    }}
+                  />
+                  <small>{label("mapEmbedHelp")}</small>
                 </label>
               </fieldset>
             );

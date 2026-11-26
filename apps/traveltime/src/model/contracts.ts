@@ -1,3 +1,4 @@
+import { parseMapEmbedUrl } from "./maps";
 import type { components } from "@oskar-lab/api/backend";
 const kinds = new Set([
   "FLIGHT",
@@ -60,7 +61,8 @@ function point(value: unknown) {
     !date(value.date) ||
     typeof value.timeZone !== "string" ||
     typeof value.placeName !== "string" ||
-    typeof value.address !== "string"
+    typeof value.address !== "string" ||
+    (value.mapEmbedUrl != null && (typeof value.mapEmbedUrl !== "string" || !parseMapEmbedUrl(value.mapEmbedUrl)))
   )
     return false;
   try {

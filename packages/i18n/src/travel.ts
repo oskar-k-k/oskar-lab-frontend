@@ -1,4 +1,8 @@
 export const travelEn = {
+  "travel.mapMissing": "No map preview saved yet. Add the Google Maps embed link while editing this place.",
+  "travel.mapEmbedLink": "Google Maps embed link (optional)",
+  "travel.mapEmbedHelp": "Google Maps → Share → Embed a map → Copy HTML. Paste the HTML or embed URL here. Select the exact place first.",
+  "travel.invalidMapEmbed": "Use a Google Maps share embed URL (https://www.google.com/maps/embed?pb=…) or its copied iframe HTML.",
   "travel.map": "Location map",
   "travel.loadMap": "Load Google Maps preview",
   "travel.loadingMap": "Loading map…",
@@ -113,6 +117,10 @@ export const travelEn = {
   "travel.dateOnly": "Day only",
 } as const;
 export const travelDe: Record<keyof typeof travelEn, string> = {
+  "travel.mapMissing": "Noch keine Kartenvorschau gespeichert. Ergänze beim Bearbeiten dieses Ortes den Google-Maps-Einbettungslink.",
+  "travel.mapEmbedLink": "Google-Maps-Einbettungslink (optional)",
+  "travel.mapEmbedHelp": "Google Maps → Teilen → Karte einbetten → HTML kopieren. Füge hier das HTML oder die Einbettungs-URL ein. Wähle vorher den exakten Ort aus.",
+  "travel.invalidMapEmbed": "Verwende einen Google-Maps-Einbettungslink (https://www.google.com/maps/embed?pb=…) oder das kopierte iframe-HTML.",
   "travel.map": "Standortkarte",
   "travel.loadMap": "Google-Maps-Vorschau laden",
   "travel.loadingMap": "Karte wird geladen…",

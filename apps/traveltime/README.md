@@ -110,41 +110,31 @@ intercept clicks. Rail gradients and station shadows use optional shared Timelin
 with existing defaults preserved for other callers and a preview in Core & Design.
 
 
-## Optional location maps
+## Optional key-free location maps
 
-Each station includes a local consent placeholder and an official Google Maps search link.
-Nothing is fetched from Google until the person loads that station's preview or opens the link.
-The embed receives only saved place/address, IP/browser information and the site origin;
-`strict-origin-when-cross-origin` prevents the private trip query from being a referrer.
-No dates, booking references, notes, documents, coordinates or account identifiers are sent.
-Google may use cookies and process data outside the EEA under its own privacy policy. Central
-privacy disclosures and the per-map notice describe this. Provider retention/transfer details
-still need operator review before a broad public launch. Hiding the map unmounts its iframe;
-account changes clear components. Consent is neither persistent nor shared between stations.
-Google attribution at the bottom remains visible and interactive. The preview surface links
-out to Maps; a separate accessible link is always available, including on failure.
+Each station stores an optional `mapEmbedUrl` copied from Google Maps → Share → Embed a map.
+Owners can paste the embed URL or copied iframe HTML into the station's editor; only the
+validated URL is saved. The backend stores it with the private point and enforces existing
+owner/viewer permissions. Map links are deleted with the point; backup retention still applies.
+Only `https://www.google.com/maps/embed?pb=...` with optional `hl` is allowed. Arbitrary hosts,
+userinfo, fragments, API-key paths/parameters and unknown/duplicate parameters are rejected
+on both boundaries. No Cloud API key, billing account or server-side geocoding is used.
 
-The configured key is deliberately public, limited to the Maps Embed API and exact production
-HTTP referrers. It is delivered only to authenticated browsers after the load action using
-`/api/maps` with private/no-store responses. It is never a general Google credential.
-The adapter performs no external requests and does not accept or log place data.
-Map matching uses the saved name/address; ambiguous or incomplete text is not a verified
-coordinate. A future persisted Google Place ID would be needed for an unambiguous identity.
+The preview begins as a local placeholder. Google is contacted only after the viewer chooses
+to load that station's map, or opens its external link. Google receives the saved embed location,
+IP address and browser/device information. Referrers are suppressed. No trip URL, dates, notes,
+booking references, documents or account identifiers are included. Google may use cookies and
+process data outside the EEA; its retention/transfer terms remain an operator review item.
+Hiding the map unmounts its iframe; account changes clear components. Consent is not persistent
+or shared between stations. Google attribution remains visible and interactive at the bottom.
 
-### Operator setup (pending)
+A saved preview links to the same Google embed so the selected pin is preserved. Without an
+embed, the outbound link searches the saved place/address and the UI explicitly says the preview
+has not been saved. An incomplete address can produce ambiguous search results. The owner must
+select the correct point in Maps before copying its embed; no coordinates are guessed.
 
-1. Create/select a Google Cloud project and enable **Maps Embed API**.
-2. Create a browser key. Restrict applications to HTTP referrers `https://oskarlab.dev/*`
-   and APIs to **Maps Embed API** only. Add a separate restricted development key if needed.
-3. Set `GOOGLE_MAPS_EMBED_PUBLIC_KEY` in the production compose environment; do not commit it.
-4. Recreate the TravelTime service. Verify one public landmark before trying private addresses.
+The initial Cloud-API implementation was replaced at the owner's request. The `/api/maps`
+configuration endpoint and key environment setting are removed. No Google key was created,
+no payment details were entered, and Google's billing onboarding was not completed.
 
-No key is currently configured. Until this setup is completed, map-load attempts show an
-unavailable notice and the official outbound Maps link remains usable. This does not certify
-the preview as production-verified. Google account setup, provider terms and any billing-account
-steps are for the operator to complete.
-
-Official references:
-- https://developers.google.com/maps/documentation/embed/get-api-key
-- https://developers.google.com/maps/documentation/embed/embedding-map
-- https://developers.google.com/maps/documentation/urls/get-started
+Official help: https://support.google.com/maps/answer/144361
