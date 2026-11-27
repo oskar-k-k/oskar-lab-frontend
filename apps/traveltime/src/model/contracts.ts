@@ -1,5 +1,6 @@
 import { parseMapEmbedUrl } from "./maps";
 import { validPackingList } from "./packing";
+import { validSavedPlace } from "./saved-places";
 import type { components } from "@oskar-lab/api/backend";
 const kinds = new Set([
   "FLIGHT",
@@ -131,6 +132,8 @@ export function validTravelResponse(
 ): boolean {
   const route = path.split("?")[0];
   if (route.endsWith("/packing")) return validPackingList(value);
+  if (route.endsWith("/saved") && method === "GET") return record(value) && Array.isArray(value.places) && value.places.length <= 20 && value.places.every(validSavedPlace) && typeof value.hasMore === "boolean";
+  if (route.includes("/saved")) return validSavedPlace(value);
   if (route.endsWith("/viewers"))
     return method === "GET"
       ? Array.isArray(value) && value.every(viewer)

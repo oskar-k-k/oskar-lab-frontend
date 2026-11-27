@@ -197,3 +197,29 @@ remain until individually removed or the trip/account is deleted; cascading rows
 from the active database. Existing backup retention still needs operator confirmation.
 No extra external requests, browser storage, analytics, location permission, assets or
 third-party dependencies are introduced. The modal does not include Maps embeds.
+
+
+## Mobile navigation and saved inspiration
+
+TravelNavigation supplies five app-local destinations: Packing list, Timeline, Add booking,
+Saved and Trips. At widths up to 760px the platform header is hidden and a fixed icon-only
+bottom dock exposes accessible names, focus indicators and the current destination. Safe-area
+padding and bottom content clearance keep controls usable above device home indicators.
+Desktop shows the same five destinations with text in the top header. Timeline editing and
+motion controls remain available in the timeline itself. Packing's native modal contains its
+own navigation; its draft-discard check runs before leaving. Booking and saved-place drafts
+also ask before navigation discards input. Navigation has no new persistent browser state.
+
+Saved keeps inspiration separate from confirmed bookings: manual title, optional HTTP(S)
+URL, and optional notes. Reels are stored as links, with no scraping, remote thumbnails,
+embeds, API integrations or external requests until a user opens a link. Links suppress
+referrers and use noopener/noreferrer. Unsafe schemes and credential-bearing URLs are rejected
+at both boundaries. GET /api/travel/{tripId}/saved is paginated (20 per page); POST creates,
+PUT /saved/{id} updates, DELETE /saved/{id}?version=... removes an item. Writes are owner-only
+and version checked; verified trip viewers can read. Lists are bounded to 500 items/trip.
+
+The existing database/backup provider stores these private titles, URLs and notes to provide
+this requested collection. Authorized trip readers can see them; nothing is published.
+Rows remain until individually deleted or the trip/account is deleted. Active database rows
+cascade with their parent; existing backup deletion schedules still need operator confirmation.
+No extra analytics, external service, browser permission or third-party asset is introduced.

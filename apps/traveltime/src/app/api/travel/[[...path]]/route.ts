@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@oskar-lab/auth/platformUser";
 const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 const routes = new RegExp(
-  `^(?:${uuid}(?:/(?:packing|entries(?:/${uuid}(?:/attachments(?:/${uuid})?)?)?|viewers(?:/${uuid})?))?)?$`,
+  `^(?:${uuid}(?:/(?:packing|saved(?:/${uuid})?|entries(?:/${uuid}(?:/attachments(?:/${uuid})?)?)?|viewers(?:/${uuid})?))?)?$`,
   "i",
 );
 const headers = {

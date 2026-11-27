@@ -8,6 +8,7 @@
 .total small { display: block; font-size: 11px; color: var(--travel-muted); }
 .dialog .back { width: 44px; height: 44px; padding: 0; font-size: 23px; }
 .content { padding: 24px 32px 80px; }
+.navigation { border-bottom: 1px solid var(--travel-line); padding: 8px; }
 .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; min-height: 42px; margin-bottom: 24px; }
 .toolbar [role="status"] { font-size: 12px; color: var(--travel-muted); }
 .dialog button { border: 1px solid var(--travel-line); border-radius: 10px; padding: 9px 14px; background: var(--travel-surface); color: var(--travel-ink); cursor: pointer; font: inherit; font-size: 13px; }
@@ -46,4 +47,8 @@
   .groupHeader { padding: 14px; }
   .items { padding: 4px 14px; }
   .editRow { flex-wrap: wrap; }
+}
+@media (max-width: 760px) {
+  .content { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+  .navigation { border: 0; padding: 0; }
 }

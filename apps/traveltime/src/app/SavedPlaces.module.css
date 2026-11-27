@@ -1,0 +1,18 @@
+.library { max-width: 860px; margin: auto; padding: 24px 0; }
+.heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.heading p { margin: 0 0 4px; color: var(--travel-focus); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; }
+.heading h1 { margin: 0; font: 38px Georgia, serif; }
+.intro { color: var(--travel-muted); max-width: 460px; margin-bottom: 26px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); gap: 16px; margin: 24px 0; }
+.card, .form, .notice { padding: 22px; border: 1px solid var(--travel-line); border-radius: 18px; background: var(--travel-surface); }
+.card svg, .empty svg { fill: none; stroke: var(--travel-focus); stroke-width: 1.4; stroke-linejoin: round; }
+.card h2 { margin: 14px 0 8px; font: 23px Georgia, serif; overflow-wrap: anywhere; }
+.card p { color: var(--travel-muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+.card a { display: inline-block; color: var(--travel-focus); font-size: 13px; overflow-wrap: anywhere; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+.form { display: grid; gap: 16px; margin: 24px 0; }
+.form label { display: grid; gap: 6px; color: var(--travel-muted); font-size: 12px; }
+.form input, .form textarea { width: 100%; padding: 10px; color: var(--travel-ink); background: var(--travel-bg); border: 1px solid var(--travel-line); border-radius: 9px; font: inherit; font-size: 16px; }
+.empty { padding: 56px 20px; text-align: center; color: var(--travel-muted); }
+.empty h2 { color: var(--travel-ink); font: 25px Georgia, serif; }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import type { TranslationKey } from "@oskar-lab/i18n/messages";
 import { usePackingList } from "../hooks/usePackingList";
@@ -7,7 +7,7 @@ import { checkPackingItem, packingProgress, validPackingList, type PackingList, 
 import styles from "./PackingList.module.css";
 
 /** Full-screen, focus-trapped checklist; drafts stay local until an explicit owner save. */
-export default function PackingListDialog({ tripId, canEdit, onClose }: { tripId: string; canEdit: boolean; onClose: () => void }) {
+export default function PackingListDialog({ tripId, canEdit, onClose, navigation }: { tripId: string; canEdit: boolean; onClose: () => void; navigation?: (leave: (action: () => void) => void, saving: boolean) => ReactNode }) {
   const { t, locale } = useI18n();
   const label = (key: string) => t(("travel." + key) as TranslationKey);
   const state = usePackingList(tripId);
@@ -32,11 +32,12 @@ export default function PackingListDialog({ tripId, canEdit, onClose }: { tripId
     element?.showModal();
     return () => { element?.close(); document.body.style.overflow = overflow; if (trigger?.isConnected) trigger.focus({ preventScroll: true }); };
   }, []);
-  const close = () => {
+  const leave = (action: () => void) => {
     if (state.saving) return;
     if (editing && !window.confirm(label("packingDiscard"))) return;
-    onClose();
+    action();
   };
+  const close = () => leave(onClose);
   const changePerson = (change: (person: PackingPerson) => PackingPerson) => {
     if (!draft || !person) return;
     setDraft({ ...draft, people: draft.people.map(p => p.id === person.id ? change(p) : p) });
@@ -61,6 +62,7 @@ export default function PackingListDialog({ tripId, canEdit, onClose }: { tripId
         </span>}
         <button className={styles.back} type="button" autoFocus disabled={state.saving} aria-label={label("packingBack")} title={label("packingBack")} onClick={close}>←</button>
       </header>
+      {navigation && <div className={styles.navigation}>{navigation(leave, state.saving)}</div>}
       <div className={styles.content}>
         <div className={styles.toolbar}>
           {canEdit && !editing && state.list && <button disabled={disabled} type="button" onClick={() => { setDraft(state.list); setInvalid(false); }}>{label("editMode")}</button>}

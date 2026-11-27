@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @next/next/no-html-link-for-pages -- Platform links cross independent app boundaries. */
 import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
@@ -12,6 +11,8 @@ import TripForm from "./TripForm";
 import BookingForm from "./BookingForm";
 import StationTimeEditor from "./StationTimeEditor";
 import PackingListDialog from "./PackingListDialog";
+import TravelNavigation, { type TravelSection } from "./TravelNavigation";
+import SavedPlaces from "./SavedPlaces";
 import styles from "./Travel.module.css";
 type Trip = components["schemas"]["TravelTrip"];
 export type Entry = components["schemas"]["TravelEntry"];
@@ -40,6 +41,8 @@ function TravelWorkspaceContent() {
   const documentGeneration = useRef(0);
   const [editingTimeline, setEditingTimeline] = useState(false);
   const [packingOpen, setPackingOpen] = useState(false);
+  const [section, setSection] = useState<TravelSection>("trips");
+  const [draftDirty, setDraftDirty] = useState(false);
   const [timeEdit, setTimeEdit] = useState<{entry: Entry; point: Entry["points"][number]} | null>(null);
   const [ambientMotion, setAmbientMotion] = useState(true);
   const [success, setSuccess] = useState(false);
@@ -98,6 +101,7 @@ function TravelWorkspaceContent() {
       setError("");
       setSelected(null);
       setTimeEdit(null);
+      setPackingOpen(false); setSection("timeline"); setDraftDirty(false);
       ++documentGeneration.current;
       setShare(false);
       try {
@@ -197,34 +201,47 @@ function TravelWorkspaceContent() {
       year: "numeric",
       timeZone: "UTC",
     }).format(new Date(value + "T12:00:00Z"));
+  function navigate(next: TravelSection) {
+    if (busy || (next !== "trips" && !trip) || (next === "add" && !trip?.canEdit)) return;
+    if (next === section && !packingOpen) return;
+    if (draftDirty && !window.confirm(label("discardChanges"))) return;
+    setDraftDirty(false); setSuccess(false); setTimeEdit(null); setNewTrip(false); setShare(false); setSelected(null); setEdit(undefined);
+    if (next === "packing") { setSection("timeline"); setPackingOpen(true); return; }
+    setPackingOpen(false); setSection(next);
+    if (next === "trips") {
+      ++requestGeneration.current; ++documentGeneration.current;
+      setTrip(null); setEditingTimeline(false);
+      window.history.replaceState(null, "", appPath("/")); void loadTrips();
+    }
+    if (next === "add") setEdit(null);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
   return (
     <div className={`${styles.page} ${trip && ambientMotion ? styles.ambientMotion : ""}`}>
       <header className={styles.header}>
-        {!trip && <a className={styles.platformLink} href="/">OSKAR LAB</a>}
-        {trip && !auth && <button className={styles.packingButton} onClick={() => setPackingOpen(true)}>
-          <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="3" y="5" width="14" height="13" rx="2"/><path d="M7 5V3h6v2M3 10h14M8 9v3h4V9"/></svg>
-          {label("packingTitle")}
-        </button>}
-        <strong>TravelTime</strong>
+        <a className={styles.platformLink} href={appPath("/")} onClick={event => { event.preventDefault(); navigate("trips"); }}>TravelTime</a>
+        {!auth && <TravelNavigation active={packingOpen ? "packing" : section} hasTrip={Boolean(trip)} canEdit={Boolean(trip?.canEdit)} disabled={busy} onNavigate={navigate} />}
         <a className={styles.accountLink} href="/account" aria-label={label("accountLink")} title={label("accountLink")}><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><circle cx="10" cy="6" r="3"/><path d="M4 18v-2a6 6 0 0 1 12 0v2"/></svg></a>
-        {trip && !auth && (
-          <nav className={styles.headerActions} aria-label={label("timeline")}>
-            <button
-              className={styles.headerIcon} aria-label={label("back")} title={label("back")}
-              onClick={() => {
-                ++requestGeneration.current;
-                ++documentGeneration.current;
-                window.history.replaceState(null, "", appPath("/"));
-                setNewTrip(false);
-                setTrip(null);
-                setEditingTimeline(false);
-                setSelected(null);
-                setEdit(undefined);
-                void loadTrips();
-              }}
-            >
-              <span aria-hidden="true">←</span>
-            </button>
+      </header>
+      {!auth && <div className={styles.mobileNavigation}><TravelNavigation active={packingOpen ? "packing" : section} hasTrip={Boolean(trip)} canEdit={Boolean(trip?.canEdit)} disabled={busy} onNavigate={navigate} /></div>}
+      {trip && timeEdit && editingTimeline && trip.canEdit && <StationTimeEditor
+        entry={timeEdit.entry} point={timeEdit.point} disabled={writeDisabled}
+        onClose={() => setTimeEdit(null)}
+        onSave={async input => {
+          if (writeDisabled || !trip.canEdit || !editingTimeline) throw new TravelError(403, "forbidden");
+          const generation = requestGeneration.current;
+          setBusy(true); setSuccess(false); setError("");
+          try {
+            const saved = await travelRequest<Entry>(`/${trip.id}/entries/${timeEdit.entry.id}`, "PUT", input);
+            if (generation !== requestGeneration.current) return;
+            setEntries(previous => previous.map(entry => entry.id === saved.id ? saved : entry));
+            setTimeEdit(null); setSuccess(true);
+          } catch (reason) { report(reason); throw reason; }
+          finally { setBusy(false); }
+        }} />}
+      <main className={styles.main}>
+        {trip && !auth && section === "timeline" && (
+          <nav className={styles.timelineTools} aria-label={label("tripActions")}>
             {trip.canEdit && (
               <button
                 className={styles.editModeToggle}
@@ -320,23 +337,6 @@ function TravelWorkspaceContent() {
             </button>
           </nav>
         )}
-      </header>
-      {trip && timeEdit && editingTimeline && trip.canEdit && <StationTimeEditor
-        entry={timeEdit.entry} point={timeEdit.point} disabled={writeDisabled}
-        onClose={() => setTimeEdit(null)}
-        onSave={async input => {
-          if (writeDisabled || !trip.canEdit || !editingTimeline) throw new TravelError(403, "forbidden");
-          const generation = requestGeneration.current;
-          setBusy(true); setSuccess(false); setError("");
-          try {
-            const saved = await travelRequest<Entry>(`/${trip.id}/entries/${timeEdit.entry.id}`, "PUT", input);
-            if (generation !== requestGeneration.current) return;
-            setEntries(previous => previous.map(entry => entry.id === saved.id ? saved : entry));
-            setTimeEdit(null); setSuccess(true);
-          } catch (reason) { report(reason); throw reason; }
-          finally { setBusy(false); }
-        }} />}
-      <main className={styles.main}>
         {!trip && (
           <section className={styles.hero}>
             <p className={styles.eyebrow}>TRAVELTIME</p>
@@ -385,7 +385,7 @@ function TravelWorkspaceContent() {
             {loading && <p role="status">{label("loading")}</p>}
             {!trip && (
               <div className={styles.toolbar}>
-                <h2>{label("trips")}</h2>
+                <h2>{label("trips")}</h2><a href="/account">{label("accountLink")}</a>
                 <button
                   className={styles.primary}
                   disabled={writeDisabled}
@@ -400,7 +400,8 @@ function TravelWorkspaceContent() {
                 key={trip?.id ?? "new-trip"}
                 trip={trip}
                 busy={writeDisabled}
-                onCancel={() => setNewTrip(false)}
+                onDirtyChange={() => setDraftDirty(true)}
+                onCancel={() => { setNewTrip(false); setDraftDirty(false); }}
                 onSave={(input) =>
                   mutate(async () => {
                     const value = await travelRequest<Trip>(
@@ -498,13 +499,14 @@ function TravelWorkspaceContent() {
                 ))}
               </section>
             )}
-            {trip && edit !== undefined && (
+            {trip && section !== "saved" && edit !== undefined && (
               <BookingForm
                 key={edit?.id ?? "new"}
                 entry={edit}
                 startDate={trip.startDate}
                 busy={writeDisabled}
-                onCancel={() => setEdit(undefined)}
+                onDirtyChange={() => setDraftDirty(true)}
+                onCancel={() => { setEdit(undefined); setDraftDirty(false); setSection("timeline"); }}
                 onSave={(input) =>
                   mutate(async () => {
                     await travelRequest(
@@ -512,7 +514,7 @@ function TravelWorkspaceContent() {
                       edit ? "PUT" : "POST",
                       input,
                     );
-                    setEdit(undefined);
+                    setEdit(undefined); setDraftDirty(false);
                     await openTrip(trip);
                   })
                 }
@@ -604,7 +606,8 @@ function TravelWorkspaceContent() {
                 ))}
               </section>
             )}
-            {trip && (
+            {trip && section === "saved" && <SavedPlaces key={trip.id} tripId={trip.id} canEdit={trip.canEdit} onDirtyChange={setDraftDirty} onBusyChange={setBusy} />}
+            {trip && section === "timeline" && (
               <TravelTimeline
                 trip={trip}
                 entries={entries}
@@ -615,7 +618,7 @@ function TravelWorkspaceContent() {
                 disabled={writeDisabled}
                 onEditTime={(entry, point) => setTimeEdit({entry, point})}
                 onDocuments={(entry) => void showDocuments(entry)}
-                onEdit={setEdit}
+                onEdit={entry => { setEdit(entry); setDraftDirty(false); }}
                 onDelete={(entry) => {
                   if (window.confirm(label("confirmDelete")))
                     void mutate(async () => {
@@ -631,7 +634,8 @@ function TravelWorkspaceContent() {
           </>
         )}
       </main>
-      {trip && !auth && packingOpen && <PackingListDialog key={trip.id} tripId={trip.id} canEdit={trip.canEdit} onClose={() => setPackingOpen(false)} />}
+      {trip && !auth && packingOpen && <PackingListDialog key={trip.id} tripId={trip.id} canEdit={trip.canEdit} onClose={() => setPackingOpen(false)}
+        navigation={(leave, saving) => <TravelNavigation active="packing" hasTrip canEdit={trip.canEdit} disabled={saving} onNavigate={next => { if (next !== "packing") leave(() => navigate(next)); }} />} />}
     </div>
   );
 }

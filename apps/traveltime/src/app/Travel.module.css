@@ -421,6 +421,11 @@
   border-radius: 10px;
 }
 .header svg { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.mobileNavigation { display: none; }
+.timelineTools { display: flex; justify-content: flex-end; align-items: center; gap: 6px; padding: 0 0 12px; }
+.timelineTools > button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 7px 10px; }
+.timelineTools svg { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.timelineTools .motionLabel { display: none; }
 .header .packingButton { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; white-space: nowrap; font-size: 12px; border-radius: 8px; }
 .header .accountLink { order: 3; padding: 8px; }
 .editModeToggle[aria-pressed="true"] { border-color: var(--travel-focus); color: var(--travel-focus); }
@@ -439,6 +444,14 @@
 .timeDialog input { width: 100%; min-width: 0; padding: 9px 10px; background: var(--travel-bg); color: var(--travel-ink); border: 1px solid var(--travel-line); border-radius: 9px; font: inherit; }
 .timeDialog .actions { margin: 20px 0 0; }
 .saveToast { position: fixed; right: 18px; bottom: 18px; z-index: 30; padding: 8px 14px; margin: 0; color: var(--travel-ink); border: 1px solid var(--travel-focus); border-radius: 12px; background: var(--travel-surface); box-shadow: 0 4px 20px rgb(0 0 0 / 20%); pointer-events: none; }
+@media (max-width: 760px) {
+  :global(body):has(.page) { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .page .header { display: none; }
+  .mobileNavigation { display: block; }
+  .page .main { padding-bottom: calc(105px + env(safe-area-inset-bottom)); }
+  .saveToast { bottom: calc(88px + env(safe-area-inset-bottom)); }
+  .timelineTools { padding-top: 8px; }
+}
 @media (max-width: 640px) {
   .page .header { gap: 6px; padding: 8px 12px; }
   .platformLink, .editModeText { display: none; }

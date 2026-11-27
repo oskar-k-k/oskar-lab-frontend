@@ -27,12 +27,14 @@ export default function BookingForm({
   busy,
   onSave,
   onCancel,
+  onDirtyChange,
 }: {
   entry: Entry | null;
   startDate: string;
   busy: boolean;
   onSave: (input: Input) => Promise<void>;
   onCancel: () => void;
+  onDirtyChange?: () => void;
 }) {
   const { t } = useI18n();
   const label = (key: string) => t(("travel." + key) as TranslationKey);
@@ -49,6 +51,7 @@ export default function BookingForm({
         : ["START"];
   return (
     <form
+      onChange={onDirtyChange}
       className={styles.panel}
       onSubmit={(event) => {
         event.preventDefault();

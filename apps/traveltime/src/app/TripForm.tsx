@@ -9,16 +9,19 @@ export default function TripForm({
   busy,
   onSave,
   onCancel,
+  onDirtyChange,
 }: {
   trip: components["schemas"]["TravelTrip"] | null;
   busy: boolean;
   onSave: (input: components["schemas"]["TravelSaveTrip"]) => Promise<void>;
   onCancel: () => void;
+  onDirtyChange?: () => void;
 }) {
   const { t } = useI18n();
   const label = (key: string) => t(("travel." + key) as TranslationKey);
   return (
     <form
+      onChange={onDirtyChange}
       className={styles.panel}
       onSubmit={(event) => {
         event.preventDefault();
