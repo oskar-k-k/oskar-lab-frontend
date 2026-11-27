@@ -183,6 +183,21 @@
 .alternate .bubbleLabel {
   left: calc(100% + 2rem);
 }
+.bubbles .bubbleLabel.labelAction {
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  padding: 0.4rem 0.65rem;
+  color: var(--timeline-muted, var(--color-text-muted));
+  background: var(--timeline-background, var(--color-background));
+  border: 1px dashed var(--timeline-current, var(--color-primary));
+  cursor: pointer;
+}
+.labelAction:focus-visible {
+  outline: 2px solid var(--timeline-current, var(--color-focus));
+  outline-offset: 4px;
+}
+.labelAction:disabled { opacity: 0.6; cursor: wait; }
 
 .bubbleTitle {
   width: 100%;

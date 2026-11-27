@@ -17,6 +17,12 @@ export type TimelineStation = Readonly<{
   visualStyle?: "circle" | "illustration";
   /** Optional explicit side in bubble view, for relationships across intervening items. */
   side?: "left" | "right";
+  /** Optional inline label action; does not toggle the station's detail disclosure. */
+  onLabelActivate?: () => void;
+  /** Localized accessible name required for an editable label. */
+  labelActionName?: string;
+  /** Disables label editing while a save or unavailable connection prevents changes. */
+  labelActionDisabled?: boolean;
 }>;
 
 /** A visual relationship between two existing items without changing their chronological order. */
@@ -53,7 +59,12 @@ function BubbleStation({
           {station.visual ?? <span className={styles.fallback} />}
         </span>
         {station.label != null && (
-          <span className={styles.bubbleLabel}>{station.label}</span>
+          station.onLabelActivate && station.labelActionName ?
+            <button type="button" className={`${styles.bubbleLabel} ${styles.labelAction}`}
+              aria-label={station.labelActionName} disabled={station.labelActionDisabled}
+              onClick={event => { event.preventDefault(); event.stopPropagation(); station.onLabelActivate?.(); }}>
+              {station.label}
+            </button> : <span className={styles.bubbleLabel}>{station.label}</span>
         )}
         {station.title != null && (
           <span className={styles.bubbleTitle}>{station.title}</span>

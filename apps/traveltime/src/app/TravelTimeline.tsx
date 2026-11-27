@@ -26,6 +26,7 @@ export default function TravelTimeline({
   onDocuments,
   onEdit,
   onDelete,
+  onEditTime,
 }: {
   entries: Entry[];
   trip?: { title: string; startDate: string; endDate: string };
@@ -37,6 +38,7 @@ export default function TravelTimeline({
   onDocuments: (entry: Entry) => void;
   onEdit: (entry: Entry) => void;
   onDelete: (entry: Entry) => void;
+  onEditTime?: (entry: Entry, point: Entry["points"][number]) => void;
 }) {
   const { t, locale } = useI18n();
   const label = (key: string) => t(("travel." + key) as TranslationKey);
@@ -47,15 +49,6 @@ export default function TravelTimeline({
     `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)}`;
   return (
     <>
-      {editing && next && (
-        <a
-          className={styles.next}
-          href={`#booking-${next.entry.id}-${next.points[0].role}`}
-        >
-          <small>{label("next")}</small>
-          <strong>{next.entry.title} ↗</strong>
-        </a>
-      )}
       <Timeline
         start={trip && (
           <>
@@ -65,25 +58,24 @@ export default function TravelTimeline({
             </span>
           </>
         )}
-        variant={editing ? "cards" : "bubbles"}
+        variant="bubbles"
         className={`${styles.timeline} ${trip && /\bthailand\b/i.test(trip.title) ? styles.destinationTimeline : ""}`}
         label={label("timeline")}
         currentItemId={
           next ? `booking-${next.entry.id}-${next.points[0].role}` : undefined
         }
-        ranges={editing ? [] : stays.map(entry => ({
+        ranges={stays.map(entry => ({
           fromItemId: `booking-${entry.id}-CHECK_IN`,
           toItemId: `booking-${entry.id}-CHECK_OUT`,
           label: `${new Intl.NumberFormat(locale).format(stayNights(entry))} ${label(stayNights(entry) === 1 ? "night" : "nights")}`,
         }))}
-        items={rows.map((row, index) => {
+        items={rows.map((row) => {
           const point = row.points[0];
           const stay = row.entry.type === "HOTEL" || row.entry.type === "APARTMENT";
           const visualStyle: "illustration" | "circle" =
             ["FLIGHT", "BOAT", "HOTEL", "APARTMENT"].includes(row.entry.type)
               ? "illustration" : "circle";
           const paired =
-            !editing &&
             (row.entry.type === "FLIGHT" || row.entry.type === "BOAT") &&
             row.points.length === 2;
           const stationLabel = (original: Entry["points"][number]) => {
@@ -122,16 +114,15 @@ export default function TravelTimeline({
             visualStyle,
             side: (stay ? "left" : stays.some(s => s.points[0].date <= point.date && s.points.at(-1)!.date >= point.date) ? "right" : undefined) as "left" | "right" | undefined,
             label:
-              !editing ||
-              index === 0 ||
-              rows[index - 1].points[0].date !== point.date
-                ? stationLabel(point)
-                : null,
+              stationLabel(point),
+            onLabelActivate: editing && editable && onEditTime ? () => onEditTime(row.entry, point) : undefined,
+            labelActionName: label("editDateTime") + " · " + point.placeName + " · " + label(point.role),
+            labelActionDisabled: disabled,
             content: (
               <BookingDetails
                 entry={row.entry}
                 points={paired ? [point] : row.points}
-                editing={editing}
+                editing={false}
                 editable={editable}
                 disabled={disabled}
                 onDocuments={onDocuments}
@@ -158,6 +149,9 @@ export default function TravelTimeline({
                 </>
               ),
               label: stationLabel(arrival),
+              onLabelActivate: editing && editable && onEditTime ? () => onEditTime(row.entry, arrival) : undefined,
+              labelActionName: label("editDateTime") + " · " + arrival.placeName + " · " + label(arrival.role),
+              labelActionDisabled: disabled,
               visual: <BookingVisual type={row.entry.type} />,
               visualStyle,
               content: (

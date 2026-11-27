@@ -31,12 +31,12 @@
   background: rgb(12 17 27 / 94%);
   backdrop-filter: blur(18px);
   border-bottom: 1px solid rgb(191 219 235 / 12%);
-  padding: 16px max(16px, calc((100% - 1152px) / 2));
+  padding: 8px max(12px, calc((100% - 1152px) / 2));
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 .header a {
   font-size: 12px;
@@ -45,7 +45,7 @@
 }
 .header strong {
   font:
-    26px Georgia,
+    22px Georgia,
     serif;
 }
 .main {
@@ -401,14 +401,46 @@
 
 .headerActions {
   display: flex;
-  flex: 0 0 100%;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 4px;
+  flex: 1;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
   white-space: nowrap;
 }
 .headerActions > button {
   flex: none;
+}
+.header .headerActions > button {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 7px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 10px;
+}
+.header svg { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.header .accountLink { order: 3; padding: 8px; }
+.editModeToggle[aria-pressed="true"] { border-color: var(--travel-focus); color: var(--travel-focus); }
+.headerMenu { position: relative; flex: none; }
+.headerMenu > summary { list-style: none; cursor: pointer; padding: 4px 10px; min-height: 36px; border: 1px solid var(--travel-line); border-radius: 10px; }
+.headerMenu > summary::-webkit-details-marker { display: none; }
+.headerMenu > div { position: absolute; top: calc(100% + 10px); right: 0; width: 220px; display: grid; gap: 6px; padding: 8px; border: 1px solid var(--travel-line); border-radius: 14px; background: var(--travel-surface); box-shadow: 0 12px 30px rgb(0 0 0 / 35%); }
+.headerMenu button { text-align: left; }
+.header .motionLabel { display: none; }
+.timeDialog { position: fixed; top: 50%; left: 50%; right: auto; bottom: auto; transform: translate(-50%, -50%); margin: 0; width: min(360px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 22px; border: 1px solid var(--travel-line); border-radius: 18px; background: var(--travel-surface); color: var(--travel-ink); box-shadow: 0 24px 80px rgb(0 0 0 / 45%); }
+.timeDialog::backdrop { background: rgb(4 10 18 / 65%); backdrop-filter: blur(4px); }
+.timeDialog h2 { margin: 0; font-size: 1.15rem; }
+.timeDialog p, .timeDialog small { color: var(--travel-muted); }
+.timeDialog fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 14px; }
+.timeDialog label { display: grid; gap: 5px; }
+.timeDialog input { width: 100%; min-width: 0; padding: 9px 10px; background: var(--travel-bg); color: var(--travel-ink); border: 1px solid var(--travel-line); border-radius: 9px; font: inherit; }
+.timeDialog .actions { margin: 20px 0 0; }
+.saveToast { position: fixed; right: 18px; bottom: 18px; z-index: 30; padding: 8px 14px; margin: 0; color: var(--travel-ink); border: 1px solid var(--travel-focus); border-radius: 12px; background: var(--travel-surface); box-shadow: 0 4px 20px rgb(0 0 0 / 20%); pointer-events: none; }
+@media (max-width: 640px) {
+  .page .header { gap: 6px; padding: 8px 12px; }
+  .platformLink, .editModeText { display: none; }
 }
 
 .page button:hover:not(:disabled) {
@@ -471,7 +503,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-left: auto;
+  margin-left: 0;
   color: var(--travel-muted);
   background: transparent;
   border-color: transparent;

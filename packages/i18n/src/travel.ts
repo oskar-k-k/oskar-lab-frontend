@@ -1,4 +1,8 @@
 export const travelEn = {
+  "travel.editMode": "Edit mode",
+  "travel.editDateTime": "Edit date and time",
+  "travel.tripActions": "Trip actions",
+  "travel.saving": "Saving…",
   "travel.plannedArrival": "Planned arrival",
   "travel.plannedDeparture": "Planned departure",
   "travel.plannedOffset": "Planned time UTC offset (optional; needed for ambiguous clock changes)",
@@ -122,6 +126,10 @@ export const travelEn = {
   "travel.dateOnly": "Day only",
 } as const;
 export const travelDe: Record<keyof typeof travelEn, string> = {
+  "travel.editMode": "Bearbeitungsmodus",
+  "travel.editDateTime": "Datum und Uhrzeit bearbeiten",
+  "travel.tripActions": "Reiseaktionen",
+  "travel.saving": "Wird gespeichert…",
   "travel.plannedArrival": "Geplante Ankunft",
   "travel.plannedDeparture": "Geplante Abreise",
   "travel.plannedOffset": "UTC-Offset der geplanten Zeit (optional; nötig bei mehrdeutiger Zeitumstellung)",

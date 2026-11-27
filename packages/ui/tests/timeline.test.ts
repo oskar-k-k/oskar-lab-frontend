@@ -2,6 +2,14 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { expect, it } from "vitest";
 import Timeline from "../src/Timeline/Timeline";
+it("exposes an independently named, disableable label edit action while keeping station details collapsed", () => {
+  const html = renderToStaticMarkup(createElement(Timeline,{label:"Editable timeline",variant:"bubbles",items:[{
+    id:"editable",label:"01.12 10:00",content:"Station details",onLabelActivate:()=>{},labelActionName:"Edit departure time",labelActionDisabled:true,
+  }]}));
+  expect(html).toContain('aria-label="Edit departure time"');
+  expect(html).toMatch(/<button[^>]*disabled=""/);
+  expect(html).not.toMatch(/<details[^>]* open/);
+});
 it("connects separated same-side items without moving intervening content", () => {
   const html = renderToStaticMarkup(createElement(Timeline, {label:"Stay history",variant:"bubbles",
     ranges:[{fromItemId:"arrival",toItemId:"departure",label:"2 nights"}],

@@ -76,14 +76,15 @@ function RangePreview() {
 function TimelinePreview() {
     const {t} = useI18n();
     const [bubbles,setBubbles]=useState(true);
+    const [labelActivated,setLabelActivated]=useState(false);
     const visual=<svg viewBox="0 0 120 120" width="120" height="120" aria-hidden="true"><path fill="var(--color-primary-soft)" d="M0 0h120v120H0z"/><circle cx="86" cy="30" r="14" fill="var(--color-accent-yellow)"/><path d="m0 110 40-70 29 42 18-25 33 53" fill="var(--color-primary)"/><path d="m24 68 16-28 19 28-18-7Z" fill="var(--color-text)"/></svg>;
     const illustration=<svg viewBox="0 0 120 120" aria-hidden="true"><path d="m60 12 13 31 34 4-25 23 7 34-29-17-29 17 7-34-25-23 34-4Z" fill="var(--color-accent-yellow)" stroke="var(--color-primary)" strokeWidth="3" /></svg>;
     return <><div className={styles.demoRow}><button type="button" aria-pressed={bubbles} onClick={()=>setBubbles(true)}>{t("core.timelineBubbles")}</button><button type="button" aria-pressed={!bubbles} onClick={()=>setBubbles(false)}>{t("core.timelineCards")}</button></div>
     <Timeline className={styles.timelineDemo} start={t("core.timelineLabel")} label={t("core.timelineLabel")} variant={bubbles ? "bubbles" : "cards"} currentItemId="preview-progress" ranges={[{fromItemId:"preview-progress",toItemId:"preview-complete",label:t("core.timelineRange")}]} items={[
-        {id:"preview-request", title:t("core.timelineFirst"), visual, label:<time dateTime="2030-12-01">01.12.2030</time>, content:<p>{t("core.timelineContent")}</p>, connectionLabel:t("core.timelineConnection"), end:{id:"preview-connected",title:t("core.timelineSecond"),visual,label:<time dateTime="2030-12-02">02.12.2030</time>,content:<p>{t("core.timelineContent")}</p>}},
+        {id:"preview-request", onLabelActivate:()=>setLabelActivated(true), labelActionName:t("core.timelineEditLabel"), title:t("core.timelineFirst"), visual, label:<time dateTime="2030-12-01">01.12.2030</time>, content:<p>{t("core.timelineContent")}</p>, connectionLabel:t("core.timelineConnection"), end:{id:"preview-connected",title:t("core.timelineSecond"),visual,label:<time dateTime="2030-12-02">02.12.2030</time>,content:<p>{t("core.timelineContent")}</p>}},
         {id:"preview-progress", title:t("core.timelineSecond"), visual:illustration, visualStyle:"illustration", label:<time dateTime="2030-12-02">02.12.2030</time>, content:<><strong>{t("core.timelineSecond")}</strong><p>{t("core.timelineContent")}</p></>},
         {id:"preview-complete", side:"left", title:t("core.timelineLast"), visual, label:<time dateTime="2030-12-03">03.12.2030</time>, content:<p>{t("core.timelineContent")}</p>},
-    ]} /><p>{t("core.timelineTokens")}</p></>;
+    ]} />{labelActivated && <p role="status">{t("core.timelineEditNotice")}</p>}<p>{t("core.timelineTokens")}</p></>;
 }
 
 function TabsPreview() {

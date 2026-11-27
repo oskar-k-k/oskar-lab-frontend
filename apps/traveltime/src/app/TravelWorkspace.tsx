@@ -10,6 +10,7 @@ import { travelRequest, TravelError } from "../services/client";
 import TravelTimeline from "./TravelTimeline";
 import TripForm from "./TripForm";
 import BookingForm from "./BookingForm";
+import StationTimeEditor from "./StationTimeEditor";
 import styles from "./Travel.module.css";
 type Trip = components["schemas"]["TravelTrip"];
 export type Entry = components["schemas"]["TravelEntry"];
@@ -37,6 +38,7 @@ function TravelWorkspaceContent() {
   const requestGeneration = useRef(0);
   const documentGeneration = useRef(0);
   const [editingTimeline, setEditingTimeline] = useState(false);
+  const [timeEdit, setTimeEdit] = useState<{entry: Entry; point: Entry["points"][number]} | null>(null);
   const [ambientMotion, setAmbientMotion] = useState(true);
   const [success, setSuccess] = useState(false);
   const [now, setNow] = useState(0);
@@ -93,6 +95,7 @@ function TravelWorkspaceContent() {
       setLoading(true);
       setError("");
       setSelected(null);
+      setTimeEdit(null);
       ++documentGeneration.current;
       setShare(false);
       try {
@@ -193,14 +196,15 @@ function TravelWorkspaceContent() {
       timeZone: "UTC",
     }).format(new Date(value + "T12:00:00Z"));
   return (
-    <div className={`${styles.page} ${trip && !editingTimeline && ambientMotion ? styles.ambientMotion : ""}`}>
+    <div className={`${styles.page} ${trip && ambientMotion ? styles.ambientMotion : ""}`}>
       <header className={styles.header}>
-        <a href="/">OSKAR LAB</a>
+        <a className={styles.platformLink} href="/">OSKAR LAB</a>
         <strong>TravelTime</strong>
-        <a href="/account">{label("accountLink")}</a>
+        <a className={styles.accountLink} href="/account" aria-label={label("accountLink")} title={label("accountLink")}><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><circle cx="10" cy="6" r="3"/><path d="M4 18v-2a6 6 0 0 1 12 0v2"/></svg></a>
         {trip && !auth && (
           <nav className={styles.headerActions} aria-label={label("timeline")}>
             <button
+              className={styles.headerIcon} aria-label={label("back")} title={label("back")}
               onClick={() => {
                 ++requestGeneration.current;
                 ++documentGeneration.current;
@@ -213,24 +217,30 @@ function TravelWorkspaceContent() {
                 void loadTrips();
               }}
             >
-              {label("back")}
+              <span aria-hidden="true">←</span>
             </button>
             {trip.canEdit && (
               <button
+                className={styles.editModeToggle}
+                aria-label={label("editMode")} title={label("editMode")}
                 aria-pressed={editingTimeline}
                 onClick={() => {
                   setEditingTimeline(!editingTimeline);
+                  setTimeEdit(null);
                   setNewTrip(false);
                   setEdit(undefined);
                   setShare(false);
                   setSelected(null);
                 }}
               >
-                {label(editingTimeline ? "doneEditing" : "editTimeline")}
+                <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">{editingTimeline ? <path d="m4 10 4 4 8-9"/> : <path d="m4 13-1 4 4-1L17 6l-3-3Z M12 5l3 3"/>}</svg>
+                <span className={styles.editModeText}>{label("editMode")}</span>
               </button>
             )}
             {trip.canEdit && editingTimeline && (
-              <>
+              <details className={styles.headerMenu}>
+                <summary aria-label={label("tripActions")} title={label("tripActions")}>···</summary>
+                <div>
                 <button
                   className={styles.primary}
                   disabled={writeDisabled}
@@ -287,7 +297,8 @@ function TravelWorkspaceContent() {
                 >
                   {label("deleteTrip")}
                 </button>
-              </>
+                </div>
+              </details>
             )}
             <button
               className={styles.motionControl}
@@ -304,6 +315,21 @@ function TravelWorkspaceContent() {
           </nav>
         )}
       </header>
+      {trip && timeEdit && editingTimeline && trip.canEdit && <StationTimeEditor
+        entry={timeEdit.entry} point={timeEdit.point} disabled={writeDisabled}
+        onClose={() => setTimeEdit(null)}
+        onSave={async input => {
+          if (writeDisabled || !trip.canEdit || !editingTimeline) throw new TravelError(403, "forbidden");
+          const generation = requestGeneration.current;
+          setBusy(true); setSuccess(false); setError("");
+          try {
+            const saved = await travelRequest<Entry>(`/${trip.id}/entries/${timeEdit.entry.id}`, "PUT", input);
+            if (generation !== requestGeneration.current) return;
+            setEntries(previous => previous.map(entry => entry.id === saved.id ? saved : entry));
+            setTimeEdit(null); setSuccess(true);
+          } catch (reason) { report(reason); throw reason; }
+          finally { setBusy(false); }
+        }} />}
       <main className={styles.main}>
         {!trip && (
           <section className={styles.hero}>
@@ -330,11 +356,12 @@ function TravelWorkspaceContent() {
           </section>
         ) : (
           <>
-            {success && !error && <p role="status">{label("saved")}</p>}
+            {success && !error && <p className={styles.saveToast} role="status">{label("saved")}</p>}
             {error && (
               <div role="alert" className={styles.notice}>
                 <p>{label(error)}</p>
                 <button
+                  data-travel-reload
                   disabled={busy || offline}
                   onClick={() => {
                     setEdit(undefined);
@@ -580,6 +607,7 @@ function TravelWorkspaceContent() {
                 editing={editingTimeline}
                 editable={trip.canEdit && editingTimeline}
                 disabled={writeDisabled}
+                onEditTime={(entry, point) => setTimeEdit({entry, point})}
                 onDocuments={(entry) => void showDocuments(entry)}
                 onEdit={setEdit}
                 onDelete={(entry) => {
