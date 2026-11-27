@@ -16,3 +16,7 @@
 .empty { padding: 56px 20px; text-align: center; color: var(--travel-muted); }
 .empty h2 { color: var(--travel-ink); font: 25px Georgia, serif; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.heading h1 { font-style: italic; }
+.card, .form { border-radius: 4px; box-shadow: 3px 5px 0 #d6cbb14d; }
+.card { border-top: 5px solid #a7b493; }

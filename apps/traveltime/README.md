@@ -232,3 +232,13 @@ preserved and changed clocks/dates/zones are re-resolved by the server. Inline t
 only the plan. Clearing it restores the booking fallback. Captions and details distinguish planned
 airport presence from the booked departure and retain both dates when they differ. No maps or
 external services are invoked by time editing. Existing backup deletion schedules remain open.
+
+
+## Sketchbook appearance
+
+TravelTime uses an app-scoped light paper palette, local CSS grain, postcard borders,
+tape accents, date stamps and locally authored SVG travel stickers. Packing, saved places,
+forms and mobile navigation share the same paper/ink tokens. Decorative motion follows
+reduced-motion preferences and the existing atmosphere toggle. No remote fonts, textures,
+tracking, new personal data or third-party requests are introduced by this visual update.
+The existing locally served Thailand cover is reused; artwork provenance is in ARTWORK.md.

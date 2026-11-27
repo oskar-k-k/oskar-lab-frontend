@@ -1,4 +1,4 @@
-.dialog { position: fixed; inset: 0; margin: 0; width: 100vw; height: 100dvh; max-width: none; max-height: none; padding: 0; border: 0; background: var(--travel-bg); color: var(--travel-ink); color-scheme: dark; overflow: auto; }
+.dialog { position: fixed; inset: 0; margin: 0; width: 100vw; height: 100dvh; max-width: none; max-height: none; padding: 0; border: 0; background: var(--travel-bg); color: var(--travel-ink); color-scheme: light; overflow: auto; }
 .dialog::backdrop { background: var(--travel-bg); }
 .shell { max-width: 920px; margin: auto; min-height: 100%; }
 .header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 24px; padding: 28px 32px; background: var(--travel-bg); border-bottom: 1px solid var(--travel-line); }
@@ -21,11 +21,11 @@
 .tabs span, .counter { color: var(--travel-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .panel { margin-top: 20px; }
 .group { margin-bottom: 18px; border: 1px solid var(--travel-line); border-radius: 16px; background: var(--travel-surface); overflow: hidden; }
-.groupHeader { display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-bottom: 1px solid rgb(195 222 232 / 12%); }
+.groupHeader { display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-bottom: 1px solid #d8d1c0; }
 .groupHeader h2 { margin: 0; font: 21px Georgia, serif; }
 .groupHeader .counter { margin-left: auto; }
 .items { list-style: none; margin: 0; padding: 6px 20px; }
-.items li { display: flex; align-items: center; gap: 12px; min-height: 52px; border-bottom: 1px solid rgb(195 222 232 / 8%); }
+.items li { display: flex; align-items: center; gap: 12px; min-height: 52px; border-bottom: 1px solid #e1dac9; }
 .items li:last-child { border: 0; }
 .dialog .items label { display: flex; flex-direction: row; align-items: center; gap: 14px; width: 100%; padding: 12px 0; cursor: pointer; }
 .items input[type="checkbox"] { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--travel-focus); }
@@ -52,3 +52,10 @@
   .content { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   .navigation { border: 0; padding: 0; }
 }
+
+.dialog { background-image: repeating-linear-gradient(0deg, transparent 0 31px, #9caa8c15 31px 32px); }
+.header h1 { font-style: italic; }
+.group { border-radius: 4px; box-shadow: 3px 4px 0 #d6cbb14d; }
+.groupHeader { background: #e9ecdf; }
+.tabs button { border-radius: 8px 8px 0 0; background: #e9e4d3; }
+.tabs button[aria-selected="true"] { background: #fffdf6; }

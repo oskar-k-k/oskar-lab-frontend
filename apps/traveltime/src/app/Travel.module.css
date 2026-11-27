@@ -1,16 +1,16 @@
 .page {
-  --travel-ink: #f4f7fa;
-  --travel-muted: #abb8c9;
-  --travel-bg: #0c111b;
-  --travel-line: #9aa7b8;
-  --travel-accent: #e8c58c;
-  --travel-sky: #182a42;
-  --travel-sea: #3a8b93;
-  --travel-surface: #151e2c;
-  --travel-focus: #9cddd7;
+  --travel-ink: #293c3a;
+  --travel-muted: #626d64;
+  --travel-bg: #f4efe3;
+  --travel-line: #b7b4a3;
+  --travel-accent: #d7a45e;
+  --travel-sky: #dce5df;
+  --travel-sea: #49746a;
+  --travel-surface: #fffdf6;
+  --travel-focus: #34675b;
   position: relative;
   isolation: isolate;
-  color-scheme: dark;
+  color-scheme: light;
   min-height: 100vh;
   background: var(--travel-bg);
   color: var(--travel-ink);
@@ -28,9 +28,9 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgb(12 17 27 / 94%);
+  background: rgb(248 244 233 / 94%);
   backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgb(191 219 235 / 12%);
+  border-bottom: 1px solid #d8d1c0;
   padding: 8px max(12px, calc((100% - 1152px) / 2));
   display: flex;
   flex-wrap: nowrap;
@@ -116,9 +116,9 @@
   min-height: 44px;
 }
 .page .primary {
-  background: #d7efed;
-  color: #102329;
-  border-color: #d7efed;
+  background: #315b50;
+  color: #fffdf6;
+  border-color: #315b50;
   text-decoration: none;
   display: inline-block;
 }
@@ -139,7 +139,7 @@
   text-align: left;
   padding: 28px;
   min-height: 200px;
-  background: linear-gradient(140deg, #1b2a3b, #111c2b);
+  background: linear-gradient(140deg, #fffdf6, #e9e5d5);
   border-radius: 20px;
 }
 .tripCard > span {
@@ -275,8 +275,8 @@
   white-space: pre-wrap;
 }
 .notice {
-  background: #30291c;
-  border: 1px solid #7b6842;
+  background: #f5e7c9;
+  border: 1px solid #b68b42;
   padding: 18px 24px;
   border-radius: 12px;
   margin: 24px 0;
@@ -353,11 +353,11 @@
   letter-spacing: 0.04em;
 }
 .stationBookedTime { display: block; margin-top: 4px; color: var(--travel-muted); font-size: 11px; font-weight: 400; }
-.plannedFields { display: grid; gap: 8px; padding: 14px; margin: 8px 0; border: 1px solid rgb(156 221 215 / 22%); border-radius: 12px; background: rgb(156 221 215 / 4%); }
+.plannedFields { display: grid; gap: 8px; padding: 14px; margin: 8px 0; border: 1px solid #34675b38; border-radius: 12px; background: #34675b08; }
 .plannedFields small { color: var(--travel-muted); font-size: 11px; }
 .plannedFields details { border: 0; padding: 0; }
 .plannedFields summary { color: var(--travel-muted); font-size: 12px; }
-.plannedSummary { display: flex; flex-direction: column; gap: 2px; margin-bottom: 18px; padding: 12px 14px; border-left: 2px solid var(--travel-focus); border-radius: 0 10px 10px 0; background: rgb(156 221 215 / 5%); }
+.plannedSummary { display: flex; flex-direction: column; gap: 2px; margin-bottom: 18px; padding: 12px 14px; border-left: 2px solid var(--travel-focus); border-radius: 0 10px 10px 0; background: #34675b0a; }
 .endpoints .plannedSummary strong { font-size: 24px; }
 .bookingDetails h2 {
   font:
@@ -466,60 +466,35 @@
 }
 
 .page button:hover:not(:disabled) {
-  background: #223247;
-  border-color: #9aaaba;
+  background: #e9e5d6;
+  border-color: #7e8d78;
 }
 .page .primary:hover:not(:disabled) {
-  background: #efffff;
-  color: #102329;
+  background: #416e60;
+  color: #fffdf6;
 }
 .timeline > li {
   scroll-margin-top: 10rem;
 }
+/* A postcard attached to the first page of the journal. */
 .destinationTimeline {
-  --timeline-start-background: linear-gradient(rgb(4 10 18 / 28%), rgb(4 10 18 / 58%)), url("../../public/art/thailand-night.webp");
-  --timeline-start-padding: 3rem 2rem;
-  --timeline-start-width: 24rem;
+  --timeline-start-background: linear-gradient(#102d3a14, #102d3a75), url("../../public/art/thailand-night.webp");
+  --timeline-start-padding: 5rem 1.5rem 1.7rem;
+  --timeline-start-width: 25rem;
 }
-.destinationTimeline .tripTitle {
-  font-size: clamp(2rem, 6vw, 2.75rem);
-  text-shadow: 0 2px 18px #000;
-}
-.destinationTimeline .tripDates {
-  color: #f4f7fa;
-  text-shadow: 0 1px 8px #000;
-}
+.destinationTimeline .tripTitle { color: #fffdf6; font-size: clamp(2.3rem, 6vw, 3.4rem); font-style: italic; text-shadow: 0 2px 12px #15302a; }
+.destinationTimeline .tripDates { color: #fffdf6; text-shadow: 0 1px 8px #15302a; }
 
-/* Decorative layers stay separate from content and never intercept input. */
-.page::before,
-.page::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-}
-.page::before {
-  inset: -8%;
-  background:
-    radial-gradient(ellipse at 18% 25%, rgb(41 116 133 / 15%), transparent 48%),
-    radial-gradient(ellipse at 84% 63%, rgb(83 76 143 / 12%), transparent 43%),
-    radial-gradient(ellipse at 50% 94%, rgb(38 109 111 / 8%), transparent 45%);
-}
-.page::after {
-  opacity: 0.35;
-  background:
-    radial-gradient(circle at 18% 22%, rgb(210 233 240 / 45%) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 82% 41%, rgb(210 233 240 / 35%) 0 1px, transparent 1.5px),
-    repeating-radial-gradient(ellipse at 115% 78%, transparent 0 72px, rgb(173 211 223 / 6%) 73px 74px, transparent 75px 128px);
-  mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent);
-}
+/* Local paper texture: no remote textures or fonts. */
+.page::before, .page::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1; }
+.page::before { background: radial-gradient(ellipse at 12% 15%, #e0cba43b, transparent 55%), radial-gradient(ellipse at 90% 70%, #b4c4ab30, transparent 50%); }
+.page::after { background-image: radial-gradient(#8b816026 .65px, transparent .65px); background-size: 6px 6px; opacity: .55; }
 .timeline {
-  --timeline-rail-background: linear-gradient(180deg, #a8d9dc, rgb(195 222 232 / 36%) 25%, rgb(195 222 232 / 18%) 85%, transparent);
-  --timeline-branch-background: linear-gradient(90deg, rgb(195 222 232 / 15%), rgb(210 230 237 / 70%) 50%, rgb(195 222 232 / 15%));
-  --timeline-bubble-shadow: 0 0 0 1px rgb(197 224 234 / 45%), 0 0 0 7px rgb(157 210 218 / 3%), 0 12px 35px rgb(0 0 0 / 28%);
-  --timeline-active-shadow: 0 0 0 1px #b9efea, 0 0 0 7px rgb(157 210 218 / 7%), 0 0 35px rgb(91 183 190 / 13%);
-  --timeline-start-shadow: 0 0 0 6px rgb(157 210 218 / 3%), 0 20px 65px rgb(0 0 0 / 35%);
+  --timeline-rail-background: repeating-linear-gradient(180deg, #8f9e8a 0 7px, transparent 7px 12px);
+  --timeline-branch-background: repeating-linear-gradient(90deg, #9ca891 0 5px, transparent 5px 8px);
+  --timeline-bubble-shadow: 0 2px 3px #51493626, 3px 7px 0 #cfc5ae50;
+  --timeline-active-shadow: 0 0 0 3px var(--travel-focus), 3px 7px 0 #cfc5ae50;
+  --timeline-start-shadow: 1px 4px 6px #51493626, 7px 10px 0 #d6cbb14d;
 }
 .page .motionControl {
   display: inline-flex;
@@ -561,7 +536,7 @@
   margin-top: 16px;
   width: 100%;
   min-width: min(200px, 100%);
-  border: 1px solid rgb(195 222 232 / 22%);
+  border: 1px solid #b7b4a3;
   border-radius: 14px;
   overflow: hidden;
   background: var(--travel-bg);
@@ -574,9 +549,9 @@
   color: var(--travel-ink);
   font-weight: 500;
 }
-.routePicker { display: grid; gap: 10px; width: 100%; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgb(195 222 232 / 15%); }
+.routePicker { display: grid; gap: 10px; width: 100%; margin-top: 12px; padding-top: 12px; border-top: 1px solid #d6d0bd; }
 .routePicker label { display: grid; gap: 5px; color: var(--travel-muted); font-size: 12px; }
-.routePicker select { width: 100%; min-width: 0; padding: 10px; border: 1px solid rgb(195 222 232 / 28%); border-radius: 10px; background: var(--travel-bg); color: var(--travel-ink); font: inherit; font-size: 14px; text-overflow: ellipsis; }
+.routePicker select { width: 100%; min-width: 0; padding: 10px; border: 1px solid #b7b4a3; border-radius: 10px; background: var(--travel-bg); color: var(--travel-ink); font: inherit; font-size: 14px; text-overflow: ellipsis; }
 .routeOpen { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 12px; border: 1px solid var(--travel-line); border-radius: 10px; font-size: 13px; text-decoration: none; }
 .routeOpen svg { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .routeOpen:hover { background: rgb(156 221 215 / 8%); }
@@ -601,3 +576,55 @@
 .mapFrame iframe { display: block; width: 100%; height: 230px; border: 0; }
 .mapOverlay { position: absolute; inset: 0 0 48px; }
 .mapLink { display: block; padding: 12px 14px; font-size: 12px; text-align: center; }
+
+/* Journal details stay scoped to the app; shared timeline geometry remains neutral. */
+.page { --travel-paper-shadow: 0 3px 12px #4b473417; --radius-lg: 4px; }
+:global(body):has(.page) { background: #f4efe3; }
+.header { box-shadow: 0 2px 12px #4b473409; }
+.header .platformLink { font: bold italic 23px Georgia, serif; letter-spacing: -.05em; }
+.header strong { font-style: italic; font-weight: 700; letter-spacing: -.04em; }
+.main { padding-top: 24px; }
+.hero { border: 1px solid #d0c7ae; border-radius: 4px 18px 5px 12px; background: #e5e7d6; }
+.hero h1 { font-style: italic; }
+.page button, .primary { border-radius: 5px 8px 4px 7px; }
+.page input, .page select, .page textarea { background: #fffdf6; border-color: #b7b4a3; border-radius: 5px; }
+.page input[type="checkbox"] { accent-color: var(--travel-focus); }
+.page .tripCard { position: relative; border: 1px solid #c9bea6; border-radius: 3px; box-shadow: var(--travel-paper-shadow); background: #fffdf6; }
+.page .tripCard::before { content: ""; position: absolute; width: 68px; height: 22px; top: -9px; left: 28px; background: #d5b87b66; transform: rotate(-6deg); }
+.tripCard:nth-child(even) { transform: rotate(1deg); }
+.tripCard h2 { font-style: italic; }
+.panel, .card { border-color: #cfc5ae; border-radius: 5px; box-shadow: var(--travel-paper-shadow); }
+.panel { border-top: 3px solid #9ba88d; }
+.timelineTools { border-bottom: 1px solid #d8d1c0; margin-bottom: 28px; }
+.timeline { margin-inline: auto; max-width: 920px; }
+.timeline > li:first-child:has(.tripTitle) { border: 8px solid #fffdf6; border-bottom-width: 16px; border-radius: 3px; transform: rotate(-2deg); margin-bottom: 4rem; }
+.timeline > li:first-child:has(.tripTitle)::before { content: ""; position: absolute; top: -20px; left: calc(50% - 43px); width: 86px; height: 28px; background: #c4aa7280; transform: rotate(5deg); box-shadow: 0 1px 1px #4b47340d; }
+.timeline > li:first-child:has(.tripTitle)::after { content: ""; position: absolute; right: 12px; top: 14px; display: grid; place-items: center; width: 42px; height: 42px; border: 2px solid #fffdf6b3; border-radius: 50%; color: #fffdf6; background: linear-gradient(90deg, transparent 48%, #fffdf6b3 48% 52%, transparent 52%), linear-gradient(transparent 48%, #fffdf6b3 48% 52%, transparent 52%); background-size: 22px 22px; background-repeat: no-repeat; background-position: center; transform: rotate(12deg); }
+.timeline summary > [aria-hidden="true"] { filter: drop-shadow(2px 3px 0 #a89d7b30); }
+.timeline summary > [aria-hidden="true"]:has(.sticker) { filter: none; }
+.sticker { filter: drop-shadow(2px 0 0 #fffdf6) drop-shadow(-2px 0 0 #fffdf6) drop-shadow(0 2px 0 #fffdf6) drop-shadow(0 -2px 0 #fffdf6) drop-shadow(1px 4px 2px #63573d33); }
+.timeline summary > span:has(> .stationTime), .timeline summary > button:has(> .stationTime) { border: 1px solid #919d83; border-radius: 3px; background: #f4efe3; box-shadow: 2px 3px 0 #ddd4be80; padding: 7px 10px; transform: translate(-50%, -50%) rotate(-3deg); }
+.stationDate { font: bold 15px/1.2 Georgia, serif; letter-spacing: .03em; }
+.stationClock { color: #52634f; font-size: 11px; }
+.stationRole { color: #596c58; font-size: 10px; letter-spacing: .06em; }
+.stationBookedTime { color: #74694f; }
+.timeline summary > span:last-child:not(:has(.stationTime)) { font: 600 15px/1.4 Georgia, serif; }
+.timeline details[open] > div { border: 1px solid #cfc5ae; border-radius: 4px; background: #fffdf6; box-shadow: 3px 5px 0 #d6cbb14d; }
+.timeline [role="presentation"] > div > span,
+.timeline > li > div > div > span { border: 1px dashed #b2b59d; border-radius: 4px; background: #f4efe3; font-size: 11px; color: #52634f; }
+.bookingDetails .eyebrow { color: #a35d3c; }
+.bookingDetails h2 { font-style: italic; }
+.plannedFields { border-color: #b9c4ad; border-radius: 5px; background: #eef0e3; }
+.plannedSummary { background: #eef0e3; border-radius: 0 4px 4px 0; }
+.timeDialog { border-radius: 5px; box-shadow: 5px 8px 0 #81775f40, 0 24px 80px #39342133; }
+.timeDialog::backdrop { background: #39342159; }
+.placeMap { border-radius: 4px; }
+.routePicker select, .routeOpen { border-color: #b7b4a3; border-radius: 4px; }
+@media (max-width: 640px) {
+  .main { padding-top: 12px; }
+  .timeline > li:first-child:has(.tripTitle) { max-width: calc(100% - 24px); }
+  .timeline summary > span:last-child:not(:has(.stationTime)) { font-size: 13px; }
+  .timeline details[open] summary > span:has(> .stationTime),
+  .timeline details[open] summary > button:has(> .stationTime) { transform: rotate(-3deg); }
+  .stationClock { font-size: 11px; }
+}

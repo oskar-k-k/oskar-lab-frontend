@@ -17,3 +17,7 @@ Generation used only the generic destination/art direction above, with no accoun
 bookings, addresses, documents or private images. Browsers load the optimized asset from
 the app's own origin; no image generation service is contacted at runtime. Existing hosting
 access-log retention applies. No new user uploads, stored personal data or permissions.
+
+The 2026-11-27 sketchbook redesign reuses this cover as a postcard. Paper grain and tape
+are CSS; station stickers use the existing local SVG illustrations recolored in sage and ink.
+No imagery from the design-reference screenshot is copied or downloaded.
