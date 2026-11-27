@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 const state = vi.hoisted(() => ({ user: vi.fn(), fetch: vi.fn() }));
 vi.mock("@oskar-lab/auth/platformUser", () => ({ getCurrentUser: state.user }));
-import { GET, POST } from "../src/app/api/travel/[[...path]]/route";
+import { GET, POST, PUT } from "../src/app/api/travel/[[...path]]/route";
 beforeEach(() => {
   state.user.mockReset();
   state.fetch.mockReset();
@@ -10,6 +10,19 @@ beforeEach(() => {
     "AUTH_BRIDGE_SECRET",
     "synthetic-bridge-secret-at-least-32-characters",
   );
+});
+it("forwards only the authorized packing path with server-derived identity and private caching", async () => {
+  const tripId = "11111111-1111-4111-8111-111111111111";
+  state.user.mockResolvedValue({ id: "verified-owner" });
+  state.fetch.mockResolvedValue(Response.json({ version: 1, people: [] }));
+  const response = await PUT(new Request(`https://lab.invalid/api/travel/${tripId}/packing`, {
+    method: "PUT", headers: { origin: "https://lab.invalid", "content-type": "application/json", "X-User-Id": "forged" },
+    body: JSON.stringify({ version: 0, people: [] }),
+  }), { params: Promise.resolve({ path: [tripId, "packing"] }) });
+  expect(response.status).toBe(200);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  expect(state.fetch.mock.calls[0][0]).toContain(`/internal/travel/trips/${tripId}/packing`);
+  expect(state.fetch.mock.calls[0][1].headers["X-User-Id"]).toBe("verified-owner");
 });
 it("does not call the backend for an anonymous session", async () => {
   state.user.mockResolvedValue(null);

@@ -421,6 +421,7 @@
   border-radius: 10px;
 }
 .header svg { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.header .packingButton { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; white-space: nowrap; font-size: 12px; border-radius: 8px; }
 .header .accountLink { order: 3; padding: 8px; }
 .editModeToggle[aria-pressed="true"] { border-color: var(--travel-focus); color: var(--travel-focus); }
 .headerMenu { position: relative; flex: none; }
@@ -441,6 +442,7 @@
 @media (max-width: 640px) {
   .page .header { gap: 6px; padding: 8px 12px; }
   .platformLink, .editModeText { display: none; }
+  .header:has(.packingButton) > strong { display: none; }
 }
 
 .page button:hover:not(:disabled) {

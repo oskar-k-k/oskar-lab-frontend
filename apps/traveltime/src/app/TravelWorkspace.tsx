@@ -11,6 +11,7 @@ import TravelTimeline from "./TravelTimeline";
 import TripForm from "./TripForm";
 import BookingForm from "./BookingForm";
 import StationTimeEditor from "./StationTimeEditor";
+import PackingListDialog from "./PackingListDialog";
 import styles from "./Travel.module.css";
 type Trip = components["schemas"]["TravelTrip"];
 export type Entry = components["schemas"]["TravelEntry"];
@@ -38,6 +39,7 @@ function TravelWorkspaceContent() {
   const requestGeneration = useRef(0);
   const documentGeneration = useRef(0);
   const [editingTimeline, setEditingTimeline] = useState(false);
+  const [packingOpen, setPackingOpen] = useState(false);
   const [timeEdit, setTimeEdit] = useState<{entry: Entry; point: Entry["points"][number]} | null>(null);
   const [ambientMotion, setAmbientMotion] = useState(true);
   const [success, setSuccess] = useState(false);
@@ -198,7 +200,11 @@ function TravelWorkspaceContent() {
   return (
     <div className={`${styles.page} ${trip && ambientMotion ? styles.ambientMotion : ""}`}>
       <header className={styles.header}>
-        <a className={styles.platformLink} href="/">OSKAR LAB</a>
+        {!trip && <a className={styles.platformLink} href="/">OSKAR LAB</a>}
+        {trip && !auth && <button className={styles.packingButton} onClick={() => setPackingOpen(true)}>
+          <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="3" y="5" width="14" height="13" rx="2"/><path d="M7 5V3h6v2M3 10h14M8 9v3h4V9"/></svg>
+          {label("packingTitle")}
+        </button>}
         <strong>TravelTime</strong>
         <a className={styles.accountLink} href="/account" aria-label={label("accountLink")} title={label("accountLink")}><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><circle cx="10" cy="6" r="3"/><path d="M4 18v-2a6 6 0 0 1 12 0v2"/></svg></a>
         {trip && !auth && (
@@ -625,6 +631,7 @@ function TravelWorkspaceContent() {
           </>
         )}
       </main>
+      {trip && !auth && packingOpen && <PackingListDialog key={trip.id} tripId={trip.id} canEdit={trip.canEdit} onClose={() => setPackingOpen(false)} />}
     </div>
   );
 }

@@ -172,3 +172,28 @@ above. No Routes API, billing, travel-time lookup or automatic itinerary resched
 Accommodation captions include the saved check-in/out policy time with its from/until meaning, independently of planned timeline times. Unknown policy times remain omitted; no window end is inferred. This display-only change adds no storage or external data flow.
 
 TravelTime starts without an automatically highlighted milestone; station highlights follow opened details. Arrival planes face down-left and departure boats are mirrored. Artwork remains local SVG with no additional assets or data flow.
+
+
+## Packing list
+
+The top-left Packing list button opens a native full-screen modal with trapped focus,
+Escape/back navigation and focus restoration. Person tabs support arrow/Home/End keys.
+Normal mode saves checks immediately. Edit mode keeps person/group/item changes in memory
+until Save changes; Cancel discards them. Counts show checked/total per group, person and
+whole trip. Checks and labels are read from the database whenever the list opens.
+
+`GET/PUT /api/travel/{tripId}/packing` forwards the existing authenticated trip boundary.
+The backend stores ordered person, group and item rows under a versioned trip packing list.
+Only the owner can write (including checks); verified trip viewers retain read-only access.
+Person names are labels and grant no permissions. Limits are 12 people, 40 groups per person,
+100 groups total, 100 items per group and 500 items total. Names are at most 80/100/200 characters.
+Stale or ambiguous writes block further saves until the user reloads the stored list.
+Failures preserve the local edit draft; reloading or leaving it asks before discarding it.
+Offline controls and pending writes are disabled. No write is automatically retried.
+
+Purpose: store the requested private checklist and checks across visits/devices. Recipients
+are the existing backend/database/backup host and authorized trip readers. Labels and checks
+remain until individually removed or the trip/account is deleted; cascading rows are removed
+from the active database. Existing backup retention still needs operator confirmation.
+No extra external requests, browser storage, analytics, location permission, assets or
+third-party dependencies are introduced. The modal does not include Maps embeds.

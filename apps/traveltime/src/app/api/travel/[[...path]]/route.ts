@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@oskar-lab/auth/platformUser";
 const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 const routes = new RegExp(
-  `^(?:${uuid}(?:/(?:entries(?:/${uuid}(?:/attachments(?:/${uuid})?)?)?|viewers(?:/${uuid})?))?)?$`,
+  `^(?:${uuid}(?:/(?:packing|entries(?:/${uuid}(?:/attachments(?:/${uuid})?)?)?|viewers(?:/${uuid})?))?)?$`,
   "i",
 );
 const headers = {
@@ -49,7 +49,7 @@ async function proxy(
       return Response.json({ code: "unavailable" }, { status: 503, headers });
     let body: ArrayBuffer | undefined;
     if (request.method === "POST" || request.method === "PUT") {
-      const limit = path.endsWith("/attachments") ? 6 * 1024 * 1024 : 100000;
+      const limit = path.endsWith("/attachments") ? 6 * 1024 * 1024 : path.endsWith("/packing") ? 600000 : 100000;
       const reader = request.body?.getReader();
       const chunks: Uint8Array[] = [];
       let length = 0;

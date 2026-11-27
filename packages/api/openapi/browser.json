@@ -310,6 +310,104 @@
         ],
         "type": "object"
       },
+      "PackingGroup": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PackingItem"
+            },
+            "maxItems": 100,
+            "minItems": 0,
+            "type": "array"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "items",
+          "name"
+        ],
+        "type": "object"
+      },
+      "PackingItem": {
+        "properties": {
+          "checked": {
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "required": [
+          "checked",
+          "id",
+          "name"
+        ],
+        "type": "object"
+      },
+      "PackingList": {
+        "properties": {
+          "people": {
+            "items": {
+              "$ref": "#/components/schemas/PackingPerson"
+            },
+            "maxItems": 12,
+            "minItems": 0,
+            "type": "array"
+          },
+          "version": {
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "people",
+          "version"
+        ],
+        "type": "object"
+      },
+      "PackingPerson": {
+        "properties": {
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/PackingGroup"
+            },
+            "maxItems": 40,
+            "minItems": 0,
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "required": [
+          "groups",
+          "id",
+          "name"
+        ],
+        "type": "object"
+      },
       "PageableObject": {
         "properties": {
           "offset": {
@@ -3615,6 +3713,374 @@
                 "schema": {
                   "format": "binary",
                   "type": "string"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "tags": [
+          "travel-controller"
+        ]
+      }
+    },
+    "/api/travel/{tripId}/packing": {
+      "get": {
+        "operationId": "packing",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackingList"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Request rejected; code is safe for localized feedback"
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "tags": [
+          "travel-controller"
+        ]
+      },
+      "put": {
+        "operationId": "savePacking",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PackingList"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackingList"
                 }
               }
             },

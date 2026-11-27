@@ -1,4 +1,5 @@
 import { parseMapEmbedUrl } from "./maps";
+import { validPackingList } from "./packing";
 import type { components } from "@oskar-lab/api/backend";
 const kinds = new Set([
   "FLIGHT",
@@ -129,6 +130,7 @@ export function validTravelResponse(
   value: unknown,
 ): boolean {
   const route = path.split("?")[0];
+  if (route.endsWith("/packing")) return validPackingList(value);
   if (route.endsWith("/viewers"))
     return method === "GET"
       ? Array.isArray(value) && value.every(viewer)
