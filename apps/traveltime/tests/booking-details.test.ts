@@ -82,3 +82,18 @@ it.each(["FLIGHT", "BOAT"] as const)("renders %s as connected endpoints with sta
   expect(html).toContain("(UTC+4)");
   expect(html).toContain("6 hr 20 min");
 });
+
+
+it("shows accommodation policy times beneath the artwork without replacing the planned timeline time", () => {
+  const stay = { ...entry, type: "HOTEL", points: [
+    { ...departure, role: "CHECK_IN", time: "14:00:00", timeMeaning: "NOT_BEFORE", timelineTime: "17:00:00", timelineUtcOffset: "+01:00" },
+    { ...departure, role: "CHECK_OUT", date: "2030-12-03", time: "11:00:00", timeMeaning: "NOT_AFTER", timelineTime: null },
+  ] } as Entry;
+  const html = renderToStaticMarkup(createElement(TravelTimeline, {
+    entries: [stay], now: 0, loading: false, editable: false, disabled: false,
+    onDocuments: vi.fn(), onEdit: vi.fn(), onDelete: vi.fn(),
+  }));
+  expect(html).toMatch(/travel.CHECK_IN.*?travel.policyFrom.*?14:00travel.clockSuffix<\/small>/);
+  expect(html).toMatch(/travel.CHECK_OUT.*?travel.policyUntil.*?11:00travel.clockSuffix<\/small>/);
+  expect(html).toContain("17:00 (UTC+1)");
+});

@@ -106,6 +106,11 @@ export default function TravelTimeline({
                 {(row.points.length === 1 || paired) && (
                   <small className={styles.stationRole}>
                     {label(point.role)}
+                    {stay && point.time && <> {point.timeMeaning === "NOT_BEFORE"
+                      ? label("policyFrom") + " "
+                      : point.timeMeaning === "NOT_AFTER" ? label("policyUntil") + " " : ""}
+                      {point.time.slice(0, 5)}{label("clockSuffix")}
+                    </>}
                   </small>
                 )}
               </>

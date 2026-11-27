@@ -168,3 +168,5 @@ and destination names/addresses to Google Maps, not trip dates, notes, documents
 The current-location option omits the origin: Google handles any device location/permission itself.
 TravelTime never requests geolocation. Maps controls its own retention and processing as described
 above. No Routes API, billing, travel-time lookup or automatic itinerary rescheduling is introduced.
+
+Accommodation captions include the saved check-in/out policy time with its from/until meaning, independently of planned timeline times. Unknown policy times remain omitted; no window end is inferred. This display-only change adds no storage or external data flow.

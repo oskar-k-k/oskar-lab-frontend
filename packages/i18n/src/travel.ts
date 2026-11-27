@@ -1,4 +1,7 @@
 export const travelEn = {
+  "travel.policyFrom": "from",
+  "travel.policyUntil": "until",
+  "travel.clockSuffix": "",
   "travel.routeFrom": "Route from",
   "travel.currentLocation": "Current location",
   "travel.openRoute": "Open route",
@@ -129,6 +132,9 @@ export const travelEn = {
   "travel.dateOnly": "Day only",
 } as const;
 export const travelDe: Record<keyof typeof travelEn, string> = {
+  "travel.policyFrom": "ab",
+  "travel.policyUntil": "bis",
+  "travel.clockSuffix": " Uhr",
   "travel.routeFrom": "Route von",
   "travel.currentLocation": "Aktueller Standort",
   "travel.openRoute": "Route öffnen",
