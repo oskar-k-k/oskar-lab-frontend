@@ -2,6 +2,17 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { expect, it } from "vitest";
 import Timeline from "../src/Timeline/Timeline";
+it("connects separated same-side items without moving intervening content", () => {
+  const html = renderToStaticMarkup(createElement(Timeline, {label:"Stay history",variant:"bubbles",
+    ranges:[{fromItemId:"arrival",toItemId:"departure",label:"2 nights"}],
+    items:[{id:"arrival",side:"left",label:"Day 1",content:"Arrival"},
+      {id:"activity",side:"right",label:"Day 2",content:"Activity"},
+      {id:"departure",side:"left",label:"Day 3",content:"Departure"}]}));
+  expect(html.indexOf('id="arrival"')).toBeLessThan(html.indexOf('id="activity"'));
+  expect(html.indexOf('id="activity"')).toBeLessThan(html.indexOf('id="departure"'));
+  expect(html).toContain("2 nights");
+  expect(html.match(/<details /g)).toHaveLength(3);
+});
 
 it("preserves supplied order, accessible labels and a single current milestone", () => {
   const html = renderToStaticMarkup(

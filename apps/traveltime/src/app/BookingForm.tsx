@@ -55,6 +55,7 @@ export default function BookingForm({
         const data = new FormData(event.currentTarget);
         const points: Point[] = roles.map((role, index) => {
           const time = String(data.get(`time${index}`) ?? "");
+          const plannedTime = stay ? String(data.get(`timeline${index}`) ?? "") : "";
           return {
             role,
             date: String(data.get(`date${index}`)),
@@ -67,6 +68,8 @@ export default function BookingForm({
             placeName: String(data.get(`place${index}`)),
             address: String(data.get(`address${index}`) ?? ""),
             mapEmbedUrl: parseMapEmbedUrl(String(data.get(`map${index}`) ?? "")),
+            timelineTime: plannedTime || null,
+            timelineUtcOffset: plannedTime ? String(data.get(`timelineOffset${index}`) ?? "") || null : null,
           };
         });
         void onSave({
@@ -161,6 +164,13 @@ export default function BookingForm({
                     )}
                   </select>
                 </label>
+                {stay && <>
+                  <label>
+                    {label(role === "CHECK_IN" ? "plannedArrival" : "plannedDeparture")}
+                    <input name={`timeline${index}`} type="time" defaultValue={point?.timelineTime?.slice(0, 5) ?? ""} />
+                    <small>{label("plannedTimeHelp")}</small>
+                  </label>
+                </>}
                 <label>
                   {label("zone")}
                   <input
@@ -197,6 +207,10 @@ export default function BookingForm({
                       defaultValue={point?.utcOffset ?? ""}
                     />
                   </label>
+                  {stay && <label>
+                    {label("plannedOffset")}
+                    <input name={`timelineOffset${index}`} pattern="Z|[+-][0-9]{2}:[0-9]{2}" defaultValue={point?.timelineUtcOffset ?? ""} />
+                  </label>}
                 </details>
                 <label>
                   {label("place")}

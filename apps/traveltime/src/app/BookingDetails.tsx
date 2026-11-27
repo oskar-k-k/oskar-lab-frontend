@@ -51,6 +51,9 @@ export default function BookingDetails({
         {points.map((p) => (
           <div key={p.role}>
             <small>{label(p.role)}</small>
+            {(p.role === "CHECK_IN" || p.role === "CHECK_OUT") && p.timelineTime && <p>
+              {label(p.role === "CHECK_IN" ? "plannedArrival" : "plannedDeparture")}: {p.timelineTime.slice(0, 5)}
+            </p>}
             <strong>
               {p.time
                 ? `${p.timeMeaning !== "EXACT" ? label(p.timeMeaning) + " " : ""}${p.time.slice(0, 5)}`

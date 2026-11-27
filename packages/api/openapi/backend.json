@@ -776,6 +776,17 @@
             "nullable": true,
             "type": "string"
           },
+          "timelineTime": {
+            "format": "time-local",
+            "nullable": true,
+            "type": "string"
+          },
+          "timelineUtcOffset": {
+            "maxLength": 9,
+            "minLength": 0,
+            "nullable": true,
+            "type": "string"
+          },
           "timeMeaning": {
             "enum": [
               "EXACT",
@@ -806,6 +817,8 @@
           "time",
           "timeMeaning",
           "timeZone",
+          "timelineTime",
+          "timelineUtcOffset",
           "utcOffset"
         ],
         "type": "object"

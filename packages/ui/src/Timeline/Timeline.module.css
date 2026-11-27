@@ -72,6 +72,8 @@
 }
 
 .bubbles {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   position: relative;
   padding-block: 1.5rem 3rem;
   isolation: isolate;
@@ -86,6 +88,7 @@
   z-index: -1;
 }
 .bubbles .item {
+  grid-column: 1;
   display: block;
   padding-bottom: 2.5rem;
 }
@@ -322,6 +325,7 @@
 }
 
 .start {
+  grid-column: 1;
   position: relative;
   width: var(--timeline-start-width, fit-content);
   max-width: 100%;
@@ -339,4 +343,29 @@
 
 .bubbles:has(> .start) {
   padding-top: 0;
+}
+
+.range {
+  position: relative;
+  grid-column: 1;
+  width: calc(50% - 2rem);
+  margin-left: calc(50% + 2rem);
+  pointer-events: none;
+  z-index: -1;
+}
+.range.alternate { margin-left: 0; }
+.range .connection {
+  position: absolute;
+  inset: 11rem 0 1rem;
+  height: auto;
+  margin: 0;
+}
+.bubbles .rangeStart { padding-bottom: 8rem; }
+@media (max-width: 640px) {
+  .range { width: calc(50% - 2.5rem); margin-left: calc(50% + 2.5rem); }
+  .range .connection { top: 9rem; }
+  .bubbles:has(.disclosure[open]) .range { visibility: hidden; }
+}
+@media (max-width: 360px) {
+  .range .connection { top: 8rem; }
 }

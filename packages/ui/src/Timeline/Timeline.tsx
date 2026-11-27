@@ -15,6 +15,16 @@ export type TimelineStation = Readonly<{
   visual?: ReactNode;
   /** Circle crops photos; illustration keeps freestanding artwork transparent and uncropped. */
   visualStyle?: "circle" | "illustration";
+  /** Optional explicit side in bubble view, for relationships across intervening items. */
+  side?: "left" | "right";
+}>;
+
+/** A visual relationship between two existing items without changing their chronological order. */
+export type TimelineRange = Readonly<{
+  fromItemId: string;
+  toItemId: string;
+  /** Localized relationship description, such as a calendar-night count. */
+  label: ReactNode;
 }>;
 
 /** One timeline position, optionally with a connected second bubble on the same side. */
@@ -68,6 +78,8 @@ export type TimelineProps = Readonly<{
   className?: string;
   /** Cards show content immediately; bubbles alternate around a central rail and reveal content on activation. */
   variant?: "cards" | "bubbles";
+  /** Connects same-side items while preserving any items between them. Invalid endpoints are ignored. */
+  ranges?: readonly TimelineRange[];
 }>;
 
 /** Renders an accessible vertical timeline with cards or native keyboard-accessible bubble disclosures. */
@@ -78,8 +90,11 @@ export default function Timeline({
   start,
   className = "",
   variant = "cards",
+  ranges = [],
 }: TimelineProps) {
   const group = items.length ? `timeline-${items[0].id}` : undefined;
+  const firstRow = start != null ? 2 : 1;
+  const onLeft = (item: TimelineItem, index: number) => item.side ? item.side === "left" : index % 2 === 1;
   return (
     <ol
       role="list"
@@ -87,11 +102,12 @@ export default function Timeline({
       aria-label={label}
     >
       {variant === "bubbles" && start != null && (
-        <li className={styles.start}>{start}</li>
+        <li className={styles.start} style={{gridRow: 1}}>{start}</li>
       )}
       {items.map((item, index) => (
         <li
-          className={`${styles.item} ${index % 2 === 1 ? styles.alternate : ""}`}
+          className={`${styles.item} ${onLeft(item, index) ? styles.alternate : ""} ${ranges.some(range => range.fromItemId === item.id && range.toItemId === items[index + 1]?.id) ? styles.rangeStart : ""}`}
+          style={variant === "bubbles" ? {gridRow: firstRow + index} : undefined}
           key={item.id}
           id={item.id}
           aria-current={item.id === currentItemId ? "step" : undefined}
@@ -125,6 +141,16 @@ export default function Timeline({
           )}
         </li>
       ))}
+      {variant === "bubbles" && ranges.map(range => {
+        const from = items.findIndex(item => item.id === range.fromItemId);
+        const to = items.findIndex(item => item.id === range.toItemId);
+        if (from < 0 || to <= from || onLeft(items[from], from) !== onLeft(items[to], to)) return null;
+        return <li role="presentation" key={`${range.fromItemId}-${range.toItemId}`}
+          className={`${styles.range} ${onLeft(items[from], from) ? styles.alternate : ""}`}
+          style={{gridRow: `${firstRow + from} / ${firstRow + to}`}}>
+          <div className={styles.connection}><span>{range.label}</span></div>
+        </li>;
+      })}
     </ol>
   );
 }

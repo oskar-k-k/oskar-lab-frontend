@@ -4,8 +4,21 @@ import {
   nextTimelineRow,
   flightDuration,
   pointUtcOffset,
+  timelinePoint,
+  stayNights,
 } from "../src/model/timeline";
 import type { Entry } from "../src/app/TravelWorkspace";
+it("orders hotel arrival after a boat using a plan, never its earlier check-in window", () => {
+  const point = {date:"2030-12-01",time:"14:00:00",utcOffset:"+07:00",timeZone:"Asia/Bangkok",role:"CHECK_IN",timeMeaning:"NOT_BEFORE",timelineTime:"17:00:00",timelineUtcOffset:"+07:00"} as Entry["points"][number];
+  const stay = {id:"stay",type:"HOTEL",points:[point,{...point,role:"CHECK_OUT",date:"2030-12-03",timelineTime:null,timelineUtcOffset:null}]} as Entry;
+  const boat = {id:"boat",type:"BOAT",points:[{...point,role:"DEPARTURE",time:"15:00:00",timeMeaning:"EXACT"},{...point,role:"ARRIVAL",time:"16:15:00",timeMeaning:"EXACT"}]} as Entry;
+  expect(timelineRows([stay,boat]).map(r=>r.entry.id)).toEqual(["boat","stay","stay"]);
+  expect(timelinePoint(point).time).toBe("17:00:00");
+  expect(timelinePoint({...point,timelineTime:null,timelineUtcOffset:null}).time).toBeNull();
+  expect(point.time).toBe("14:00:00");
+  expect(stayNights(stay)).toBe(2);
+  expect(stayNights({...stay,points:[{...point,date:"2026-03-28"},{...point,role:"CHECK_OUT",date:"2026-03-30"}]})).toBe(2);
+});
 it("interleaves an activity with connected hotel endpoints while keeping flights grouped", () => {
   const point = (role: string, date: string) => ({
     role,

@@ -506,6 +506,9 @@ export interface components {
             role: "DEPARTURE" | "ARRIVAL" | "CHECK_IN" | "CHECK_OUT" | "START" | "END";
             /** Format: time-local */
             time: string | null;
+            /** Format: time-local */
+            timelineTime: string | null;
+            timelineUtcOffset: string | null;
             /** @enum {string} */
             timeMeaning: "EXACT" | "NOT_BEFORE" | "NOT_AFTER" | "UNSPECIFIED";
             timeZone: string;

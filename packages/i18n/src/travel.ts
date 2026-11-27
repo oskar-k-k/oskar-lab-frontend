@@ -1,4 +1,10 @@
 export const travelEn = {
+  "travel.plannedArrival": "Planned arrival",
+  "travel.plannedDeparture": "Planned departure",
+  "travel.plannedOffset": "Planned time UTC offset (optional; needed for ambiguous clock changes)",
+  "travel.plannedTimeHelp": "Used for timeline order on this date. The accommodation's check-in/out time remains an information field. Leave empty if not planned yet.",
+  "travel.night": "night",
+  "travel.nights": "nights",
   "travel.bookingSource": "Booking source (optional)",
   "travel.bookedVia": "Booked via",
   "travel.mapMissing": "No map preview saved yet. Add the Google Maps embed link while editing this place.",
@@ -116,6 +122,12 @@ export const travelEn = {
   "travel.dateOnly": "Day only",
 } as const;
 export const travelDe: Record<keyof typeof travelEn, string> = {
+  "travel.plannedArrival": "Geplante Ankunft",
+  "travel.plannedDeparture": "Geplante Abreise",
+  "travel.plannedOffset": "UTC-Offset der geplanten Zeit (optional; nötig bei mehrdeutiger Zeitumstellung)",
+  "travel.plannedTimeHelp": "Bestimmt die Reihenfolge der Timeline an diesem Datum. Die Check-in/out-Zeit der Unterkunft bleibt eine Info. Leer lassen, wenn noch nicht geplant.",
+  "travel.night": "Nacht",
+  "travel.nights": "Nächte",
   "travel.bookingSource": "Buchungsquelle (optional)",
   "travel.bookedVia": "Gebucht über",
   "travel.mapMissing": "Noch keine Kartenvorschau gespeichert. Ergänze beim Bearbeiten dieses Ortes den Google-Maps-Einbettungslink.",

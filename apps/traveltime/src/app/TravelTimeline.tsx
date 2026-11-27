@@ -7,6 +7,8 @@ import {
   nextTimelineRow,
   flightDuration,
   pointUtcOffset,
+  timelinePoint,
+  stayNights,
 } from "../model/timeline";
 import Timeline from "@oskar-lab/ui/Timeline/Timeline";
 import BookingDetails from "./BookingDetails";
@@ -40,6 +42,7 @@ export default function TravelTimeline({
   const label = (key: string) => t(("travel." + key) as TranslationKey);
   const rows = timelineRows(entries);
   const next = nextTimelineRow(rows, now);
+  const stays = entries.filter(entry => entry.type === "HOTEL" || entry.type === "APARTMENT");
   const tripDate = (value: string) =>
     `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)}`;
   return (
@@ -68,8 +71,14 @@ export default function TravelTimeline({
         currentItemId={
           next ? `booking-${next.entry.id}-${next.points[0].role}` : undefined
         }
+        ranges={editing ? [] : stays.map(entry => ({
+          fromItemId: `booking-${entry.id}-CHECK_IN`,
+          toItemId: `booking-${entry.id}-CHECK_OUT`,
+          label: `${new Intl.NumberFormat(locale).format(stayNights(entry))} ${label(stayNights(entry) === 1 ? "night" : "nights")}`,
+        }))}
         items={rows.map((row, index) => {
           const point = row.points[0];
+          const stay = row.entry.type === "HOTEL" || row.entry.type === "APARTMENT";
           const visualStyle: "illustration" | "circle" =
             ["FLIGHT", "BOAT", "HOTEL", "APARTMENT"].includes(row.entry.type)
               ? "illustration" : "circle";
@@ -77,7 +86,9 @@ export default function TravelTimeline({
             !editing &&
             (row.entry.type === "FLIGHT" || row.entry.type === "BOAT") &&
             row.points.length === 2;
-          const stationLabel = (p: Entry["points"][number]) => (
+          const stationLabel = (original: Entry["points"][number]) => {
+            const p = timelinePoint(original);
+            return (
             <span className={styles.stationTime} title={p.timeZone}>
               <time
                 dateTime={
@@ -93,7 +104,8 @@ export default function TravelTimeline({
                 </span>}
               </time>
             </span>
-          );
+            );
+          };
           const item = {
             id: `booking-${row.entry.id}-${point.role}`,
             title: (
@@ -108,6 +120,7 @@ export default function TravelTimeline({
             ),
             visual: <BookingVisual type={row.entry.type} />,
             visualStyle,
+            side: (stay ? "left" : stays.some(s => s.points[0].date <= point.date && s.points.at(-1)!.date >= point.date) ? "right" : undefined) as "left" | "right" | undefined,
             label:
               !editing ||
               index === 0 ||
