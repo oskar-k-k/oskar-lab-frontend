@@ -1,6 +1,6 @@
 "use client";
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
-import { parseMapEmbedUrl, googleMapsLink, mapQuery } from "../model/maps";
+import { parseMapEmbedUrl, googleMapsPlaceLink, mapQuery } from "../model/maps";
 import styles from "./Travel.module.css";
 
 /** Automatically embeds a saved station map with browser-native lazy loading and no referrer. */
@@ -13,7 +13,7 @@ export default function PlaceMap({ placeName, address, mapEmbedUrl }: {
   const query = mapQuery(placeName, address);
   const embed = parseMapEmbedUrl(mapEmbedUrl ?? "");
   if (!query && !embed) return null;
-  const href = embed ?? googleMapsLink(query);
+  const href = googleMapsPlaceLink(embed, query);
   const mapTitle = `${t("travel.map")} · ${placeName || address}`;
   return (
     <section className={styles.placeMap} aria-label={mapTitle}>

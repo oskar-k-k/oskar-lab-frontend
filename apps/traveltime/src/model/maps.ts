@@ -13,6 +13,27 @@ export function googleMapsLink(query: string): string {
   return url.toString();
 }
 
+/** Opens the saved venue in normal Maps; embed-only URLs remain restricted to the iframe. */
+export function googleMapsPlaceLink(embed: string | null, query: string): string {
+  const validated = embed ? parseMapEmbedUrl(embed) : null;
+  if (validated) {
+    const data = new URL(validated).searchParams.get("pb") ?? "";
+    const cid = data.match(/!1s0x[0-9a-f]+:0x([0-9a-f]{1,16})(?:!|$)/i)?.[1];
+    if (cid && BigInt("0x" + cid) > BigInt(0)) {
+      const url = new URL("https://www.google.com/maps");
+      url.searchParams.set("cid", BigInt("0x" + cid).toString());
+      return url.toString();
+    }
+    const placeId = data.match(/!1s(ChI[A-Za-z0-9_-]+)(?:!|$)/)?.[1];
+    if (placeId) {
+      const url = new URL(googleMapsLink(query));
+      url.searchParams.set("query_place_id", placeId);
+      return url.toString();
+    }
+  }
+  return googleMapsLink(query);
+}
+
 /** Extracts a key-free Google share embed from its URL or the copied iframe HTML. */
 export function parseMapEmbedUrl(input: string): string | null {
   const value = input.trim();

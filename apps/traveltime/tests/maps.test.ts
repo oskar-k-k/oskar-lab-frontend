@@ -1,10 +1,21 @@
 import { expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { googleMapsLink, mapQuery, parseMapEmbedUrl } from "../src/model/maps";
+import { googleMapsLink, googleMapsPlaceLink, mapQuery, parseMapEmbedUrl } from "../src/model/maps";
 vi.mock("@oskar-lab/i18n/I18nProvider", () => ({ useI18n: () => ({ locale: "en", t: (key: string) => key }) }));
 import PlaceMap from "../src/app/PlaceMap";
 const embed = "https://www.google.com/maps/embed?pb=!1m18!example";
+it("opens the saved venue CID as a normal Maps page without losing 64-bit precision", () => {
+  const url = new URL(googleMapsPlaceLink("https://www.google.com/maps/embed?pb=!1s0x123:0xffffffffffffffff!2sExample", "Example place"));
+  expect(url.pathname).toBe("/maps");
+  expect(url.searchParams.get("cid")).toBe("18446744073709551615");
+});
+it("uses a place ID when available and otherwise falls back to the station address", () => {
+  expect(new URL(googleMapsPlaceLink("https://www.google.com/maps/embed?pb=!1sChIJExample_place!2sExample", "Example place")).searchParams.get("query_place_id")).toBe("ChIJExample_place");
+  for (const value of [null,embed,"https://evil.invalid/maps/embed?pb=!1s0x1:0x2"]) {
+    expect(googleMapsPlaceLink(value,"Example address")).toBe(googleMapsLink("Example address"));
+  }
+});
 it("uses only the selected station for Google Maps search links", () => {
   const query = mapQuery("Example pier", "Harbor & Main, Example City");
   const link = new URL(googleMapsLink(query));
@@ -33,6 +44,9 @@ it("automatically embeds a saved station map without a loading prompt or referre
   expect(html).not.toContain("<button");
   expect(html).toContain('rel="noopener noreferrer"');
   expect(html).toContain(embed);
+  const links = [...html.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
+  expect(links).toHaveLength(2);
+  expect(links.every(link => !link.includes("/maps/embed"))).toBe(true);
 });
 it("keeps an outbound location link and an honest state when no embed is saved", () => {
   const html = renderToStaticMarkup(createElement(PlaceMap, { placeName: "Example pier", address: "Main St" }));

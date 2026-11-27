@@ -131,10 +131,13 @@ for automatic third-party embeds remain operator review items. No consent prefer
 Google attribution remains visible and interactive at the bottom. This automatic loading mode
 was explicitly requested by the owner; it is not a claim that consent is legally unnecessary.
 
-A saved preview links to the same Google embed so the selected pin is preserved. Without an
-embed, the outbound link searches the saved place/address and the UI explicitly says the preview
-has not been saved. An incomplete address can produce ambiguous search results. The owner must
-select the correct point in Maps before copying its embed; no coordinates are guessed.
+The iframe uses the validated embed URL, but preview clicks and outbound links always open a
+normal Maps page. Recognized Google share-embed venue IDs use Google's Maps CID destination
+with exact 64-bit conversion, or a Maps search URL with `query_place_id` for supported place IDs.
+The share-embed payload is an external format and may change; if no identifier is recognized,
+the outbound link falls back to the saved place/address search. No embed URL is opened as a
+standalone page. Missing/incomplete addresses can still produce ambiguous fallback results.
+No external lookup or new storage is needed to derive the link.
 
 The initial Cloud-API implementation was replaced at the owner's request. The `/api/maps`
 configuration endpoint and key environment setting are removed. No Google key was created,
