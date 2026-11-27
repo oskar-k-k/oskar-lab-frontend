@@ -2,7 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import type { components } from "@oskar-lab/api/backend";
-import { timelinePoint } from "../model/timeline";
+import type { TranslationKey } from "@oskar-lab/i18n/messages";
+import { plannedTimeLabel } from "../model/point-time";
 import { editStationTime } from "../model/edit-time";
 import { TravelError } from "../services/client";
 import type { Entry } from "./TravelWorkspace";
@@ -20,8 +21,7 @@ export default function StationTimeEditor({ entry, point, disabled, onClose, onS
   const dialog = useRef<HTMLDialogElement>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<"conflict" | "invalid" | "denied" | "error" | null>(null);
-  const displayPoint = timelinePoint(point);
-  const stay = point.role === "CHECK_IN" || point.role === "CHECK_OUT";
+
   useEffect(() => {
     const element = dialog.current;
     const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -46,11 +46,11 @@ export default function StationTimeEditor({ entry, point, disabled, onClose, onS
       <h2 id="station-time-title">{t("travel.editDateTime")}</h2>
       <p>{point.placeName || entry.title} · {point.timeZone}</p>
       <fieldset disabled={saving || disabled}>
-        <label>{t("travel.date")}<input autoFocus type="date" name="date" required defaultValue={point.date} /></label>
-        <label>{t(stay ? point.role === "CHECK_IN" ? "travel.plannedArrival" : "travel.plannedDeparture" : "travel.time")}
-          <input type="time" name="time" defaultValue={displayPoint.time?.slice(0,5) ?? ""} />
+        <label>{t("travel.plannedDate")}<input autoFocus type="date" name="date" required defaultValue={point.timelineDate ?? point.date} /></label>
+        <label>{t(("travel." + plannedTimeLabel(entry.type, point.role)) as TranslationKey)}
+          <input type="time" name="time" defaultValue={point.timelineTime?.slice(0,5) ?? ""} />
         </label>
-        {stay && <small>{t("travel.plannedTimeHelp")}</small>}
+        <small>{t("travel.plannedTimeHelp")}</small>
         <details><summary>{t("travel.advancedTime")}</summary>
           <label>{t("travel.offset")}<input name="offset" pattern="Z|[+-][0-9]{2}:[0-9]{2}" /></label>
         </details>

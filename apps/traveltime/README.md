@@ -149,9 +149,9 @@ Station artwork uses local, transparent SVG illustrations for flights, boats and
 
 The normal detail view shows optional `bookingSource` as plain text (for example, “Booked via Booking.com”) instead of a document button. Owners can edit the source in the booking form; missing sources are omitted rather than inferred. Existing attachment management remains available in edit mode. Booking sources share the trip's authorization, storage and deletion rules and create no external request.
 
-Stay points have optional `timelineTime` and `timelineUtcOffset` fields for planned arrival/departure on their saved date. Timeline sorting and labels use those fields, never check-in/out windows. Unknown plans remain date-only. Accommodation policy times stay visible in details. Calendar-night counts use date differences, not elapsed hours. Shared Timeline ranges keep stay endpoints connected without moving intervening activities. These private fields share existing authorization and deletion behavior; no new recipient or external service is introduced. Owner-approved boat-to-hotel estimates use 45 minutes after a matching arrival and are plans, not confirmed hotel policy.
+Every station has optional `timelineDate`, `timelineTime` and `timelineUtcOffset` for a personal plan. Timeline labels/sorting and route-origin suggestions use the plan when present, otherwise the booked date/time. Booking dates and actual flight/stay/event times remain independent. Missing plan dates default to the booking date; a different planned date supports early airport presence on the previous evening. Accommodation policies use role-derived from/until labels, without a separate time-mode selector. Flight/boat duration still uses booked instants and stay nights use booked calendar dates. Existing plans survive migration; no new lead/transfer times are invented. These private fields share existing trip authorization and deletion rules, with no additional recipient or external request.
 
-Edit mode preserves the visual timeline, ranges and atmosphere. Owners can activate a station date/time label to open a small native dialog. Hotel labels edit the separate plan, never accommodation policy times. Saves preserve sibling points and booking metadata, use the existing versioned owner API and update in-memory entries without reloading or scrolling the trip. Failed/conflicting writes retain dialog input and require normal reload before unsafe retries. The header remains one row; secondary trip actions live in a compact menu. No additional storage, recipients or permissions are introduced.
+Edit mode preserves the visual timeline, ranges and atmosphere. Owners can activate a station date/time label to open a small native dialog. All station labels edit only the personal plan, never booked dates, departure times or accommodation policy times. Saves preserve sibling points and booking metadata, use the existing versioned owner API and update in-memory entries without reloading or scrolling the trip. Failed/conflicting writes retain dialog input and require normal reload before unsafe retries. Navigation uses the mobile dock or desktop menu; secondary trip actions remain in the timeline tools. No additional storage, recipients or permissions are introduced.
 
 
 ## Directions from saved trip locations
@@ -223,3 +223,12 @@ this requested collection. Authorized trip readers can see them; nothing is publ
 Rows remain until individually deleted or the trip/account is deleted. Active database rows
 cascade with their parent; existing backup deletion schedules still need operator confirmation.
 No extra analytics, external service, browser permission or third-party asset is introduced.
+
+
+Booking forms expose clear booked-time labels and an optional role-specific plan (airport/pier
+arrival, planned check-in/out, activity arrival). The planned date stays in a compact disclosure;
+blank uses the booked date. Advanced offset inputs are optional; unchanged validated offsets are
+preserved and changed clocks/dates/zones are re-resolved by the server. Inline timeline edits save
+only the plan. Clearing it restores the booking fallback. Captions and details distinguish planned
+airport presence from the booked departure and retain both dates when they differ. No maps or
+external services are invoked by time editing. Existing backup deletion schedules remain open.

@@ -59,6 +59,7 @@ function trip(value: unknown) {
 function point(value: unknown) {
   if (
     !record(value) ||
+    (value.timelineDate != null && (!date(value.timelineDate) || value.timelineTime == null)) ||
     (value.timelineTime != null && (typeof value.timelineTime !== "string" || !/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?$/.test(value.timelineTime))) ||
     (value.timelineUtcOffset != null && (typeof value.timelineUtcOffset !== "string" || !/^(?:Z|[+-]\d{2}:\d{2}(?::\d{2})?)$/.test(value.timelineUtcOffset))) ||
     !roles.has(String(value.role)) ||

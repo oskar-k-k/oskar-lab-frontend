@@ -1,11 +1,11 @@
 import type { components } from "@oskar-lab/api/backend";
 type Entry = components["schemas"]["TravelEntry"];
 export type TimelineRow = { entry: Entry; points: Entry["points"] };
-/** Uses independently planned stay times; accommodation windows never imply an arrival or departure. */
+/** Uses a personal planned instant for every station, falling back to its booking time when no plan exists. */
 export function timelinePoint(point: Entry["points"][number]): Entry["points"][number] {
-  if (point.role !== "CHECK_IN" && point.role !== "CHECK_OUT") return point;
-  return { ...point, time: point.timelineTime ?? null, utcOffset: point.timelineUtcOffset ?? null,
-    timeMeaning: point.timelineTime ? "EXACT" : "UNSPECIFIED" };
+  if (!point.timelineTime) return point;
+  return { ...point, date: point.timelineDate ?? point.date, time: point.timelineTime,
+    utcOffset: point.timelineUtcOffset, timeMeaning: "EXACT" };
 }
 
 /** Counts local calendar nights, unaffected by daylight-saving clock changes. */
@@ -23,12 +23,10 @@ export function timelineRows(entries: readonly Entry[]): TimelineRow[] {
         ? entry.points.map((point) => ({ entry, points: [point] }))
         : [{ entry, points: entry.points }],
     )
-    .sort(
-      (a, b) =>
-        (a.points[0].date + (timelinePoint(a.points[0]).time ?? "23:59:59")).localeCompare(
-          b.points[0].date + (timelinePoint(b.points[0]).time ?? "23:59:59"),
-        ) || a.entry.id.localeCompare(b.entry.id),
-    );
+    .sort((a, b) => {
+      const start = timelinePoint(a.points[0]), end = timelinePoint(b.points[0]);
+      return (start.date + (start.time ?? "23:59:59")).localeCompare(end.date + (end.time ?? "23:59:59")) || a.entry.id.localeCompare(b.entry.id);
+    });
 }
 /** Finds a not-yet-finished booking without inventing an exact hour for date-only points. */
 export function nextTimelineRow(

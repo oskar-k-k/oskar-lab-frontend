@@ -7,7 +7,7 @@ type Point = Entry["points"][number];
 function point(role: Point["role"], date: string, placeName: string, time = "20:00:00"): Point {
   return { role, date, placeName, address: `${placeName}, Example street`, time,
     utcOffset: "+07:00", timeZone: "Asia/Bangkok", timeMeaning: "EXACT",
-    mapEmbedUrl: null, timelineTime: null, timelineUtcOffset: null };
+    mapEmbedUrl: null, timelineTime: null, timelineUtcOffset: null, timelineDate: null };
 }
 function entry(id: string, type: Entry["type"], points: Point[]): Entry {
   return { id, type, points, title: id, notes: "PRIVATE NOTE", reference: "PRIVATE REFERENCE" } as Entry;

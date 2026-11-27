@@ -14,10 +14,10 @@ it("edits a planned arrival without altering policies, sibling points, maps or b
 it("clears a plan and its offset together while preserving the hotel window", () => {
   expect(editStationTime(entry,"CHECK_IN",start.date,"","+07:00").points[0]).toMatchObject({timelineTime:null,timelineUtcOffset:null,time:"14:00:00"});
 });
-it("edits only the selected transport endpoint and lets the server revalidate seasonal offsets", () => {
+it("edits only the selected transport plan while preserving its booked date and time", () => {
   const flight = {...entry,type:"FLIGHT",points:[{...start,role:"DEPARTURE"},{...end,role:"ARRIVAL"}]} as Entry;
   const input = editStationTime(flight,"ARRIVAL","2030-12-04","12:15","");
   expect(input.points[0]).toEqual(flight.points[0]);
-  expect(input.points[1]).toMatchObject({date:"2030-12-04",time:"12:15",timeMeaning:"EXACT",utcOffset:null});
+  expect(input.points[1]).toMatchObject({date:"2030-12-03",time:"11:00:00",timelineDate:"2030-12-04",timelineTime:"12:15",timelineUtcOffset:null});
   expect(() => editStationTime(entry,"START",start.date,"10:00","")).toThrow();
 });

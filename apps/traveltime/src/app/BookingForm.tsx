@@ -5,6 +5,8 @@ import type { TranslationKey } from "@oskar-lab/i18n/messages";
 import type { components } from "@oskar-lab/api/backend";
 import type { Entry } from "./TravelWorkspace";
 import { parseMapEmbedUrl } from "../model/maps";
+import { timelinePoint } from "../model/timeline";
+import { bookingTimeMeaning, bookingTimeLabel, plannedTimeLabel, editedUtcOffset } from "../model/point-time";
 import styles from "./Travel.module.css";
 type Point = components["schemas"]["TravelPoint"];
 type Input = components["schemas"]["TravelSaveEntry"];
@@ -20,7 +22,7 @@ const kinds: Input["type"][] = [
   "RESTAURANT",
   "TOUR",
 ];
-/** Edits one booking atomically, keeping unknown times and hotel time windows explicit. */
+/** Edits booked instants and optional personal plans independently, with role-derived time labels. */
 export default function BookingForm({
   entry,
   startDate,
@@ -58,21 +60,24 @@ export default function BookingForm({
         const data = new FormData(event.currentTarget);
         const points: Point[] = roles.map((role, index) => {
           const time = String(data.get(`time${index}`) ?? "");
-          const plannedTime = stay ? String(data.get(`timeline${index}`) ?? "") : "";
+          const plannedTime = String(data.get(`timeline${index}`) ?? "");
+          const date = String(data.get(`date${index}`));
+          const plannedDate = String(data.get(`timelineDate${index}`) ?? "") || date;
+          const zone = String(data.get(`zone${index}`));
+          const original = entry?.points.find(point => point.role === role);
           return {
             role,
-            date: String(data.get(`date${index}`)),
+            date,
             time: time || null,
-            timeZone: String(data.get(`zone${index}`)),
-            utcOffset: String(data.get(`offset${index}`) || "") || null,
-            timeMeaning: time
-              ? (String(data.get(`meaning${index}`)) as Point["timeMeaning"])
-              : "UNSPECIFIED",
+            timeZone: zone,
+            utcOffset: editedUtcOffset(original, date, time, zone, String(data.get(`offset${index}`) ?? "")),
+            timeMeaning: bookingTimeMeaning(role, time),
             placeName: String(data.get(`place${index}`)),
             address: String(data.get(`address${index}`) ?? ""),
             mapEmbedUrl: parseMapEmbedUrl(String(data.get(`map${index}`) ?? "")),
             timelineTime: plannedTime || null,
-            timelineUtcOffset: plannedTime ? String(data.get(`timelineOffset${index}`) ?? "") || null : null,
+            timelineUtcOffset: editedUtcOffset(original ? timelinePoint(original) : undefined, plannedDate, plannedTime, zone, String(data.get(`timelineOffset${index}`) ?? "")),
+            timelineDate: plannedTime ? plannedDate : null,
           };
         });
         void onSave({
@@ -136,44 +141,27 @@ export default function BookingForm({
                   />
                 </label>
                 <label>
-                  {label("time")}
+                  {label(bookingTimeLabel(role))}
                   <input
                     name={`time${index}`}
                     type="time"
                     defaultValue={point?.time?.slice(0, 5)}
                   />
                 </label>
-                <label>
-                  {label("meaning")}
-                  <select
-                    name={`meaning${index}`}
-                    defaultValue={
-                      point?.timeMeaning === "UNSPECIFIED"
-                        ? "EXACT"
-                        : (point?.timeMeaning ??
-                          (role === "CHECK_IN"
-                            ? "NOT_BEFORE"
-                            : role === "CHECK_OUT"
-                              ? "NOT_AFTER"
-                              : "EXACT"))
-                    }
-                  >
-                    <option value="EXACT">{label("EXACT")}</option>
-                    {role === "CHECK_IN" && (
-                      <option value="NOT_BEFORE">{label("NOT_BEFORE")}</option>
-                    )}
-                    {role === "CHECK_OUT" && (
-                      <option value="NOT_AFTER">{label("NOT_AFTER")}</option>
-                    )}
-                  </select>
-                </label>
-                {stay && <>
+                <div className={styles.plannedFields}>
                   <label>
-                    {label(role === "CHECK_IN" ? "plannedArrival" : "plannedDeparture")}
+                    {label(plannedTimeLabel(type, role))}
                     <input name={`timeline${index}`} type="time" defaultValue={point?.timelineTime?.slice(0, 5) ?? ""} />
                     <small>{label("plannedTimeHelp")}</small>
                   </label>
-                </>}
+                  <details open={Boolean(point?.timelineDate && point.timelineDate !== point.date)}>
+                    <summary>{label("differentPlannedDate")}</summary>
+                    <label>{label("plannedDate")}
+                      <input name={`timelineDate${index}`} type="date" defaultValue={point?.timelineDate && point.timelineDate !== point.date ? point.timelineDate : ""} />
+                      <small>{label("plannedDateHelp")}</small>
+                    </label>
+                  </details>
+                </div>
                 <label>
                   {label("zone")}
                   <input
@@ -207,13 +195,13 @@ export default function BookingForm({
                     <input
                       name={`offset${index}`}
                       pattern="Z|[+-][0-9]{2}:[0-9]{2}"
-                      defaultValue={point?.utcOffset ?? ""}
+                      placeholder={point?.utcOffset ?? ""}
                     />
                   </label>
-                  {stay && <label>
+                  <label>
                     {label("plannedOffset")}
-                    <input name={`timelineOffset${index}`} pattern="Z|[+-][0-9]{2}:[0-9]{2}" defaultValue={point?.timelineUtcOffset ?? ""} />
-                  </label>}
+                    <input name={`timelineOffset${index}`} pattern="Z|[+-][0-9]{2}:[0-9]{2}" placeholder={point?.timelineUtcOffset ?? ""} />
+                  </label>
                 </details>
                 <label>
                   {label("place")}

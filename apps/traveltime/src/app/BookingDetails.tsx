@@ -2,7 +2,8 @@
 import { useI18n } from "@oskar-lab/i18n/I18nProvider";
 import type { TranslationKey } from "@oskar-lab/i18n/messages";
 import type { Entry } from "./TravelWorkspace";
-import { pointUtcOffset } from "../model/timeline";
+import { pointUtcOffset, timelinePoint } from "../model/timeline";
+import { bookingTimeLabel, plannedTimeLabel } from "../model/point-time";
 import PlaceMap from "./PlaceMap";
 import RoutePicker from "./RoutePicker";
 import { canOpenRoute, routeOrigins } from "../model/routes";
@@ -54,13 +55,16 @@ export default function BookingDetails({
       <div className={styles.endpoints}>
         {points.map((p) => (
           <div key={p.role}>
-            <small>{label(p.role)}</small>
-            {(p.role === "CHECK_IN" || p.role === "CHECK_OUT") && p.timelineTime && <p>
-              {label(p.role === "CHECK_IN" ? "plannedArrival" : "plannedDeparture")}: {p.timelineTime.slice(0, 5)}
-            </p>}
+            {p.timelineTime && <div className={styles.plannedSummary}>
+              <small>{label(plannedTimeLabel(entry.type, p.role))}</small>
+              <strong>{p.timelineTime.slice(0, 5)}</strong>
+              <span>{date(p.timelineDate ?? p.date)}</span>
+              <small>{p.timeZone}{pointUtcOffset(timelinePoint(p)) ? " · " + pointUtcOffset(timelinePoint(p)) : ""}</small>
+            </div>}
+            <small>{label(bookingTimeLabel(p.role))}</small>
             <strong>
               {p.time
-                ? `${p.timeMeaning !== "EXACT" ? label(p.timeMeaning) + " " : ""}${p.time.slice(0, 5)}`
+                ? p.time.slice(0, 5)
                 : label("unknown")}
             </strong>
             <span>{date(p.date)}</span>

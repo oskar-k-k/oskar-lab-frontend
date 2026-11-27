@@ -874,7 +874,14 @@
             "nullable": true,
             "type": "string"
           },
+          "timelineDate": {
+            "description": "Optional planned local date; defaults to the booking date when a planned time is supplied",
+            "format": "date",
+            "nullable": true,
+            "type": "string"
+          },
           "timelineTime": {
+            "description": "Optional personal planned time for any station; the timeline falls back to the booked time when absent",
             "format": "time-local",
             "nullable": true,
             "type": "string"
@@ -915,6 +922,7 @@
           "time",
           "timeMeaning",
           "timeZone",
+          "timelineDate",
           "timelineTime",
           "timelineUtcOffset",
           "utcOffset"

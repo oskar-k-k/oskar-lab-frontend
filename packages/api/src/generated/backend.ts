@@ -721,7 +721,15 @@ export interface components {
             role: "DEPARTURE" | "ARRIVAL" | "CHECK_IN" | "CHECK_OUT" | "START" | "END";
             /** Format: time-local */
             time: string | null;
-            /** Format: time-local */
+            /**
+             * Format: date
+             * @description Optional planned local date; defaults to the booking date when a planned time is supplied
+             */
+            timelineDate: string | null;
+            /**
+             * Format: time-local
+             * @description Optional personal planned time for any station; the timeline falls back to the booked time when absent
+             */
             timelineTime: string | null;
             timelineUtcOffset: string | null;
             /** @enum {string} */

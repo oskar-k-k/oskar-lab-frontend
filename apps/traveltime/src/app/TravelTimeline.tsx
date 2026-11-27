@@ -12,6 +12,7 @@ import {
 import Timeline from "@oskar-lab/ui/Timeline/Timeline";
 import BookingDetails from "./BookingDetails";
 import BookingVisual from "./BookingVisual";
+import StationCaption from "./StationCaption";
 import styles from "./Travel.module.css";
 /** Renders connected transports and interleaved stay points without owning API state. */
 export default function TravelTimeline({
@@ -83,9 +84,7 @@ export default function TravelTimeline({
               >
                 <span className={styles.stationDate}>{p.date.slice(8, 10) + "." + p.date.slice(5, 7)}</span>
                 {p.time && <span className={styles.stationClock}>
-                  {(p.timeMeaning !== "EXACT"
-                      ? label(p.timeMeaning) + " "
-                      : "") + p.time.slice(0, 5)}
+                  {p.time.slice(0, 5)}
                   {pointUtcOffset(p, true) && ` (${pointUtcOffset(p, true)})`}
                 </span>}
               </time>
@@ -98,14 +97,7 @@ export default function TravelTimeline({
               <>
                 {paired ? point.placeName : row.entry.title}
                 {(row.points.length === 1 || paired) && (
-                  <small className={styles.stationRole}>
-                    {label(point.role)}
-                    {stay && point.time && <> {point.timeMeaning === "NOT_BEFORE"
-                      ? label("policyFrom") + " "
-                      : point.timeMeaning === "NOT_AFTER" ? label("policyUntil") + " " : ""}
-                      {point.time.slice(0, 5)}{label("clockSuffix")}
-                    </>}
-                  </small>
+                  <StationCaption type={row.entry.type} point={point} />
                 )}
               </>
             ),
@@ -143,9 +135,7 @@ export default function TravelTimeline({
               title: (
                 <>
                   {arrival.placeName}
-                  <small className={styles.stationRole}>
-                    {label(arrival.role)}
-                  </small>
+                  <StationCaption type={row.entry.type} point={arrival} />
                 </>
               ),
               label: stationLabel(arrival),
