@@ -152,3 +152,19 @@ The normal detail view shows optional `bookingSource` as plain text (for example
 Stay points have optional `timelineTime` and `timelineUtcOffset` fields for planned arrival/departure on their saved date. Timeline sorting and labels use those fields, never check-in/out windows. Unknown plans remain date-only. Accommodation policy times stay visible in details. Calendar-night counts use date differences, not elapsed hours. Shared Timeline ranges keep stay endpoints connected without moving intervening activities. These private fields share existing authorization and deletion behavior; no new recipient or external service is introduced. Owner-approved boat-to-hotel estimates use 45 minutes after a matching arrival and are plans, not confirmed hotel policy.
 
 Edit mode preserves the visual timeline, ranges and atmosphere. Owners can activate a station date/time label to open a small native dialog. Hotel labels edit the separate plan, never accommodation policy times. Saves preserve sibling points and booking metadata, use the existing versioned owner API and update in-memory entries without reloading or scrolling the trip. Failed/conflicting writes retain dialog input and require normal reload before unsafe retries. The header remains one row; secondary trip actions live in a compact menu. No additional storage, recipients or permissions are introduced.
+
+
+## Directions from saved trip locations
+
+Eligible station details show a local route-origin picker below the map. Active accommodation
+is preferred for independent activities; otherwise the latest previous stay or transport arrival
+is suggested. The same booking, future anchors and identical destinations are excluded. Connected
+arrival, check-out and end stations do not show incoming directions. Unknown times use their
+local calendar day for suggestions; these are editable choices, not confirmed transfer plans.
+
+Options are computed in memory from the currently authorized trip, with no new storage or API.
+Selecting an option sends no request. Opening directions sends only the selected saved origin
+and destination names/addresses to Google Maps, not trip dates, notes, documents or account data.
+The current-location option omits the origin: Google handles any device location/permission itself.
+TravelTime never requests geolocation. Maps controls its own retention and processing as described
+above. No Routes API, billing, travel-time lookup or automatic itinerary rescheduling is introduced.

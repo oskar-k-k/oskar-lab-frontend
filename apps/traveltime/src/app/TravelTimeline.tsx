@@ -121,6 +121,7 @@ export default function TravelTimeline({
             content: (
               <BookingDetails
                 entry={row.entry}
+                entries={entries}
                 points={paired ? [point] : row.points}
                 editing={false}
                 editable={editable}
@@ -157,6 +158,7 @@ export default function TravelTimeline({
               content: (
                 <BookingDetails
                   entry={row.entry}
+                  entries={entries}
                   points={[arrival]}
                   editing={false}
                   editable={editable}

@@ -552,6 +552,12 @@
   color: var(--travel-ink);
   font-weight: 500;
 }
+.routePicker { display: grid; gap: 10px; width: 100%; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgb(195 222 232 / 15%); }
+.routePicker label { display: grid; gap: 5px; color: var(--travel-muted); font-size: 12px; }
+.routePicker select { width: 100%; min-width: 0; padding: 10px; border: 1px solid rgb(195 222 232 / 28%); border-radius: 10px; background: var(--travel-bg); color: var(--travel-ink); font: inherit; font-size: 14px; text-overflow: ellipsis; }
+.routeOpen { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 12px; border: 1px solid var(--travel-line); border-radius: 10px; font-size: 13px; text-decoration: none; }
+.routeOpen svg { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.routeOpen:hover { background: rgb(156 221 215 / 8%); }
 .mapEmpty {
   display: grid;
   justify-items: center;

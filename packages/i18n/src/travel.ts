@@ -1,4 +1,7 @@
 export const travelEn = {
+  "travel.routeFrom": "Route from",
+  "travel.currentLocation": "Current location",
+  "travel.openRoute": "Open route",
   "travel.editMode": "Edit mode",
   "travel.editDateTime": "Edit date and time",
   "travel.tripActions": "Trip actions",
@@ -126,6 +129,9 @@ export const travelEn = {
   "travel.dateOnly": "Day only",
 } as const;
 export const travelDe: Record<keyof typeof travelEn, string> = {
+  "travel.routeFrom": "Route von",
+  "travel.currentLocation": "Aktueller Standort",
+  "travel.openRoute": "Route öffnen",
   "travel.editMode": "Bearbeitungsmodus",
   "travel.editDateTime": "Datum und Uhrzeit bearbeiten",
   "travel.tripActions": "Reiseaktionen",

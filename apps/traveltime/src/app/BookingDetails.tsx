@@ -4,6 +4,8 @@ import type { TranslationKey } from "@oskar-lab/i18n/messages";
 import type { Entry } from "./TravelWorkspace";
 import { pointUtcOffset } from "../model/timeline";
 import PlaceMap from "./PlaceMap";
+import RoutePicker from "./RoutePicker";
+import { canOpenRoute, routeOrigins } from "../model/routes";
 import styles from "./Travel.module.css";
 
 /** Shows only the supplied station points while keeping shared booking actions together. */
@@ -16,6 +18,7 @@ export default function BookingDetails({
   onDocuments,
   onEdit,
   onDelete,
+  entries = [],
 }: {
   entry: Entry;
   points: Entry["points"];
@@ -25,6 +28,7 @@ export default function BookingDetails({
   onDocuments: (entry: Entry) => void;
   onEdit: (entry: Entry) => void;
   onDelete: (entry: Entry) => void;
+  entries?: readonly Entry[];
 }) {
   const { t, locale } = useI18n();
   const label = (key: string) => t(("travel." + key) as TranslationKey);
@@ -67,6 +71,9 @@ export default function BookingDetails({
               {pointUtcOffset(p) ? " · " + pointUtcOffset(p) : ""}
             </small>
             <PlaceMap key={p.placeName + p.address + p.mapEmbedUrl} placeName={p.placeName} address={p.address} mapEmbedUrl={p.mapEmbedUrl} />
+            {canOpenRoute(p) && <RoutePicker
+              key={`${entry.id}:${p.role}:${routeOrigins(entries, entry, p)[0]?.id ?? "current"}`}
+              destination={p} origins={routeOrigins(entries, entry, p)} />}
           </div>
         ))}
       </div>
