@@ -4,7 +4,6 @@ import type { TranslationKey } from "@oskar-lab/i18n/messages";
 import type { Entry } from "./TravelWorkspace";
 import {
   timelineRows,
-  nextTimelineRow,
   flightDuration,
   pointUtcOffset,
   timelinePoint,
@@ -18,7 +17,6 @@ import styles from "./Travel.module.css";
 export default function TravelTimeline({
   entries,
   trip,
-  now,
   loading,
   editable,
   editing = false,
@@ -43,7 +41,6 @@ export default function TravelTimeline({
   const { t, locale } = useI18n();
   const label = (key: string) => t(("travel." + key) as TranslationKey);
   const rows = timelineRows(entries);
-  const next = nextTimelineRow(rows, now);
   const stays = entries.filter(entry => entry.type === "HOTEL" || entry.type === "APARTMENT");
   const tripDate = (value: string) =>
     `${value.slice(8, 10)}.${value.slice(5, 7)}.${value.slice(0, 4)}`;
@@ -61,9 +58,6 @@ export default function TravelTimeline({
         variant="bubbles"
         className={`${styles.timeline} ${trip && /\bthailand\b/i.test(trip.title) ? styles.destinationTimeline : ""}`}
         label={label("timeline")}
-        currentItemId={
-          next ? `booking-${next.entry.id}-${next.points[0].role}` : undefined
-        }
         ranges={stays.map(entry => ({
           fromItemId: `booking-${entry.id}-CHECK_IN`,
           toItemId: `booking-${entry.id}-CHECK_OUT`,
@@ -115,7 +109,7 @@ export default function TravelTimeline({
                 )}
               </>
             ),
-            visual: <BookingVisual type={row.entry.type} />,
+            visual: <BookingVisual type={row.entry.type} role={point.role} />,
             visualStyle,
             side: (stay ? "left" : stays.some(s => s.points[0].date <= point.date && s.points.at(-1)!.date >= point.date) ? "right" : undefined) as "left" | "right" | undefined,
             label:
@@ -158,7 +152,7 @@ export default function TravelTimeline({
               onLabelActivate: editing && editable && onEditTime ? () => onEditTime(row.entry, arrival) : undefined,
               labelActionName: label("editDateTime") + " · " + arrival.placeName + " · " + label(arrival.role),
               labelActionDisabled: disabled,
-              visual: <BookingVisual type={row.entry.type} />,
+              visual: <BookingVisual type={row.entry.type} role={arrival.role} />,
               visualStyle,
               content: (
                 <BookingDetails

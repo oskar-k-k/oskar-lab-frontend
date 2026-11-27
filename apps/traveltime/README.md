@@ -170,3 +170,5 @@ TravelTime never requests geolocation. Maps controls its own retention and proce
 above. No Routes API, billing, travel-time lookup or automatic itinerary rescheduling is introduced.
 
 Accommodation captions include the saved check-in/out policy time with its from/until meaning, independently of planned timeline times. Unknown policy times remain omitted; no window end is inferred. This display-only change adds no storage or external data flow.
+
+TravelTime starts without an automatically highlighted milestone; station highlights follow opened details. Arrival planes face down-left and departure boats are mirrored. Artwork remains local SVG with no additional assets or data flow.

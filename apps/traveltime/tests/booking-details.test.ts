@@ -97,3 +97,16 @@ it("shows accommodation policy times beneath the artwork without replacing the p
   expect(html).toMatch(/travel.CHECK_OUT.*?travel.policyUntil.*?11:00travel.clockSuffix<\/small>/);
   expect(html).toContain("17:00 (UTC+1)");
 });
+
+
+it.each([['FLIGHT', 'rotate(180 80 80)'], ['BOAT', 'translate(160 0) scale(-1 1)']] as const)(
+  "keeps %s unselected initially and gives its endpoints distinct directions", (type, transform) => {
+    const html = renderToStaticMarkup(createElement(TravelTimeline, {
+      entries: [{ ...entry, type }], now: 0, loading: false, editable: false,
+      disabled: false, onDocuments: vi.fn(), onEdit: vi.fn(), onDelete: vi.fn(),
+    }));
+    expect(html).not.toContain('aria-current=');
+    expect(html).not.toMatch(/<details[^>]* open/);
+    expect(html.split('transform="' + transform + '"')).toHaveLength(2);
+  },
+);

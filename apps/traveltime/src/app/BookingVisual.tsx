@@ -1,8 +1,8 @@
 import { useId } from "react";
 import type { Entry } from "./TravelWorkspace";
 
-/** Local night-travel artwork, with no remote media or private booking information. */
-export default function BookingVisual({ type }: { type: Entry["type"] }) {
+/** Local artwork; transport endpoint roles determine departure and arrival direction. */
+export default function BookingVisual({ type, role }: { type: Entry["type"]; role?: Entry["points"][number]["role"] }) {
   const id = useId().replaceAll(":", "");
   const flight = type === "FLIGHT";
   const stay = type === "HOTEL" || type === "APARTMENT";
@@ -17,6 +17,7 @@ export default function BookingVisual({ type }: { type: Entry["type"] }) {
           <stop stopColor="#6ba9aa" /><stop offset="1" stopColor="#254759" />
         </linearGradient>
       </defs>
+      <g transform={flight && role === "ARRIVAL" ? "rotate(180 80 80)" : boat && role === "DEPARTURE" ? "translate(160 0) scale(-1 1)" : undefined}>
       {flight ? <>
         <path d="m11 117 25-13m-13 27 18-10" stroke="#87b8c5" strokeWidth="2" strokeLinecap="round" opacity=".5" />
         <path d="m30 99 35-23-9-44 11-7 26 35 34-20q16-9 22-1t-9 20l-34 24 7 43-12 8-27-34-27 13-17-7 15-10Z" fill={`url(#${id}-body)`} stroke="#c8e0e6" strokeWidth="1.5" strokeLinejoin="round" />
@@ -47,6 +48,7 @@ export default function BookingVisual({ type }: { type: Entry["type"] }) {
         <path d="M28 132v-25m0 8q-15-14-17-3 5 9 17 3 11-20 17-11 1 10-17 11" fill="#6c9f95" stroke="#6c9f95" strokeWidth="2" strokeLinejoin="round" />
         <path d="M19 126h18l-3 12H22Z" fill="#c5a27a" />
       </>}
+      </g>
     </svg>
   );
   return (
